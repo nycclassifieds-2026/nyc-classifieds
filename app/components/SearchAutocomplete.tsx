@@ -170,6 +170,7 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
   const [open, setOpen] = useState(false)
   const [selectedIdx, setSelectedIdx] = useState(-1)
   const [listening, setListening] = useState(false)
+  const [voiceStatus, setVoiceStatus] = useState<string | null>(null)
   const [tipIdx, setTipIdx] = useState(0)
   const [hasSpeech, setHasSpeech] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -178,18 +179,9 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
   const recognitionRef = useRef<any>(null)
 
   // Detect speech support after mount (SSR-safe)
-  // Actually try to instantiate — iOS Safari lies about support
   useEffect(() => {
-    try {
-      const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-      if (SR) {
-        const test = new SR()
-        test.abort()
-        setHasSpeech(true)
-      }
-    } catch {
-      setHasSpeech(false)
-    }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (SR) setHasSpeech(true)
   }, [])
 
   // Rotate placeholder tips
@@ -393,27 +385,77 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
     }
   }
 
+  // Play a short beep to signal listening started
+  const playBeep = useCallback(() => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = 880
+      gain.gain.value = 0.15
+      osc.start()
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15)
+      osc.stop(ctx.currentTime + 0.15)
+      // Second beep (higher) after a tiny gap
+      const osc2 = ctx.createOscillator()
+      const gain2 = ctx.createGain()
+      osc2.connect(gain2)
+      gain2.connect(ctx.destination)
+      osc2.frequency.value = 1320
+      gain2.gain.value = 0.15
+      osc2.start(ctx.currentTime + 0.12)
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
+      osc2.stop(ctx.currentTime + 0.3)
+      setTimeout(() => ctx.close(), 500)
+    } catch { /* no audio context available */ }
+  }, [])
+
+  // Pause any media playing on the page
+  const pauseMedia = useCallback(() => {
+    document.querySelectorAll('audio, video').forEach((el) => {
+      if (!(el as HTMLMediaElement).paused) (el as HTMLMediaElement).pause()
+    })
+  }, [])
+
   const startVoice = () => {
     if (recognitionRef.current) {
       recognitionRef.current.abort()
       recognitionRef.current = null
       setListening(false)
+      setVoiceStatus(null)
       return
     }
 
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SR) return
 
+    // Pause any playing media so mic picks up voice clearly
+    pauseMedia()
+
     const recognition = new SR()
     recognition.lang = 'en-US'
     recognition.interimResults = false
     recognition.maxAlternatives = 1
+    recognition.continuous = false
+
+    recognition.onaudiostart = () => {
+      // Mic is live — play beep and show prompt
+      playBeep()
+      setVoiceStatus('Listening... speak now')
+    }
+
+    recognition.onspeechstart = () => {
+      setVoiceStatus('Hearing you...')
+    }
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript as string
       const cleaned = stripNL(transcript)
       setQuery(cleaned)
       setOpen(true)
+      setVoiceStatus(null)
       // Auto-navigate if it maps to a real page
       const url = buildUrl(cleaned)
       if (url && !url.startsWith('/search')) {
@@ -426,27 +468,36 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
     recognition.onend = () => {
       setListening(false)
       recognitionRef.current = null
+      // Clear status after a moment if no result came
+      setTimeout(() => setVoiceStatus(null), 1500)
     }
 
     recognition.onerror = (e: any) => {
-      setListening(false)
       recognitionRef.current = null
-      // 'not-allowed' means user denied mic permission
-      // 'no-speech' means no voice detected
+      setListening(false)
       if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
+        setVoiceStatus('Mic blocked — check browser permissions')
         setHasSpeech(false)
+      } else if (e?.error === 'no-speech') {
+        setVoiceStatus('No speech detected — try again')
+      } else if (e?.error === 'network') {
+        setVoiceStatus('Network error — check connection')
+      } else {
+        setVoiceStatus('Voice error — try again')
       }
+      setTimeout(() => setVoiceStatus(null), 3000)
     }
 
     recognitionRef.current = recognition
     setListening(true)
+    setVoiceStatus('Starting mic...')
     try {
       recognition.start()
     } catch {
-      // Browser blocked or doesn't actually support it
       setListening(false)
+      setVoiceStatus('Voice not supported in this browser')
       recognitionRef.current = null
-      setHasSpeech(false)
+      setTimeout(() => setVoiceStatus(null), 3000)
     }
   }
 
@@ -483,7 +534,7 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
             style={{
               width: '100%',
               padding: '10px 16px',
-              paddingRight: hasSpeech ? '40px' : '16px',
+              paddingRight: hasSpeech ? '44px' : '16px',
               borderRadius: '8px',
               border: '1px solid #1a56db',
               fontSize: '0.9375rem',
@@ -504,17 +555,19 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
                 right: '8px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                background: 'none',
+                background: listening ? 'rgba(220,38,38,0.08)' : 'none',
                 border: 'none',
+                borderRadius: '50%',
                 cursor: 'pointer',
-                padding: '4px',
+                padding: '6px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 animation: listening ? 'mic-pulse 1s infinite' : 'none',
+                transition: 'background 0.2s',
               }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={listening ? '#dc2626' : '#6b7280'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill={listening ? '#dc2626' : 'none'} stroke={listening ? '#dc2626' : '#6b7280'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                 <line x1="12" y1="19" x2="12" y2="23" />
@@ -542,6 +595,28 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
           Search
         </button>
       </div>
+
+      {voiceStatus && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 14px',
+          marginTop: '6px',
+          backgroundColor: listening ? '#fef2f2' : '#f3f4f6',
+          border: `1px solid ${listening ? '#fecaca' : '#e5e7eb'}`,
+          borderRadius: '8px',
+          fontSize: '0.875rem',
+          fontFamily: "'DM Sans', sans-serif",
+          color: listening ? '#dc2626' : '#374151',
+          animation: listening ? 'mic-pulse 1.5s infinite' : 'none',
+        }}>
+          {listening && (
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#dc2626', flexShrink: 0 }} />
+          )}
+          {voiceStatus}
+        </div>
+      )}
 
       {open && suggestions.length > 0 && (
         <ul
