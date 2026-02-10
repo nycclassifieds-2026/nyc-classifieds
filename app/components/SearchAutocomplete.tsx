@@ -491,15 +491,17 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
       setListening(false)
       if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
         setVoiceStatus('Mic blocked — tap the lock icon in your address bar and allow microphone')
-        setHasSpeech(false)
       } else if (e?.error === 'no-speech') {
-        setVoiceStatus('No speech detected — try again')
+        setVoiceStatus('No speech detected — tap the mic and try again')
       } else if (e?.error === 'network') {
         setVoiceStatus('Network error — check connection')
+      } else if (e?.error === 'aborted') {
+        setVoiceStatus(null)
+        return
       } else {
-        setVoiceStatus('Voice error — try again')
+        setVoiceStatus('Voice error — tap the mic and try again')
       }
-      setTimeout(() => setVoiceStatus(null), 5000)
+      setTimeout(() => setVoiceStatus(null), 10000)
     }
 
     recognitionRef.current = recognition
@@ -511,7 +513,7 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
       setListening(false)
       setVoiceStatus('Voice not supported in this browser')
       recognitionRef.current = null
-      setTimeout(() => setVoiceStatus(null), 3000)
+      setTimeout(() => setVoiceStatus(null), 10000)
     }
   }
 
