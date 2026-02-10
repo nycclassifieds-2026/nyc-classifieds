@@ -181,3 +181,9 @@ export const homepageColumns = [
   [categoryBySlug['gigs'], categoryBySlug['tickets'], categoryBySlug['pets']],
   [categoryBySlug['resumes'], categoryBySlug['personals'], categoryBySlug['barter'], categoryBySlug['rentals']],
 ]
+
+// Balanced 2-column layout for mobile (~117 vs ~116 visual lines)
+export const mobileHomepageColumns = [
+  [categoryBySlug['services'], categoryBySlug['jobs'], categoryBySlug['community'], categoryBySlug['pets'], categoryBySlug['barter'], categoryBySlug['rentals']],
+  [categoryBySlug['for-sale'], categoryBySlug['resumes'], categoryBySlug['gigs'], categoryBySlug['housing'], categoryBySlug['tickets'], categoryBySlug['personals']],
+]

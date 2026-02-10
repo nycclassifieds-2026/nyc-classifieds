@@ -2,7 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { homepageColumns, boroughs, slugify, findNeighborhood } from '@/lib/data'
+import { homepageColumns, mobileHomepageColumns, boroughs, slugify, findNeighborhood } from '@/lib/data'
+
+function useIsMobile(breakpoint = 768) {
+  const [mobile, setMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setMobile(window.innerWidth < breakpoint)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [breakpoint])
+  return mobile
+}
 
 interface HomeInfo {
   boroughSlug: string
@@ -13,6 +24,7 @@ interface HomeInfo {
 
 export default function HomeCategoryGrid() {
   const [home, setHome] = useState<HomeInfo | null>(null)
+  const mobile = useIsMobile()
 
   useEffect(() => {
     const saved = localStorage.getItem('home')
@@ -97,7 +109,7 @@ export default function HomeCategoryGrid() {
         display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0 20px',
         borderTop: '1px solid #e5e7eb', paddingTop: '12px',
       }}>
-        {homepageColumns.map((col, ci) => (
+        {(mobile ? mobileHomepageColumns : homepageColumns).map((col, ci) => (
           <div key={ci}>
             {col.map(cat => {
               const isCommunity = cat.slug === 'community'

@@ -20,15 +20,11 @@ export default function BoroughNav() {
     const nh = findNeighborhood(boroughSlug, nhSlug)
     if (!b || !nh) return
     setPending({ boroughSlug, nhSlug, nhName: nh.name, boroughName: b.name })
-    window.dispatchEvent(new CustomEvent('walkthrough:neighborhood-clicked'))
   }
 
   const confirmSave = () => {
     if (!pending) return
     localStorage.setItem('home', `${pending.boroughSlug}/${pending.nhSlug}`)
-    // Persist walkthrough to step 4 before reload
-    try { localStorage.setItem('walkthrough_step', '4') } catch {}
-    window.dispatchEvent(new CustomEvent('walkthrough:home-saved'))
     setPending(null)
     setExpanded(null)
     window.location.reload()
@@ -48,14 +44,32 @@ export default function BoroughNav() {
       }}>
         Pick your borough to set your neighborhood
       </p>
-      <nav aria-label="Browse by borough" className="home-borough-nav" data-walkthrough="borough-nav" style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '4px' }}>
+      <nav aria-label="Browse by borough" className="home-borough-nav" style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '4px' }}>
+        <button
+          onClick={() => {
+            localStorage.removeItem('home')
+            window.location.href = '/'
+          }}
+          style={{
+            color: expanded === null && !pending ? '#111827' : '#1a56db',
+            fontSize: '1rem',
+            fontWeight: expanded === null && !pending ? 700 : 500,
+            textDecoration: 'none',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+            fontFamily: "'DM Sans', sans-serif",
+          }}
+        >
+          NYC
+        </button>
         {boroughs.map(b => (
           <button
             key={b.slug}
             onClick={() => {
               const willExpand = expanded !== b.slug
               setExpanded(willExpand ? b.slug : null)
-              if (willExpand) window.dispatchEvent(new CustomEvent('walkthrough:borough-expanded'))
             }}
             style={{
               color: expanded === b.slug ? '#111827' : '#1a56db',
@@ -76,7 +90,7 @@ export default function BoroughNav() {
 
       {/* Confirmation popup */}
       {pending && (
-        <div data-walkthrough="save-confirm" style={{
+        <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
@@ -128,7 +142,7 @@ export default function BoroughNav() {
         const borough = boroughs.find(b => b.slug === expanded)
         if (!borough) return null
         return (
-          <div data-walkthrough="neighborhood-list" style={{
+          <div style={{
             display: 'flex',
             flexWrap: 'wrap',
             gap: '4px 12px',

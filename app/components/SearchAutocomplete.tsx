@@ -109,6 +109,36 @@ const nycAbbreviations: Record<string, string[]> = {
   'ri': ['Roosevelt Island'],
 }
 
+// Strip conversational prefixes from natural language queries
+// "I need a plumber" → "plumber", "find me apartments in brooklyn" → "apartments in brooklyn"
+const nlPrefixes = [
+  /^i(?:'m| am) looking for (?:a |an )?/i,
+  /^i need (?:a |an |some )?/i,
+  /^find me (?:a |an |some )?/i,
+  /^looking for (?:a |an |some )?/i,
+  /^where (?:can|do) i find (?:a |an |some )?/i,
+  /^i want (?:a |an |to find |to get )?/i,
+  /^show me (?:a |an |some )?/i,
+  /^search for (?:a |an )?/i,
+  /^get me (?:a |an |some )?/i,
+  /^help me find (?:a |an |some )?/i,
+  /^can you find (?:me )?(?:a |an |some )?/i,
+  /^do you have (?:a |an |any )?/i,
+  /^is there (?:a |an |any )?/i,
+  /^are there (?:any )?/i,
+  /^who (?:has|does|can) /i,
+]
+
+function stripNL(q: string): string {
+  let cleaned = q.trim()
+  for (const re of nlPrefixes) {
+    cleaned = cleaned.replace(re, '')
+  }
+  // Remove trailing punctuation from voice
+  cleaned = cleaned.replace(/[?.!]+$/, '').trim()
+  return cleaned || q.trim()
+}
+
 // Rotating placeholder tips
 const searchTips = [
   'apartments in east village',
@@ -215,9 +245,10 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
   }, [])
 
   const suggestions = useMemo((): Suggestion[] => {
-    const q = query.trim()
-    if (!q) return []
+    const raw = query.trim()
+    if (!raw) return []
 
+    const q = stripNL(raw)
     const inIdx = q.toLowerCase().indexOf(' in ')
     let candidates: string[]
     let matchTerm = q
@@ -319,7 +350,14 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
     const trimmed = query.trim()
     if (!trimmed) return
     setOpen(false)
-    onSearch(trimmed)
+    const cleaned = stripNL(trimmed)
+    // Try direct navigation first
+    const url = buildUrl(cleaned)
+    if (url && !url.startsWith('/search')) {
+      router.push(url)
+    } else {
+      onSearch(cleaned)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -373,14 +411,15 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript as string
-      setQuery(transcript)
+      const cleaned = stripNL(transcript)
+      setQuery(cleaned)
       setOpen(true)
       // Auto-navigate if it maps to a real page
-      const url = buildUrl(transcript)
+      const url = buildUrl(cleaned)
       if (url && !url.startsWith('/search')) {
         router.push(url)
       } else {
-        onSearch(transcript)
+        onSearch(cleaned)
       }
     }
 
