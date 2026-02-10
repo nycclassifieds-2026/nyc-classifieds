@@ -1,6 +1,7 @@
 'use client'
 
 import ListingCard from './ListingCard'
+import ListingRow from './ListingRow'
 
 interface Listing {
   id: number
@@ -15,9 +16,19 @@ interface Listing {
 
 interface Props {
   listings: Listing[]
+  mode?: 'grid' | 'list'
+  hideCategoryPill?: boolean
 }
 
-export default function ListingGrid({ listings }: Props) {
+// Categories that use list view (text-dense, no photos)
+const listViewCategories = new Set(['jobs', 'services', 'gigs', 'resumes', 'barter', 'personals'])
+
+export function getDisplayMode(categorySlug?: string): 'grid' | 'list' {
+  if (categorySlug && listViewCategories.has(categorySlug)) return 'list'
+  return 'grid'
+}
+
+export default function ListingGrid({ listings, mode = 'grid', hideCategoryPill = false }: Props) {
   if (listings.length === 0) {
     return (
       <div style={{
@@ -33,6 +44,21 @@ export default function ListingGrid({ listings }: Props) {
     )
   }
 
+  if (mode === 'list') {
+    return (
+      <div style={{
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        overflow: 'hidden',
+        backgroundColor: '#ffffff',
+      }}>
+        {listings.map(listing => (
+          <ListingRow key={listing.id} {...listing} />
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="listing-grid" style={{
       display: 'grid',
@@ -40,7 +66,7 @@ export default function ListingGrid({ listings }: Props) {
       gap: 'var(--sp-4)',
     }}>
       {listings.map(listing => (
-        <ListingCard key={listing.id} {...listing} />
+        <ListingCard key={listing.id} {...listing} hideCategoryPill={hideCategoryPill} />
       ))}
     </div>
   )

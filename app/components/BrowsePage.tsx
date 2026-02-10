@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import ListingGrid from './ListingGrid'
+import ListingGrid, { getDisplayMode } from './ListingGrid'
 import { type Category, slugify } from '@/lib/data'
 
 interface Listing {
@@ -27,6 +27,9 @@ interface BrowsePageProps {
   categorySlug?: string
 }
 
+// Categories where price sort doesn't make sense
+const hidePriceSortCategories = new Set(['jobs', 'services', 'gigs', 'resumes', 'personals', 'barter'])
+
 export default function BrowsePage({
   title,
   breadcrumbs,
@@ -46,6 +49,9 @@ export default function BrowsePage({
 
   const effectiveCategorySlug = categorySlug || category?.slug
   const subs = subcategories || category?.subs || []
+  const displayMode = getDisplayMode(effectiveCategorySlug)
+  const showPriceSort = !hidePriceSortCategories.has(effectiveCategorySlug || '')
+  const useDropdown = subs.length > 10
 
   useEffect(() => {
     setLoading(true)
@@ -102,10 +108,29 @@ export default function BrowsePage({
         </Link>
       </div>
 
-      {/* Subcategory chips + sort */}
-      {(subs.length > 0 || true) && (
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
-          {subs.length > 0 && !subcategorySlug && (
+      {/* Subcategory filter + sort */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
+        {subs.length > 0 && !subcategorySlug && (
+          useDropdown ? (
+            <select
+              value={activeSub}
+              onChange={e => { setActiveSub(e.target.value); setPage(1) }}
+              style={{
+                padding: '6px 10px',
+                borderRadius: '6px',
+                border: '1px solid #e5e7eb',
+                fontSize: '0.8125rem',
+                backgroundColor: '#fff',
+                color: '#374151',
+                outline: 'none',
+              }}
+            >
+              <option value="">All subcategories</option>
+              {subs.map(s => (
+                <option key={s} value={slugify(s)}>{s}</option>
+              ))}
+            </select>
+          ) : (
             <>
               <button
                 onClick={() => { setActiveSub(''); setPage(1) }}
@@ -137,28 +162,28 @@ export default function BrowsePage({
                 )
               })}
             </>
-          )}
-          <div style={{ marginLeft: 'auto' }}>
-            <select
-              value={sort}
-              onChange={e => { setSort(e.target.value); setPage(1) }}
-              style={{
-                padding: '6px 10px',
-                borderRadius: '6px',
-                border: '1px solid #e5e7eb',
-                fontSize: '0.8125rem',
-                backgroundColor: '#fff',
-                color: '#374151',
-                outline: 'none',
-              }}
-            >
-              <option value="newest">Newest</option>
-              <option value="price-low">Price: Low → High</option>
-              <option value="price-high">Price: High → Low</option>
-            </select>
-          </div>
+          )
+        )}
+        <div style={{ marginLeft: 'auto' }}>
+          <select
+            value={sort}
+            onChange={e => { setSort(e.target.value); setPage(1) }}
+            style={{
+              padding: '6px 10px',
+              borderRadius: '6px',
+              border: '1px solid #e5e7eb',
+              fontSize: '0.8125rem',
+              backgroundColor: '#fff',
+              color: '#374151',
+              outline: 'none',
+            }}
+          >
+            <option value="newest">Newest</option>
+            {showPriceSort && <option value="price-low">Price: Low → High</option>}
+            {showPriceSort && <option value="price-high">Price: High → Low</option>}
+          </select>
         </div>
-      )}
+      </div>
 
       {/* Listings */}
       {loading ? (
@@ -183,7 +208,11 @@ export default function BrowsePage({
           </Link>
         </div>
       ) : (
-        <ListingGrid listings={listings} />
+        <ListingGrid
+          listings={listings}
+          mode={displayMode}
+          hideCategoryPill={!!effectiveCategorySlug}
+        />
       )}
 
       {/* Pagination */}

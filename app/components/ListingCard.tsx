@@ -11,6 +11,7 @@ interface ListingCardProps {
   category_slug: string
   created_at: string
   users: { name: string; verified: boolean; selfie_url?: string | null }
+  hideCategoryPill?: boolean
 }
 
 const categoryColors: Record<string, string> = {
@@ -35,7 +36,7 @@ function hashColor(name: string) {
   return COLORS[Math.abs(h) % COLORS.length]
 }
 
-export default function ListingCard({ id, title, price, images, location, category_slug, created_at, users }: ListingCardProps) {
+export default function ListingCard({ id, title, price, images, location, category_slug, created_at, users, hideCategoryPill = false }: ListingCardProps) {
   const timeAgo = getTimeAgo(created_at)
   const catColor = categoryColors[category_slug] || 'var(--gray-500)'
 
@@ -71,21 +72,23 @@ export default function ListingCard({ id, title, price, images, location, catego
         ) : (
           <span style={{ color: 'var(--gray-400)', fontSize: '1.5rem' }}>&#128247;</span>
         )}
-        {/* Category pill */}
-        <span style={{
-          position: 'absolute',
-          top: '8px',
-          left: '8px',
-          fontSize: '0.6875rem',
-          fontWeight: 600,
-          padding: '2px 8px',
-          borderRadius: '4px',
-          backgroundColor: 'var(--white)',
-          color: catColor,
-          border: `1px solid ${catColor}20`,
-        }}>
-          {category_slug.replace(/-/g, ' ')}
-        </span>
+        {/* Category pill — hidden when already on that category page */}
+        {!hideCategoryPill && (
+          <span style={{
+            position: 'absolute',
+            top: '8px',
+            left: '8px',
+            fontSize: '0.6875rem',
+            fontWeight: 600,
+            padding: '2px 8px',
+            borderRadius: '4px',
+            backgroundColor: 'var(--white)',
+            color: catColor,
+            border: `1px solid ${catColor}20`,
+          }}>
+            {category_slug.replace(/-/g, ' ')}
+          </span>
+        )}
       </div>
 
       {/* Content */}
