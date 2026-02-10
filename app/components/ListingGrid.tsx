@@ -34,7 +34,7 @@ export default function ListingGrid({ listings }: Props) {
   }
 
   return (
-    <div style={{
+    <div className="listing-grid" style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
       gap: 'var(--sp-4)',
