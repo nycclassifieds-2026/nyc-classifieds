@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { boroughs, categories, neighborhoodSlug, findNeighborhood } from '@/lib/data'
 import SearchAutocomplete from './components/SearchAutocomplete'
 import HomepageAd from './components/HomepageAd'
-import Walkthrough from './components/Walkthrough'
 
 function useIsMobile(breakpoint = 640) {
   const [mobile, setMobile] = useState(false)
@@ -30,7 +29,14 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   const [homeName, setHomeName] = useState<string | null>(null)
   const [showLocationPicker, setShowLocationPicker] = useState(false)
   const [pickerBorough, setPickerBorough] = useState<string | null>(null)
+  const [porchNudge, setPorchNudge] = useState(false)
   const mobile = useIsMobile()
+
+  useEffect(() => {
+    const visits = parseInt(localStorage.getItem('site_visits') || '0', 10) + 1
+    localStorage.setItem('site_visits', String(visits))
+    if (visits <= 10) setPorchNudge(true)
+  }, [])
 
   useEffect(() => {
     const saved = localStorage.getItem('home')
@@ -108,7 +114,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
               }}>
                 Classifieds
               </Link>
-              <Link href="/porch" data-walkthrough="porch-tab" style={{
+              <Link href="/porch" className={porchNudge ? 'porch-nudge' : ''} style={{
                 padding: mobile ? '6px 8px' : '6px 14px',
                 fontSize: mobile ? '0.75rem' : '0.8125rem',
                 fontWeight: isPorch ? 600 : 500,
@@ -125,7 +131,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 
             {/* Right nav: Post | Account */}
             <nav style={{ display: 'flex', alignItems: 'center', gap: mobile ? '8px' : '12px', flexShrink: 0 }}>
-              <Link href="/listings/new" data-walkthrough="post-button" style={{
+              <Link href="/listings/new" style={{
                 backgroundColor: '#1a56db',
                 color: '#ffffff',
                 padding: mobile ? '5px 10px' : '7px 18px',
@@ -233,8 +239,6 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
           </div>
         </div>
       )}
-
-      {isHomepage && <Walkthrough />}
 
       {children}
 
