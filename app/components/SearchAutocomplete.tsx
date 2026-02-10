@@ -263,7 +263,7 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
         }
         const nhSuggestions = getNeighborhoodSuggestions(term, location)
         candidates.push(...nhSuggestions)
-        matchTerm = q
+        matchTerm = term
       } else {
         const termLower = term.toLowerCase()
         candidates = baseSuggestions.filter(s => {
@@ -294,12 +294,26 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
       }
     }
 
-    // Sort: exact prefix first, then includes, then by length
+    // Sort: best match first
+    // Score: 0 = exact match, 1 = first word starts with query & is close length,
+    //        2 = starts with query, 3 = contains query
     const qLower = matchTerm.toLowerCase()
+    function score(s: string): number {
+      const sLower = s.toLowerCase()
+      // Extract just the term part (before " in ")
+      const sIn = sLower.indexOf(' in ')
+      const sTerm = sIn !== -1 ? sLower.slice(0, sIn) : sLower
+      if (sTerm === qLower) return 0
+      // First word of the term
+      const firstWord = sTerm.split(/[\s&,]+/)[0]
+      // "cars" for query "car" — first word starts with query and is very close
+      if (firstWord.startsWith(qLower) && firstWord.length <= qLower.length + 2) return 1
+      if (sTerm.startsWith(qLower)) return 2
+      return 3
+    }
     unique.sort((a, b) => {
-      const aPrefix = a.toLowerCase().startsWith(qLower) ? 0 : 1
-      const bPrefix = b.toLowerCase().startsWith(qLower) ? 0 : 1
-      if (aPrefix !== bPrefix) return aPrefix - bPrefix
+      const sa = score(a), sb = score(b)
+      if (sa !== sb) return sa - sb
       return a.length - b.length
     })
 
@@ -476,7 +490,7 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
       recognitionRef.current = null
       setListening(false)
       if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
-        setVoiceStatus('Mic blocked — check browser permissions')
+        setVoiceStatus('Mic blocked — tap the lock icon in your address bar and allow microphone')
         setHasSpeech(false)
       } else if (e?.error === 'no-speech') {
         setVoiceStatus('No speech detected — try again')
@@ -485,7 +499,7 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
       } else {
         setVoiceStatus('Voice error — try again')
       }
-      setTimeout(() => setVoiceStatus(null), 3000)
+      setTimeout(() => setVoiceStatus(null), 5000)
     }
 
     recognitionRef.current = recognition
