@@ -45,8 +45,8 @@ export default function LoginClient() {
       <input
         type="password"
         inputMode="numeric"
-        maxLength={4}
-        placeholder="4-digit PIN"
+        maxLength={10}
+        placeholder="PIN"
         value={pin}
         onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
         onKeyDown={e => e.key === 'Enter' && handleLogin()}
@@ -55,7 +55,7 @@ export default function LoginClient() {
 
       {error && <p style={{ color: '#dc2626', fontSize: '0.875rem', marginBottom: '0.75rem' }}>{error}</p>}
 
-      <button onClick={handleLogin} disabled={loading || !email || pin.length !== 4} style={{
+      <button onClick={handleLogin} disabled={loading || !email || pin.length < 4} style={{
         width: '100%',
         padding: '0.75rem',
         borderRadius: '0.5rem',

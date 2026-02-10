@@ -179,8 +179,8 @@ export async function POST(request: NextRequest) {
     // C2 fix: Use cookie for auth instead of body userId
     const userId = request.cookies.get(COOKIE_NAME)?.value
     const { pin } = body
-    if (!userId || !pin || !/^\d{4}$/.test(pin)) {
-      return NextResponse.json({ error: 'Valid 4-digit PIN required' }, { status: 400 })
+    if (!userId || !pin || !/^\d{4,10}$/.test(pin)) {
+      return NextResponse.json({ error: 'PIN must be 4–10 digits' }, { status: 400 })
     }
 
     const db = getSupabaseAdmin()

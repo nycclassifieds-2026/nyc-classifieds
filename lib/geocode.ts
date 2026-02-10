@@ -55,9 +55,11 @@ export interface AddressSuggestion {
 
 /**
  * Search for address suggestions within NYC using Nominatim.
+ * Appends "New York City" to bias results and filters to NY state.
  */
 export async function searchAddresses(query: string): Promise<AddressSuggestion[]> {
-  const encoded = encodeURIComponent(query)
+  const biased = `${query}, New York City`
+  const encoded = encodeURIComponent(biased)
   const res = await fetch(
     `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=5&countrycodes=us&viewbox=${NYC_VIEWBOX}&bounded=1&addressdetails=1`,
     {
@@ -68,9 +70,26 @@ export async function searchAddresses(query: string): Promise<AddressSuggestion[
   if (!res.ok) return []
 
   const data = await res.json()
-  return data.map((item: { display_name: string; lat: string; lon: string }) => ({
-    display_name: item.display_name,
-    lat: parseFloat(item.lat),
-    lng: parseFloat(item.lon),
-  }))
+  // Filter to only New York state results
+  return data
+    .filter((item: { address?: { state?: string } }) =>
+      item.address?.state === 'New York'
+    )
+    .map((item: { display_name: string; lat: string; lon: string; address?: { house_number?: string; road?: string; neighbourhood?: string; suburb?: string; city?: string; borough?: string; postcode?: string } }) => {
+      // Build a clean short display: "150 W 47th St, Midtown, Manhattan, 10036"
+      const a = item.address || {}
+      const parts: string[] = []
+      if (a.house_number && a.road) parts.push(`${a.house_number} ${a.road}`)
+      else if (a.road) parts.push(a.road)
+      if (a.neighbourhood || a.suburb) parts.push(a.neighbourhood || a.suburb || '')
+      if (a.borough) parts.push(a.borough)
+      else if (a.city) parts.push(a.city)
+      if (a.postcode) parts.push(a.postcode)
+      const display = parts.filter(Boolean).join(', ') || item.display_name
+      return {
+        display_name: display,
+        lat: parseFloat(item.lat),
+        lng: parseFloat(item.lon),
+      }
+    })
 }

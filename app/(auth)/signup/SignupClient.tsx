@@ -163,7 +163,7 @@ export default function SignupClient() {
 
   const handleSetPin = async () => {
     if (pin !== pinConfirm) { setError('PINs do not match'); return }
-    if (!/^\d{4}$/.test(pin)) { setError('PIN must be exactly 4 digits'); return }
+    if (!/^\d{4,10}$/.test(pin)) { setError('PIN must be 4–10 digits'); return }
     const data = await api({ action: 'set-pin', userId, pin })
     if (data?.pinSet) setStep('address')
   }
@@ -324,7 +324,7 @@ export default function SignupClient() {
       {step === 'name' && (
         <div>
           <h1 style={h1Style}>{isBusiness ? 'Your name' : 'What\u2019s your name?'}</h1>
-          <p style={descStyle}>{isBusiness ? 'The contact person for this business.' : 'Your first name is shown on your listings. Last name is kept private.'}</p>
+          <p style={descStyle}>{isBusiness ? 'The contact person for this business.' : 'Your full name is shown on your profile and listings. Use your real name — we do random verification checks.'}</p>
           <input type="text" placeholder="First name" value={firstName}
             onChange={e => setFirstName(e.target.value)}
             style={{ ...inputStyle, marginBottom: '0.75rem' }} />
@@ -451,17 +451,17 @@ export default function SignupClient() {
       {/* ── PIN ── */}
       {step === 'pin' && (
         <div>
-          <h1 style={h1Style}>Set a 4-digit PIN</h1>
-          <p style={descStyle}>You&apos;ll use this to log in quickly.</p>
-          <input type="password" inputMode="numeric" maxLength={4} placeholder="PIN" value={pin}
+          <h1 style={h1Style}>Set a PIN</h1>
+          <p style={descStyle}>Choose 4–10 digits. You&apos;ll use this to log in quickly.</p>
+          <input type="password" inputMode="numeric" maxLength={10} placeholder="PIN (4–10 digits)" value={pin}
             onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
             style={{ ...inputStyle, marginBottom: '0.75rem' }} />
-          <input type="password" inputMode="numeric" maxLength={4} placeholder="Confirm PIN" value={pinConfirm}
+          <input type="password" inputMode="numeric" maxLength={10} placeholder="Confirm PIN" value={pinConfirm}
             onChange={e => setPinConfirm(e.target.value.replace(/\D/g, ''))}
             onKeyDown={e => e.key === 'Enter' && handleSetPin()}
             style={inputStyle} />
           {error && <p style={errorStyle}>{error}</p>}
-          <button onClick={handleSetPin} disabled={loading || pin.length !== 4} style={btnStyle}>
+          <button onClick={handleSetPin} disabled={loading || pin.length < 4} style={btnStyle}>
             {loading ? 'Setting...' : 'Set PIN'}
           </button>
         </div>
