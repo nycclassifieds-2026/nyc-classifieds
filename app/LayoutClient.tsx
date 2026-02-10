@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { boroughs, categories, neighborhoodSlug } from '@/lib/data'
+import SearchAutocomplete from './components/SearchAutocomplete'
 
 function useIsMobile(breakpoint = 640) {
   const [mobile, setMobile] = useState(false)
@@ -18,7 +19,10 @@ function useIsMobile(breakpoint = 640) {
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const hideNav = pathname?.startsWith('/admin')
+  const isHomepage = pathname === '/'
+  const isSearchPage = pathname === '/search'
   const [user, setUser] = useState<{ name?: string } | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
   const mobile = useIsMobile()
@@ -177,6 +181,18 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
             </nav>
           </div>
         </header>
+      )}
+
+      {!hideNav && !isHomepage && !isSearchPage && (
+        <div style={{
+          maxWidth: '1050px',
+          margin: '0 auto',
+          padding: mobile ? '8px 12px' : '10px 24px',
+        }}>
+          <SearchAutocomplete
+            onSearch={(q) => router.push(`/search?q=${encodeURIComponent(q)}`)}
+          />
+        </div>
       )}
 
       {children}
