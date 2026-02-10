@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { categories, boroughs } from '@/lib/data'
+import { useRouter } from 'next/navigation'
+import { categories, boroughs, slugify, neighborhoodSlug } from '@/lib/data'
 
 interface SearchAutocompleteProps {
   initialQuery?: string
@@ -12,6 +13,7 @@ interface SearchAutocompleteProps {
 
 interface Suggestion {
   text: string
+  url: string
   matchStart: number
   matchEnd: number
 }
@@ -21,11 +23,68 @@ const allSubs = categories.flatMap(c => c.subs)
 const categoryNames = categories.map(c => c.name)
 const boroughNames = boroughs.map(b => b.name)
 const allNeighborhoods = boroughs.flatMap(b => b.neighborhoods)
-
-// All searchable terms (categories + subcategories) for "{term} in {location}" combos
 const allTerms = [...new Set([...categoryNames, ...allSubs])]
 
-// NYC abbreviation map for neighborhood/borough matching
+// Lookup helpers
+function findCategory(name: string) {
+  return categories.find(c => c.name === name)
+}
+function findCategoryForSub(subName: string) {
+  return categories.find(c => c.subs.includes(subName))
+}
+function findBorough(name: string) {
+  return boroughs.find(b => b.name === name)
+}
+function findBoroughForNeighborhood(nhName: string) {
+  return boroughs.find(b => b.neighborhoods.includes(nhName))
+}
+
+// Build the real URL for a suggestion
+function buildUrl(text: string): string {
+  const inIdx = text.toLowerCase().indexOf(' in ')
+  if (inIdx !== -1) {
+    const term = text.slice(0, inIdx).trim()
+    const location = text.slice(inIdx + 4).trim()
+
+    const cat = findCategory(term)
+    const parentCat = !cat ? findCategoryForSub(term) : undefined
+    const borough = findBorough(location)
+    const nhBorough = !borough ? findBoroughForNeighborhood(location) : undefined
+
+    if (cat && borough) {
+      // "Jobs in Brooklyn" → /brooklyn/jobs
+      return `/${borough.slug}/${cat.slug}`
+    }
+    if (cat && nhBorough) {
+      // "Jobs in East Village" → /manhattan/east-village/jobs
+      return `/${nhBorough.slug}/${neighborhoodSlug(location)}/${cat.slug}`
+    }
+    if (parentCat && borough) {
+      // "Apartments in Brooklyn" → /brooklyn/housing/apartments
+      // Route: /{borough}/{slug} where slug=category works, but there's no /{borough}/{cat}/{sub}
+      // Best: /{borough}/{category} since /{borough}/{slug} handles categories
+      return `/${borough.slug}/${parentCat.slug}`
+    }
+    if (parentCat && nhBorough) {
+      // "Apartments in East Village" → /manhattan/east-village/housing/apartments
+      return `/${nhBorough.slug}/${neighborhoodSlug(location)}/${parentCat.slug}/${slugify(term)}`
+    }
+  }
+
+  // Plain term (no "in")
+  const cat = findCategory(text)
+  if (cat) return `/listings/${cat.slug}`
+
+  const parentCat = findCategoryForSub(text)
+  if (parentCat) return `/listings/${parentCat.slug}/${slugify(text)}`
+
+  const borough = findBorough(text)
+  if (borough) return `/${borough.slug}`
+
+  return `/search?q=${encodeURIComponent(text)}`
+}
+
+// NYC abbreviation map
 const nycAbbreviations: Record<string, string[]> = {
   'lic': ['Long Island City'],
   'ues': ['Upper East Side'],
@@ -70,13 +129,13 @@ function matchesLocation(name: string, query: string): boolean {
   const nameLower = name.toLowerCase()
   const qLower = query.toLowerCase()
   if (nameLower.startsWith(qLower) || nameLower.includes(qLower)) return true
-  // Check abbreviations
   const abbrevMatches = nycAbbreviations[qLower]
   if (abbrevMatches) return abbrevMatches.some(a => a.toLowerCase() === nameLower)
   return false
 }
 
 export default function SearchAutocomplete({ initialQuery = '', onSearch, placeholder, autoFocus = false }: SearchAutocompleteProps) {
+  const router = useRouter()
   const [query, setQuery] = useState(initialQuery)
   const [open, setOpen] = useState(false)
   const [selectedIdx, setSelectedIdx] = useState(-1)
@@ -87,12 +146,11 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null)
 
-  // Check for speech recognition support
   const hasSpeech = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
 
   // Rotate placeholder tips
   useEffect(() => {
-    if (placeholder) return // custom placeholder overrides tips
+    if (placeholder) return
     const interval = setInterval(() => {
       setTipIdx(i => (i + 1) % searchTips.length)
     }, 3500)
@@ -101,12 +159,11 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
 
   const currentPlaceholder = placeholder || searchTips[tipIdx]
 
-  // Eagerly computed base suggestions: terms + "{term} in {borough}" combos + borough names
+  // Eagerly computed base suggestions
   const baseSuggestions = useMemo(() => {
     const items: string[] = []
     for (const name of categoryNames) items.push(name)
     for (const sub of allSubs) items.push(sub)
-    // "{term} in {borough}" for both category names and subcategories
     for (const term of allTerms) {
       for (const b of boroughNames) {
         items.push(`${term} in ${b}`)
@@ -116,12 +173,11 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
     return items
   }, [])
 
-  // Generate neighborhood combos lazily based on input
+  // Lazy neighborhood combos
   const getNeighborhoodSuggestions = useCallback((term: string, location: string): string[] => {
     const results: string[] = []
     const termLower = term.toLowerCase()
     const matchingNeighborhoods = allNeighborhoods.filter(n => matchesLocation(n, location))
-    // Also check boroughs via abbreviations
     const matchingBoroughs = boroughNames.filter(b => matchesLocation(b, location))
 
     for (const n of matchingNeighborhoods) {
@@ -132,7 +188,6 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
         }
       }
     }
-    // Borough abbreviation matches (e.g. "bk" → "Brooklyn")
     for (const b of matchingBoroughs) {
       for (const t of allTerms) {
         if (t.toLowerCase().startsWith(termLower) || t.toLowerCase().includes(termLower)) {
@@ -159,26 +214,20 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
       if (location) {
         const termLower = term.toLowerCase()
         candidates = []
-
-        // From base suggestions (borough combos)
         for (const s of baseSuggestions) {
           const sLower = s.toLowerCase()
           const sInIdx = sLower.indexOf(' in ')
           if (sInIdx === -1) continue
           const sTerm = sLower.slice(0, sInIdx)
-          const sLoc = sLower.slice(sInIdx + 4)
           if ((sTerm.startsWith(termLower) || sTerm.includes(termLower)) &&
               matchesLocation(s.slice(sInIdx + 4), location)) {
             candidates.push(s)
           }
         }
-        // Neighborhood combos (lazy)
         const nhSuggestions = getNeighborhoodSuggestions(term, location)
         candidates.push(...nhSuggestions)
-
         matchTerm = q
       } else {
-        // User typed "something in " but no location yet — show borough combos for the term
         const termLower = term.toLowerCase()
         candidates = baseSuggestions.filter(s => {
           const sLower = s.toLowerCase()
@@ -190,7 +239,6 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
         matchTerm = term
       }
     } else {
-      // No "in" — match against full list
       const qLower = q.toLowerCase()
       candidates = baseSuggestions.filter(s => {
         const sLower = s.toLowerCase()
@@ -218,12 +266,12 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
       return a.length - b.length
     })
 
-    // Take top 7 and compute match highlights
     return unique.slice(0, 7).map(text => {
       const textLower = text.toLowerCase()
       const idx = textLower.indexOf(qLower)
       return {
         text,
+        url: buildUrl(text),
         matchStart: idx >= 0 ? idx : 0,
         matchEnd: idx >= 0 ? idx + qLower.length : 0,
       }
@@ -241,16 +289,22 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  // Reset selection when suggestions change
   useEffect(() => {
     setSelectedIdx(-1)
   }, [suggestions])
 
-  const submit = (value: string) => {
-    const trimmed = value.trim()
+  // Navigate directly to suggestion URL
+  const navigate = (suggestion: Suggestion) => {
+    setOpen(false)
+    setQuery(suggestion.text)
+    router.push(suggestion.url)
+  }
+
+  // Free-text search fallback (no suggestion selected)
+  const submitFreeText = () => {
+    const trimmed = query.trim()
     if (!trimmed) return
     setOpen(false)
-    setQuery(trimmed)
     onSearch(trimmed)
   }
 
@@ -258,7 +312,7 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
     if (!open || suggestions.length === 0) {
       if (e.key === 'Enter') {
         e.preventDefault()
-        submit(query)
+        submitFreeText()
       }
       return
     }
@@ -275,9 +329,9 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
       case 'Enter':
         e.preventDefault()
         if (selectedIdx >= 0 && selectedIdx < suggestions.length) {
-          submit(suggestions[selectedIdx].text)
+          navigate(suggestions[selectedIdx])
         } else {
-          submit(query)
+          submitFreeText()
         }
         break
       case 'Escape':
@@ -399,7 +453,7 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
         </div>
         <button
           type="button"
-          onClick={() => submit(query)}
+          onClick={submitFreeText}
           style={{
             backgroundColor: 'transparent',
             color: '#1a56db',
@@ -442,7 +496,7 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
               key={s.text}
               role="option"
               aria-selected={i === selectedIdx}
-              onMouseDown={(e) => { e.preventDefault(); submit(s.text) }}
+              onMouseDown={(e) => { e.preventDefault(); navigate(s) }}
               onMouseEnter={() => setSelectedIdx(i)}
               style={{
                 padding: '8px 14px',
@@ -459,7 +513,6 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
         </ul>
       )}
 
-      {/* Mic pulse animation */}
       {listening && (
         <style>{`
           @keyframes mic-pulse {
