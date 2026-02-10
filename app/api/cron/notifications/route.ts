@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { sendEmail } from '@/lib/email'
-import { listingExpiringEmail, listingExpiredEmail } from '@/lib/email-templates'
+import { listingExpiringEmail, listingExpiredEmail, adminDailyDigestEmail, DailyDigestStats } from '@/lib/email-templates'
 
 export async function GET(request: NextRequest) {
   // Verify cron secret
@@ -22,8 +22,12 @@ export async function GET(request: NextRequest) {
 
   // Use Eastern Time for date boundaries
   const etNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }))
+  const todayStart = new Date(etNow)
+  todayStart.setHours(0, 0, 0, 0)
+  const todayStartISO = todayStart.toISOString()
 
-  // 1. Listings expiring in 3 days — send reminder
+  // ── 1. Listings expiring in 3 days — send reminder ──
+
   const threeDaysFromNow = new Date(etNow.getTime() + 3 * 86400000)
   const threeDaysStart = new Date(threeDaysFromNow.setHours(0, 0, 0, 0)).toISOString()
   const threeDaysEnd = new Date(threeDaysFromNow.setHours(23, 59, 59, 999)).toISOString()
@@ -34,7 +38,7 @@ export async function GET(request: NextRequest) {
     .eq('status', 'active')
     .gte('expires_at', threeDaysStart)
     .lte('expires_at', threeDaysEnd)
-    .not('users.email', 'like', '%@example.com') // Skip seed users
+    .not('users.email', 'like', '%@example.com')
 
   for (const listing of expiringListings || []) {
     const user = listing.users as unknown as { email: string; name: string | null }
@@ -50,9 +54,8 @@ export async function GET(request: NextRequest) {
     if (result.success) expiringNotified++
   }
 
-  // 2. Listings that expired today — send expired notice
-  const todayStart = new Date(etNow)
-  todayStart.setHours(0, 0, 0, 0)
+  // ── 2. Listings that expired today — send expired notice ──
+
   const yesterdayStart = new Date(todayStart.getTime() - 86400000)
 
   const { data: expiredListings } = await db
@@ -60,10 +63,9 @@ export async function GET(request: NextRequest) {
     .select('id, title, user_id, users!inner(email, name)')
     .eq('status', 'active')
     .gte('expires_at', yesterdayStart.toISOString())
-    .lte('expires_at', todayStart.toISOString())
+    .lte('expires_at', todayStartISO)
     .not('users.email', 'like', '%@example.com')
 
-  // Update expired listings to 'expired' status
   if (expiredListings && expiredListings.length > 0) {
     const ids = expiredListings.map(l => l.id)
     await db.from('listings').update({ status: 'expired' }).in('id', ids)
@@ -78,10 +80,92 @@ export async function GET(request: NextRequest) {
     if (result.success) expiredNotified++
   }
 
+  // ── 3. Daily admin digest ──
+
+  let digestSent = false
+  try {
+    // Gather today's stats (real users only, exclude @example.com seed users)
+    const [
+      { count: newUsers },
+      { count: newListings },
+      { count: newPorchPosts },
+      { count: newReplies },
+      { count: newMessages },
+      { count: pendingFlags },
+      { count: totalUsers },
+      { count: totalListings },
+    ] = await Promise.all([
+      db.from('users').select('id', { count: 'exact', head: true })
+        .gte('created_at', todayStartISO)
+        .not('email', 'like', '%@example.com')
+        .eq('verified', true),
+      db.from('listings').select('id', { count: 'exact', head: true })
+        .gte('created_at', todayStartISO)
+        .not('user_id', 'in', `(SELECT id FROM users WHERE email LIKE '%@example.com')`),
+      db.from('porch_posts').select('id', { count: 'exact', head: true })
+        .gte('created_at', todayStartISO)
+        .not('user_id', 'in', `(SELECT id FROM users WHERE email LIKE '%@example.com')`),
+      db.from('porch_replies').select('id', { count: 'exact', head: true })
+        .gte('created_at', todayStartISO)
+        .not('user_id', 'in', `(SELECT id FROM users WHERE email LIKE '%@example.com')`),
+      db.from('messages').select('id', { count: 'exact', head: true })
+        .gte('created_at', todayStartISO),
+      db.from('flagged_content').select('id', { count: 'exact', head: true })
+        .eq('status', 'pending'),
+      db.from('users').select('id', { count: 'exact', head: true })
+        .not('email', 'like', '%@example.com')
+        .eq('verified', true),
+      db.from('listings').select('id', { count: 'exact', head: true })
+        .eq('status', 'active'),
+    ])
+
+    // Seed posts today
+    const { count: seedPostsToday } = await db
+      .from('porch_posts')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', todayStartISO)
+      .filter('user_id', 'in', `(SELECT id FROM users WHERE email LIKE '%@example.com')`)
+
+    const stats: DailyDigestStats = {
+      newUsers: newUsers || 0,
+      newListings: newListings || 0,
+      newPorchPosts: newPorchPosts || 0,
+      newReplies: newReplies || 0,
+      newMessages: newMessages || 0,
+      pendingFlags: pendingFlags || 0,
+      seedPostsToday: seedPostsToday || 0,
+      totalUsers: totalUsers || 0,
+      totalListings: totalListings || 0,
+      expiringNotified,
+      expiredNotified,
+    }
+
+    // Send to all admins
+    const { data: admins } = await db
+      .from('users')
+      .select('email')
+      .eq('role', 'admin')
+      .eq('banned', false)
+      .not('email', 'like', '%@example.com')
+
+    if (admins && admins.length > 0) {
+      const digestTemplate = adminDailyDigestEmail(stats)
+      for (const admin of admins) {
+        if (admin.email) {
+          await sendEmail(admin.email, digestTemplate)
+        }
+      }
+      digestSent = true
+    }
+  } catch (err) {
+    console.error('Daily digest error:', err)
+  }
+
   return NextResponse.json({
     ok: true,
     expiring_notified: expiringNotified,
     expired_notified: expiredNotified,
+    digest_sent: digestSent,
     timestamp: new Date().toISOString(),
   })
 }

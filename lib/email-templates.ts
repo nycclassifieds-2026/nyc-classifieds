@@ -446,6 +446,91 @@ export function helpfulVoteEmail(
   }
 }
 
+export function adminNewSignupEmail(
+  userName: string,
+  userEmail: string,
+  neighborhood: string,
+  accountType: string,
+): { subject: string; html: string } {
+  const n = esc(userName), e = esc(userEmail), nh = esc(neighborhood), at = esc(accountType)
+  return {
+    subject: `New verified ${at} user: ${n}`,
+    html: `
+      ${WRAPPER_START}
+        ${HEADER}
+        <p style="color: #475569; font-size: 0.875rem; margin-bottom: 0.5rem;">A new user just completed verification.</p>
+        <div style="background: #f1f5f9; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+          <p style="color: #475569; font-size: 0.875rem; margin: 0 0 0.25rem;"><strong>Name:</strong> ${n}</p>
+          <p style="color: #475569; font-size: 0.875rem; margin: 0 0 0.25rem;"><strong>Email:</strong> ${e}</p>
+          <p style="color: #475569; font-size: 0.875rem; margin: 0 0 0.25rem;"><strong>Neighborhood:</strong> ${nh || 'Not set'}</p>
+          <p style="color: #475569; font-size: 0.875rem; margin: 0;"><strong>Account:</strong> ${at}</p>
+        </div>
+        ${BUTTON(`${BASE_URL}/admin`, 'View in Admin')}
+        ${FOOTER}
+      ${WRAPPER_END}
+    `,
+  }
+}
+
+export interface DailyDigestStats {
+  newUsers: number
+  newListings: number
+  newPorchPosts: number
+  newReplies: number
+  newMessages: number
+  pendingFlags: number
+  seedPostsToday: number
+  totalUsers: number
+  totalListings: number
+  expiringNotified: number
+  expiredNotified: number
+}
+
+export function adminDailyDigestEmail(stats: DailyDigestStats): { subject: string; html: string } {
+  const row = (label: string, val: number | string) =>
+    `<tr><td style="padding: 4px 12px 4px 0; color: #475569; font-size: 0.875rem;">${label}</td><td style="padding: 4px 0; font-weight: 600; color: #0f172a; font-size: 0.875rem;">${val}</td></tr>`
+
+  return {
+    subject: `Daily Digest: ${stats.newUsers} new users, ${stats.newListings} listings, ${stats.newPorchPosts} porch posts`,
+    html: `
+      ${WRAPPER_START}
+        ${HEADER}
+        <p style="color: #475569; font-size: 0.875rem; margin-bottom: 1rem;">Here's today's activity on The NYC Classifieds.</p>
+
+        <h3 style="font-size: 0.875rem; font-weight: 700; color: #0f172a; margin: 1rem 0 0.5rem;">Today's Activity (Real Users)</h3>
+        <table style="border-collapse: collapse;">
+          ${row('New verified users', stats.newUsers)}
+          ${row('New listings', stats.newListings)}
+          ${row('New porch posts', stats.newPorchPosts)}
+          ${row('New replies', stats.newReplies)}
+          ${row('New messages', stats.newMessages)}
+        </table>
+
+        <h3 style="font-size: 0.875rem; font-weight: 700; color: #0f172a; margin: 1rem 0 0.5rem;">Moderation</h3>
+        <table style="border-collapse: collapse;">
+          ${row('Pending flags', stats.pendingFlags)}
+        </table>
+
+        <h3 style="font-size: 0.875rem; font-weight: 700; color: #0f172a; margin: 1rem 0 0.5rem;">Automated</h3>
+        <table style="border-collapse: collapse;">
+          ${row('Seed posts today', stats.seedPostsToday)}
+          ${row('Expiring reminders sent', stats.expiringNotified)}
+          ${row('Expired notices sent', stats.expiredNotified)}
+        </table>
+
+        <h3 style="font-size: 0.875rem; font-weight: 700; color: #0f172a; margin: 1rem 0 0.5rem;">Totals</h3>
+        <table style="border-collapse: collapse;">
+          ${row('Total users', stats.totalUsers)}
+          ${row('Total active listings', stats.totalListings)}
+        </table>
+
+        ${BUTTON(`${BASE_URL}/admin`, 'Open Admin Dashboard')}
+        ${FOOTER}
+      ${WRAPPER_END}
+    `,
+  }
+}
+
 export function businessProfileLiveEmail(
   name: string,
   businessName: string,

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { haversineDistance } from '@/lib/geocode'
 import { sendEmail } from '@/lib/email'
-import { verificationSuccessEmail, welcomeEmail } from '@/lib/email-templates'
+import { verificationSuccessEmail, welcomeEmail, adminNewSignupEmail } from '@/lib/email-templates'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const MAX_DISTANCE_MILES = 0.1
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 
   // Send verification + welcome emails before returning
   try {
-    const { data: u } = await db.from('users').select('email, name, address').eq('id', userId).single()
+    const { data: u } = await db.from('users').select('email, name, address, account_type').eq('id', userId).single()
     if (u?.email && !u.email.endsWith('@example.com')) {
       const nh = u.address?.split(',')[0]?.trim() || ''
       const [verRes, welRes] = await Promise.all([
@@ -92,6 +92,25 @@ export async function POST(request: NextRequest) {
       ])
       if (verRes.error) console.error('Verification email failed:', verRes.error)
       if (welRes.error) console.error('Welcome email failed:', welRes.error)
+
+      // Notify admins of new real user signup (async)
+      ;(async () => {
+        try {
+          const { data: admins } = await db.from('users').select('email').in('role', ['admin']).eq('banned', false)
+          if (admins) {
+            for (const admin of admins) {
+              if (admin.email && !admin.email.endsWith('@example.com')) {
+                await sendEmail(admin.email, adminNewSignupEmail(
+                  u.name || 'Unknown',
+                  u.email,
+                  nh,
+                  u.account_type || 'personal',
+                ))
+              }
+            }
+          }
+        } catch {}
+      })()
     }
   } catch (err) {
     console.error('Signup email error:', err)
