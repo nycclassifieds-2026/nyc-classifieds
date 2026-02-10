@@ -243,7 +243,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 
       {children}
 
-      {!hideNav && (
+      {!hideNav && !isAuthPage && (
         <footer style={{
           backgroundColor: '#111827',
           marginTop: '48px',
