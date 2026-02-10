@@ -1,0 +1,170 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import ListingGrid from '@/app/components/ListingGrid'
+
+interface Listing {
+  id: number
+  title: string
+  price: number | null
+  images: string[]
+  location: string | null
+  category_slug: string
+  created_at: string
+  users: { name: string; verified: boolean }
+}
+
+const categories = [
+  { slug: 'for-sale', name: 'For Sale' },
+  { slug: 'housing', name: 'Housing' },
+  { slug: 'services', name: 'Services' },
+  { slug: 'jobs', name: 'Jobs' },
+  { slug: 'community', name: 'Community' },
+  { slug: 'gigs', name: 'Gigs' },
+]
+
+export default function SearchClient() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const [query, setQuery] = useState(searchParams.get('q') || '')
+  const [category, setCategory] = useState(searchParams.get('category') || '')
+  const [sort, setSort] = useState(searchParams.get('sort') || 'relevance')
+  const [listings, setListings] = useState<Listing[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [searched, setSearched] = useState(false)
+
+  const doSearch = (q: string, cat: string, s: string, p: number) => {
+    if (!q.trim()) return
+    setLoading(true)
+    setSearched(true)
+    const params = new URLSearchParams({ q: q.trim(), sort: s, page: String(p) })
+    if (cat) params.set('category', cat)
+
+    // Update URL
+    router.replace(`/search?${params}`, { scroll: false })
+
+    fetch(`/api/search?${params}`)
+      .then(r => r.json())
+      .then(data => {
+        setListings(data.listings || [])
+        setTotal(data.total || 0)
+      })
+      .catch(() => setListings([]))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (q) {
+      setQuery(q)
+      doSearch(q, searchParams.get('category') || '', searchParams.get('sort') || 'relevance', 1)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setPage(1)
+    doSearch(query, category, sort, 1)
+  }
+
+  return (
+    <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Search Listings</h1>
+
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <input
+          type="text"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Search listings..."
+          style={{
+            flex: 1,
+            minWidth: '200px',
+            padding: '0.75rem 1rem',
+            borderRadius: '0.5rem',
+            border: '1px solid #e2e8f0',
+            fontSize: '1rem',
+            outline: 'none',
+          }}
+        />
+        <button type="submit" style={{
+          padding: '0.75rem 1.5rem',
+          borderRadius: '0.5rem',
+          border: 'none',
+          backgroundColor: '#2563eb',
+          color: '#fff',
+          fontSize: '1rem',
+          fontWeight: 600,
+          cursor: 'pointer',
+        }}>
+          Search
+        </button>
+      </form>
+
+      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+        <select
+          value={category}
+          onChange={e => { setCategory(e.target.value); doSearch(query, e.target.value, sort, 1) }}
+          style={selectStyle}
+        >
+          <option value="">All categories</option>
+          {categories.map(c => (
+            <option key={c.slug} value={c.slug}>{c.name}</option>
+          ))}
+        </select>
+        <select
+          value={sort}
+          onChange={e => { setSort(e.target.value); doSearch(query, category, e.target.value, 1) }}
+          style={selectStyle}
+        >
+          <option value="relevance">Most relevant</option>
+          <option value="newest">Newest first</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+        </select>
+      </div>
+
+      {searched && (
+        <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem' }}>
+          {total} result{total !== 1 ? 's' : ''} for &ldquo;{searchParams.get('q') || query}&rdquo;
+        </p>
+      )}
+
+      {loading ? (
+        <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Searching...</div>
+      ) : (
+        <ListingGrid listings={listings} />
+      )}
+
+      {total > 24 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '2rem' }}>
+          <button disabled={page <= 1} onClick={() => { setPage(p => p - 1); doSearch(query, category, sort, page - 1) }} style={pageBtnStyle}>Previous</button>
+          <span style={{ padding: '0.5rem 1rem', color: '#64748b', fontSize: '0.875rem' }}>Page {page}</span>
+          <button disabled={listings.length < 24} onClick={() => { setPage(p => p + 1); doSearch(query, category, sort, page + 1) }} style={pageBtnStyle}>Next</button>
+        </div>
+      )}
+    </main>
+  )
+}
+
+const selectStyle: React.CSSProperties = {
+  padding: '0.5rem 0.75rem',
+  borderRadius: '0.5rem',
+  border: '1px solid #e2e8f0',
+  fontSize: '0.875rem',
+  backgroundColor: '#fff',
+  outline: 'none',
+}
+
+const pageBtnStyle: React.CSSProperties = {
+  padding: '0.5rem 1rem',
+  borderRadius: '0.5rem',
+  border: '1px solid #e2e8f0',
+  backgroundColor: '#fff',
+  cursor: 'pointer',
+  fontSize: '0.875rem',
+}
