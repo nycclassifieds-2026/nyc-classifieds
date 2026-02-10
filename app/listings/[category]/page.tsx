@@ -36,14 +36,14 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
     '@type': 'CollectionPage',
     name: `${cat?.name || category} in New York City`,
     description: `Browse free ${(cat?.name || category).toLowerCase()} listings across all five NYC boroughs.`,
-    url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com'}/listings/${category}`,
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'}/listings/${category}`,
     isPartOf: { '@type': 'WebSite', name: 'The NYC Classifieds' },
     mainEntity: {
       '@type': 'ItemList',
       numberOfItems: subItems.length,
       itemListElement: subItems.map((item, i) => ({
         '@type': 'ListItem', position: i + 1, name: item.name,
-        url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com'}${item.url}`,
+        url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'}${item.url}`,
       })),
     },
   }
@@ -52,8 +52,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com' },
-      { '@type': 'ListItem', position: 2, name: cat?.name || category, item: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com'}/listings/${category}` },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com' },
+      { '@type': 'ListItem', position: 2, name: cat?.name || category, item: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'}/listings/${category}` },
     ],
   }
 

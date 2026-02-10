@@ -5,14 +5,10 @@ import { buildMetadata } from '@/lib/seo'
 import SubcategoryPageClient from './SubcategoryPageClient'
 import ListingDetailClient from './ListingDetailClient'
 
+export const dynamicParams = true
+
 export async function generateStaticParams() {
-  const params: { category: string; subcategory: string }[] = []
-  for (const cat of categories) {
-    for (const sub of cat.subs) {
-      params.push({ category: cat.slug, subcategory: slugify(sub) })
-    }
-  }
-  return params
+  return []
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string; subcategory: string }> }): Promise<Metadata> {
@@ -39,7 +35,7 @@ export default async function SubcategoryOrDetailPage({ params }: { params: Prom
 
   if (isSubcategory) {
     const subName = cat?.subs.find(s => slugify(s) === subcategory) || subcategory
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com'
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
 
     const jsonLd = {
       '@context': 'https://schema.org',

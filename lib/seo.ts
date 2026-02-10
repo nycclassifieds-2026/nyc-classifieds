@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 const SITE_NAME = 'The NYC Classifieds'
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
 const SITE_DESC = 'Free local classifieds for New York City. Buy, sell, find housing, jobs, and services from real, geo-verified New Yorkers.'
 
 // ─── Metadata builder ───

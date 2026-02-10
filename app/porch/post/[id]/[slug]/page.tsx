@@ -5,7 +5,7 @@ import PorchPostClient from './PorchPostClient'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string; slug: string }> }): Promise<Metadata> {
   const { id, slug } = await params
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
 
   // Attempt to fetch post data for metadata
   try {
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function PorchPostPage({ params }: { params: Promise<{ id: string; slug: string }> }) {
   const { id, slug } = await params
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
 
   const readableSlug = slug.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
 

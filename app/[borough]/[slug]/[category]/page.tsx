@@ -5,16 +5,10 @@ import { boroughs, boroughBySlug, categoryBySlug, findNeighborhood, neighborhood
 import { buildMetadata } from '@/lib/seo'
 import NeighborhoodCategoryClient from './NeighborhoodCategoryClient'
 
+export const dynamicParams = true
+
 export async function generateStaticParams() {
-  const params: { borough: string; slug: string; category: string }[] = []
-  for (const b of boroughs) {
-    for (const n of b.neighborhoods) {
-      for (const cat of categories) {
-        params.push({ borough: b.slug, slug: neighborhoodSlug(n), category: cat.slug })
-      }
-    }
-  }
-  return params
+  return []
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ borough: string; slug: string; category: string }> }): Promise<Metadata> {
@@ -39,7 +33,7 @@ export default async function NeighborhoodCategoryPage({ params }: { params: Pro
   const cat = categoryBySlug[category]
   if (!b || !nh || !cat) notFound()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
 
   const breadcrumbLd = {
     '@context': 'https://schema.org', '@type': 'BreadcrumbList',

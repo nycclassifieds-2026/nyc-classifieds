@@ -33,7 +33,7 @@ function getCorsHeaders(request: NextRequest): Record<string, string> {
 
   let allowOrigin: string
   if (isProduction) {
-    const prodDomain = process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com'
+    const prodDomain = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
     allowOrigin = origin === prodDomain || origin === `https://www.${new URL(prodDomain).hostname}`
       ? origin
       : prodDomain

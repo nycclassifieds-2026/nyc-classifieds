@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com',
+    canonical: process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com',
   },
 }
 

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { boroughs, categories, neighborhoodSlug, slugify, porchPostTypes } from '@/lib/data'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date().toISOString()

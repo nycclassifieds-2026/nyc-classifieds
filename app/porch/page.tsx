@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function PorchPage() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
 
   const forumLd = {
     '@context': 'https://schema.org',

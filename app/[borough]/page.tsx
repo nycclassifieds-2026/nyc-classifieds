@@ -27,7 +27,7 @@ export default async function BoroughPage({ params }: { params: Promise<{ boroug
   const b = boroughBySlug[borough]
   if (!b) notFound()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nycclassifieds.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
 
   const placeLd = {
     '@context': 'https://schema.org',
