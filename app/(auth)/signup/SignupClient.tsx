@@ -233,7 +233,7 @@ export default function SignupClient() {
   const currentIdx = visibleSteps.indexOf(step)
 
   return (
-    <main style={{ maxWidth: '480px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+    <main style={{ maxWidth: '480px', margin: '0 auto', padding: '1.5rem', minHeight: 'calc(100vh - 56px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       {/* Progress */}
       {step !== 'done' && (
         <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '2rem' }}>

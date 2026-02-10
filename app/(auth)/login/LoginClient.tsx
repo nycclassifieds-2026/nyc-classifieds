@@ -31,7 +31,7 @@ export default function LoginClient() {
   }
 
   return (
-    <main style={{ maxWidth: '400px', margin: '0 auto', padding: '3rem 1.5rem' }}>
+    <main style={{ maxWidth: '400px', margin: '0 auto', padding: '1.5rem', minHeight: 'calc(100vh - 56px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>Log in</h1>
       <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>Enter your email and 4-digit PIN.</p>
 
