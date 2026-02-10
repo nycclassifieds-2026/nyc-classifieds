@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { haversineDistance } from '@/lib/geocode'
+import { sendEmail } from '@/lib/email'
+import { verificationSuccessEmail, welcomeEmail } from '@/lib/email-templates'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
-const MAX_DISTANCE_MILES = 0.01
+const MAX_DISTANCE_MILES = 0.1
 
 export async function POST(request: NextRequest) {
   const userId = request.cookies.get(COOKIE_NAME)?.value
@@ -78,6 +80,17 @@ export async function POST(request: NextRequest) {
     entity_id: parseInt(userId),
     details: { distance: distance.toFixed(3), lat: geoLat, lon: geoLon },
   })
+
+  // Send verification success email (async, don't block response)
+  ;(async () => {
+    try {
+      const { data: u } = await db.from('users').select('email, name, address').eq('id', userId).single()
+      if (!u?.email || u.email.endsWith('@example.com')) return
+      const nh = u.address?.split(',')[0]?.trim() || ''
+      await sendEmail(u.email, verificationSuccessEmail(u.name || 'there', nh))
+      await sendEmail(u.email, welcomeEmail(u.name || 'there', nh))
+    } catch {}
+  })()
 
   return NextResponse.json({ verified: true, distance: distance.toFixed(2) })
 }

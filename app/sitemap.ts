@@ -117,13 +117,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }
   }
 
-  // Static pages
-  for (const page of ['about', 'safety', 'how-it-works', 'guidelines', 'faq', 'contact', 'terms', 'privacy', 'dmca']) {
+  // Static pages (only include pages that actually exist)
+  for (const page of ['search', 'porch']) {
     entries.push({
       url: `${SITE_URL}/${page}`,
       lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.3,
+      changeFrequency: 'daily',
+      priority: 0.5,
     })
   }
 

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { sendEmail } from '@/lib/email'
+import { listingLiveEmail } from '@/lib/email-templates'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const PAGE_SIZE = 24
@@ -16,12 +18,19 @@ export async function GET(request: NextRequest) {
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
   const minPrice = searchParams.get('minPrice')
   const maxPrice = searchParams.get('maxPrice')
+  const userId = searchParams.get('user')
 
   const db = getSupabaseAdmin()
   let query = db
     .from('listings')
     .select('id, title, price, images, location, category_slug, subcategory_slug, created_at, user_id, users!inner(name, verified, selfie_url)', { count: 'exact' })
-    .eq('status', 'active')
+
+  // When filtering by user, show all their listings (any status); otherwise only active
+  if (userId) {
+    query = query.eq('user_id', parseInt(userId))
+  } else {
+    query = query.eq('status', 'active')
+  }
 
   if (category) query = query.eq('category_slug', category)
   if (subcategory) query = query.eq('subcategory_slug', subcategory)
@@ -98,6 +107,7 @@ export async function POST(request: NextRequest) {
       subcategory_slug: subcategory_slug || null,
       images: images || [],
       location: location || null,
+      expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
     })
     .select('id')
     .single()
@@ -114,6 +124,16 @@ export async function POST(request: NextRequest) {
     entity_id: listing.id,
     ip,
   })
+
+  // Send listing live email (async)
+  ;(async () => {
+    try {
+      const { data: u } = await db.from('users').select('email, name').eq('id', userId).single()
+      if (u?.email && !u.email.endsWith('@example.com')) {
+        await sendEmail(u.email, listingLiveEmail(u.name || 'there', title.trim(), listing.id, category_slug))
+      }
+    } catch {}
+  })()
 
   return NextResponse.json({ id: listing.id }, { status: 201 })
 }

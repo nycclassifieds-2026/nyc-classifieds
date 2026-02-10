@@ -22,6 +22,12 @@ const categories = [
   { slug: 'jobs', name: 'Jobs' },
   { slug: 'community', name: 'Community' },
   { slug: 'gigs', name: 'Gigs' },
+  { slug: 'personals', name: 'Personals' },
+  { slug: 'pets', name: 'Pets' },
+  { slug: 'barter', name: 'Barter' },
+  { slug: 'rentals', name: 'Rentals' },
+  { slug: 'resumes', name: 'Resumes' },
+  { slug: 'tickets', name: 'Tickets' },
 ]
 
 export default function SearchClient() {

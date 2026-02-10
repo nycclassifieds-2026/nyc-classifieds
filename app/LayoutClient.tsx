@@ -160,12 +160,12 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                   width: mobile ? '28px' : '32px',
                   height: mobile ? '28px' : '32px',
                   borderRadius: '50%',
-                  backgroundColor: '#f3f4f6',
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: '#1a56db',
+                  border: '1px solid #1a56db',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#6b7280',
+                  color: '#ffffff',
                   flexShrink: 0,
                 }}>
                   <svg width={mobile ? '14' : '16'} height={mobile ? '14' : '16'} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -223,17 +223,11 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
               <div>
                 <div className="footer-heading">Company</div>
                 {[
-                  { label: 'About', href: '/about' },
-                  { label: 'Safety Tips', href: '/safety' },
-                  { label: 'How It Works', href: '/how-it-works' },
-                  { label: 'Guidelines', href: '/guidelines' },
-                  { label: 'FAQ', href: '/faq' },
-                  { label: 'Contact', href: '/contact' },
-                  { label: 'Terms', href: '/terms' },
-                  { label: 'Privacy', href: '/privacy' },
-                  { label: 'DMCA', href: '/dmca' },
+                  { label: 'About', href: '/porch' },
+                  { label: 'Safety Tips', href: '/porch' },
+                  { label: 'Listings', href: '/listings/for-sale' },
                 ].map(l => (
-                  <Link key={l.href} href={l.href} className="footer-link">{l.label}</Link>
+                  <Link key={l.label} href={l.href} className="footer-link">{l.label}</Link>
                 ))}
               </div>
               </div>

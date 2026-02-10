@@ -627,7 +627,7 @@ export default function PorchClient({ boroughSlug, neighborhoodSlug, postTypeSlu
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Avatar user={userObj || { name: 'Anonymous', selfie_url: null }} size={32} />
                     <span
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/user/${userObj?.id}` }}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation() }}
                       style={{ fontSize: '0.8125rem', color: '#374151', fontWeight: 500, cursor: 'pointer' }}
                     >
                       {userObj?.name || 'Anonymous'}

@@ -16,6 +16,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ listings: [], total: 0, page, pageSize: PAGE_SIZE, totalPages: 0 })
   }
 
+  // Sanitize search input — strip chars that break PostgREST filter syntax
+  const safeQ = q.replace(/[.,()\\]/g, ' ').trim()
+  if (!safeQ) {
+    return NextResponse.json({ listings: [], total: 0, page, pageSize: PAGE_SIZE, totalPages: 0 })
+  }
+
   const db = getSupabaseAdmin()
 
   // Build the query using trigram ILIKE search
@@ -23,7 +29,7 @@ export async function GET(request: NextRequest) {
     .from('listings')
     .select('id, title, price, images, location, category_slug, subcategory_slug, created_at, user_id, users!inner(name, verified)', { count: 'exact' })
     .eq('status', 'active')
-    .or(`title.ilike.%${q}%,description.ilike.%${q}%`)
+    .or(`title.ilike.%${safeQ}%,description.ilike.%${safeQ}%`)
 
   if (category) query = query.eq('category_slug', category)
   if (minPrice) query = query.gte('price', parseInt(minPrice))

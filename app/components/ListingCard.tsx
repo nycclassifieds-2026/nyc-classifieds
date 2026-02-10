@@ -25,6 +25,7 @@ const categoryColors: Record<string, string> = {
   'barter': 'var(--cat-barter)',
   'rentals': 'var(--cat-rentals)',
   'resumes': 'var(--cat-resumes)',
+  'tickets': 'var(--cat-community)',
 }
 
 const COLORS = ['#2563eb','#dc2626','#059669','#d97706','#7c3aed','#db2777','#0891b2','#ea580c']
@@ -95,7 +96,7 @@ export default function ListingCard({ id, title, price, images, location, catego
           color: price === 0 || price == null ? 'var(--green-600)' : 'var(--gray-900)',
           marginBottom: '0.125rem',
         }}>
-          {price != null && price > 0 ? `$${price.toLocaleString()}` : 'Free'}
+          {price != null && price > 0 ? `$${(price / 100).toLocaleString()}` : 'Free'}
         </div>
         <div style={{
           fontSize: '0.875rem',

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { sendEmail } from '@/lib/email'
+import { newMessageEmail } from '@/lib/email-templates'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
@@ -108,6 +110,18 @@ export async function POST(request: NextRequest) {
 
   const db = getSupabaseAdmin()
 
+  // Verify listing exists and is active
+  const { data: listing } = await db
+    .from('listings')
+    .select('id')
+    .eq('id', listing_id)
+    .eq('status', 'active')
+    .single()
+
+  if (!listing) {
+    return NextResponse.json({ error: 'Listing not found or no longer active' }, { status: 404 })
+  }
+
   const { data, error } = await db
     .from('messages')
     .insert({
@@ -122,6 +136,26 @@ export async function POST(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
   }
+
+  // Send email notification to recipient (async, don't block response)
+  ;(async () => {
+    try {
+      const [recipientResult, senderResult, listingResult] = await Promise.all([
+        db.from('users').select('email, name').eq('id', recipient_id).single(),
+        db.from('users').select('name').eq('id', parseInt(userId)).single(),
+        db.from('listings').select('title').eq('id', listing_id).single(),
+      ])
+      const recipient = recipientResult.data
+      const sender = senderResult.data
+      const listing = listingResult.data
+      if (recipient?.email && !recipient.email.endsWith('@example.com') && listing?.title) {
+        await sendEmail(
+          recipient.email,
+          newMessageEmail(recipient.name || 'there', sender?.name || 'Someone', listing.title),
+        )
+      }
+    } catch {}
+  })()
 
   return NextResponse.json({ id: data.id }, { status: 201 })
 }

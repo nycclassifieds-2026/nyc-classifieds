@@ -93,9 +93,9 @@ export default function ThreadClient({ threadId }: { threadId: string }) {
             {otherUser?.verified && <span style={{ color: '#2563eb', marginLeft: '0.25rem' }}>&#10003;</span>}
           </div>
           {listing && (
-            <Link href={`/listings/${listing.id}`} style={{ fontSize: '0.75rem', color: '#2563eb' }}>
+            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
               {listing.title}
-            </Link>
+            </span>
           )}
         </div>
       </div>

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { requireAdmin, logAdminAction } from '@/lib/admin-auth'
+import { sendEmail } from '@/lib/email'
+import { listingRemovedEmail, accountBannedEmail, flagResolvedEmail } from '@/lib/email-templates'
 
 // GET — list flagged content with joined details
 export async function GET(request: NextRequest) {
@@ -98,32 +100,63 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Flag not found' }, { status: 404 })
   }
 
+  // Helper to notify the reporter when their flag is resolved
+  const notifyReporter = async (outcome: string) => {
+    try {
+      const { data: reporter } = await db.from('users').select('email, name').eq('id', flag.reporter_id).single()
+      if (reporter?.email && !reporter.email.endsWith('@example.com')) {
+        await sendEmail(reporter.email, flagResolvedEmail(reporter.name || 'there', flag.content_type, outcome))
+      }
+    } catch {}
+  }
+
   if (action === 'remove_listing' && flag.content_type === 'listing') {
+    const { data: listing } = await db.from('listings').select('title, user_id, users!inner(email, name)').eq('id', flag.content_id).single()
     await db.from('listings').update({ status: 'removed' }).eq('id', flag.content_id)
     await db.from('flagged_content').update({ status: 'resolved' }).eq('id', flagId)
     await logAdminAction(request, auth.email, 'admin_remove_flagged_listing', 'listing', flag.content_id, { flagId })
+
+    if (listing) {
+      const owner = listing.users as unknown as { email: string; name: string | null }
+      if (owner?.email && !owner.email.endsWith('@example.com')) {
+        sendEmail(owner.email, listingRemovedEmail(owner.name || 'there', listing.title)).catch(() => {})
+      }
+    }
+    notifyReporter('Content removed').catch(() => {})
+
     return NextResponse.json({ done: true })
   }
 
   if (action === 'ban_user') {
-    const targetUserId = flag.content_type === 'user' ? flag.content_id : null
+    let bannedUserId: number | null = flag.content_type === 'user' ? flag.content_id : null
     if (flag.content_type === 'listing') {
       const { data: listing } = await db.from('listings').select('user_id').eq('id', flag.content_id).single()
       if (listing) {
+        bannedUserId = listing.user_id
         await db.from('users').update({ banned: true }).eq('id', listing.user_id)
         await logAdminAction(request, auth.email, 'admin_ban_user', 'user', listing.user_id, { flagId })
       }
-    } else if (targetUserId) {
-      await db.from('users').update({ banned: true }).eq('id', targetUserId)
-      await logAdminAction(request, auth.email, 'admin_ban_user', 'user', targetUserId, { flagId })
+    } else if (bannedUserId) {
+      await db.from('users').update({ banned: true }).eq('id', bannedUserId)
+      await logAdminAction(request, auth.email, 'admin_ban_user', 'user', bannedUserId, { flagId })
     }
     await db.from('flagged_content').update({ status: 'resolved' }).eq('id', flagId)
+
+    if (bannedUserId) {
+      const { data: banned } = await db.from('users').select('email, name').eq('id', bannedUserId).single()
+      if (banned?.email && !banned.email.endsWith('@example.com')) {
+        sendEmail(banned.email, accountBannedEmail(banned.name || 'there')).catch(() => {})
+      }
+    }
+    notifyReporter('User banned').catch(() => {})
+
     return NextResponse.json({ done: true })
   }
 
   if (action === 'dismiss') {
     await db.from('flagged_content').update({ status: 'dismissed' }).eq('id', flagId)
     await logAdminAction(request, auth.email, 'admin_dismiss_flag', 'flagged_content', flagId)
+    notifyReporter('Dismissed — no action taken').catch(() => {})
     return NextResponse.json({ done: true })
   }
 

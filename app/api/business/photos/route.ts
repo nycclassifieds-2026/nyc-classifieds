@@ -28,7 +28,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Photo required' }, { status: 400 })
   }
 
-  const ext = photo.name.split('.').pop() || 'jpg'
+  // Validate file type and size
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  if (!ALLOWED_TYPES.includes(photo.type)) {
+    return NextResponse.json({ error: 'Only JPEG, PNG, WebP, and GIF images are allowed' }, { status: 400 })
+  }
+  if (photo.size > 10 * 1024 * 1024) {
+    return NextResponse.json({ error: 'Photo must be under 10MB' }, { status: 400 })
+  }
+
+  // Limit gallery to 20 photos
+  if ((user.photo_gallery || []).length >= 20) {
+    return NextResponse.json({ error: 'Maximum 20 photos allowed' }, { status: 400 })
+  }
+
+  const SAFE_EXTS: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' }
+  const ext = SAFE_EXTS[photo.type] || 'jpg'
   const filename = `biz_${userId}_${Date.now()}.${ext}`
   const buffer = Buffer.from(await photo.arrayBuffer())
 

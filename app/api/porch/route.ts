@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { moderateFields } from '@/lib/porch-moderation'
+import { sendEmail } from '@/lib/email'
+import { urgentPostLiveEmail } from '@/lib/email-templates'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const PAGE_SIZE = 20
@@ -202,6 +204,19 @@ export async function POST(request: NextRequest) {
     entity_id: post.id,
     ip,
   })
+
+  // Send confirmation email for urgent post types (async)
+  const URGENT_TYPES = new Set(['lost-and-found', 'pet-sighting', 'alert'])
+  if (URGENT_TYPES.has(post_type)) {
+    ;(async () => {
+      try {
+        const { data: u } = await db.from('users').select('email, name').eq('id', userId).single()
+        if (u?.email && !u.email.endsWith('@example.com')) {
+          await sendEmail(u.email, urgentPostLiveEmail(u.name || 'there', title.trim(), post_type, post.id))
+        }
+      } catch {}
+    })()
+  }
 
   return NextResponse.json({ id: post.id, post }, { status: 201 })
 }

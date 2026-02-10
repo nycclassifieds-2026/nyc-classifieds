@@ -123,6 +123,8 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
 
   return (
     <main style={{ maxWidth: '1050px', margin: '0 auto', padding: '24px 24px 48px' }}>
+      {/* Responsive grid for mobile */}
+      <style>{`.biz-grid { display: grid; grid-template-columns: 1fr 320px; gap: 32px; } @media (max-width: 768px) { .biz-grid { grid-template-columns: 1fr !important; } }`}</style>
       {/* Schema.org LocalBusiness */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
@@ -188,19 +190,13 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
                 Website
               </a>
             )}
-            <Link href={`/messages?to=${business.id}`}
-              style={{
-                backgroundColor: '#2563eb', color: '#fff', padding: '6px 16px',
-                borderRadius: '6px', fontSize: '0.8125rem', fontWeight: 600,
-              }}>
-              Message
-            </Link>
+            {/* Message via listing — users can message through any listing below */}
           </div>
         </div>
       </div>
 
       {/* Two-column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '32px' }} className="biz-grid">
 
         {/* Left column */}
         <div>
@@ -308,12 +304,7 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
                 {business.website.replace(/^https?:\/\//, '')}
               </a>
             )}
-            <Link href={`/messages?to=${business.id}`} style={{
-              display: 'block', textAlign: 'center', backgroundColor: '#2563eb', color: '#fff',
-              padding: '8px', borderRadius: '6px', fontSize: '0.8125rem', fontWeight: 600,
-            }}>
-              Send Message
-            </Link>
+            {/* Messaging requires listing context — users message through listings */}
           </div>
 
           {/* Member since */}

@@ -65,7 +65,7 @@ export default function Home() {
           ))}
         </nav>
         <p style={{ fontSize: '0.875rem', color: '#000000', paddingBottom: '16px', borderBottom: '1px solid #e5e7eb' }}>
-          Free. Real. Local. Verified NYC classifieds.
+          <strong>Free.</strong> Real. Local. Verified NYC classifieds.
         </p>
       </section>
 

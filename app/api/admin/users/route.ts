@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { requireAdmin, logAdminAction } from '@/lib/admin-auth'
+import { sendEmail } from '@/lib/email'
+import { accountBannedEmail, accountRestoredEmail, manuallyVerifiedEmail, roleChangedEmail } from '@/lib/email-templates'
 
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request, 'moderator')
@@ -19,7 +21,8 @@ export async function GET(request: NextRequest) {
     .select('id, email, name, verified, role, banned, created_at', { count: 'exact' })
 
   if (search) {
-    query = query.or(`email.ilike.%${search}%,name.ilike.%${search}%`)
+    const safeSearch = search.replace(/[.,()\\]/g, ' ').trim()
+    if (safeSearch) query = query.or(`email.ilike.%${safeSearch}%,name.ilike.%${safeSearch}%`)
   }
   if (role) {
     query = query.eq('role', role)
@@ -48,24 +51,41 @@ export async function PATCH(request: NextRequest) {
   const db = getSupabaseAdmin()
 
   if (action === 'toggle_verified') {
-    const { data: user } = await db.from('users').select('verified').eq('id', id).single()
+    const { data: user } = await db.from('users').select('verified, email, name').eq('id', id).single()
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
     const newVal = !user.verified
     await db.from('users').update({ verified: newVal }).eq('id', id)
     await logAdminAction(request, auth.email, 'admin_toggle_verified', 'user', id, { verified: newVal })
+
+    if (newVal && user.email && !user.email.endsWith('@example.com')) {
+      sendEmail(user.email, manuallyVerifiedEmail(user.name || 'there')).catch(() => {})
+    }
+
     return NextResponse.json({ updated: true, verified: newVal })
   }
 
   if (action === 'ban') {
+    const { data: user } = await db.from('users').select('email, name').eq('id', id).single()
     await db.from('users').update({ banned: true }).eq('id', id)
     await logAdminAction(request, auth.email, 'admin_ban_user', 'user', id)
+
+    if (user?.email && !user.email.endsWith('@example.com')) {
+      sendEmail(user.email, accountBannedEmail(user.name || 'there')).catch(() => {})
+    }
+
     return NextResponse.json({ updated: true, banned: true })
   }
 
   if (action === 'unban') {
+    const { data: user } = await db.from('users').select('email, name').eq('id', id).single()
     await db.from('users').update({ banned: false }).eq('id', id)
     await logAdminAction(request, auth.email, 'admin_unban_user', 'user', id)
+
+    if (user?.email && !user.email.endsWith('@example.com')) {
+      sendEmail(user.email, accountRestoredEmail(user.name || 'there')).catch(() => {})
+    }
+
     return NextResponse.json({ updated: true, banned: false })
   }
 
@@ -77,8 +97,14 @@ export async function PATCH(request: NextRequest) {
     if (!['user', 'moderator', 'admin'].includes(value)) {
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
     }
+    const { data: user } = await db.from('users').select('email, name').eq('id', id).single()
     await db.from('users').update({ role: value }).eq('id', id)
     await logAdminAction(request, auth.email, 'admin_change_role', 'user', id, { role: value })
+
+    if (user?.email && !user.email.endsWith('@example.com')) {
+      sendEmail(user.email, roleChangedEmail(user.name || 'there', value)).catch(() => {})
+    }
+
     return NextResponse.json({ updated: true, role: value })
   }
 

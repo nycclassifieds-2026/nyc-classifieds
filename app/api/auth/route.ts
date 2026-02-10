@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
-import { otpEmail } from '@/lib/email-templates'
+import { otpEmail, welcomeEmail, businessProfileLiveEmail } from '@/lib/email-templates'
+import { sendEmail } from '@/lib/email'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { Resend } from 'resend'
 import crypto from 'crypto'
-
-let _resend: Resend | null = null
-function getResend() {
-  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY || '')
-  return _resend
-}
 const COOKIE_NAME = 'nyc_classifieds_user'
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -97,14 +91,8 @@ export async function POST(request: NextRequest) {
       expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     })
 
-    // Send email
-    const template = otpEmail(code)
-    await getResend().emails.send({
-      from: 'NYC Classifieds <noreply@nycclassifieds.com>',
-      to: email,
-      subject: template.subject,
-      html: template.html,
-    })
+    // Send email via shared helper
+    await sendEmail(email, otpEmail(code))
 
     return NextResponse.json({ sent: true })
   }
@@ -178,25 +166,13 @@ export async function POST(request: NextRequest) {
       return res
     }
 
-    // New user — needs to set PIN
-    return NextResponse.json({
+    // New user — needs to set PIN. Set cookie now so subsequent steps work.
+    const res = NextResponse.json({
       verified: true,
       hasPin: false,
       userId: user.id,
     })
-  }
-
-  if (action === 'set-pin') {
-    const { userId, pin } = body
-    if (!userId || !pin || !/^\d{4}$/.test(pin)) {
-      return NextResponse.json({ error: 'Valid 4-digit PIN required' }, { status: 400 })
-    }
-
-    const db = getSupabaseAdmin()
-    await db.from('users').update({ pin: hashPin(pin) }).eq('id', userId)
-
-    const res = NextResponse.json({ pinSet: true })
-    res.cookies.set(COOKIE_NAME, String(userId), {
+    res.cookies.set(COOKIE_NAME, String(user.id), {
       httpOnly: true,
       secure: isProd,
       sameSite: 'lax',
@@ -204,6 +180,20 @@ export async function POST(request: NextRequest) {
       path: '/',
     })
     return res
+  }
+
+  if (action === 'set-pin') {
+    // C2 fix: Use cookie for auth instead of body userId
+    const userId = request.cookies.get(COOKIE_NAME)?.value
+    const { pin } = body
+    if (!userId || !pin || !/^\d{4}$/.test(pin)) {
+      return NextResponse.json({ error: 'Valid 4-digit PIN required' }, { status: 400 })
+    }
+
+    const db = getSupabaseAdmin()
+    await db.from('users').update({ pin: hashPin(pin) }).eq('id', userId)
+
+    return NextResponse.json({ pinSet: true })
   }
 
   if (action === 'set-name') {
@@ -227,6 +217,7 @@ export async function POST(request: NextRequest) {
 
     const db = getSupabaseAdmin()
     await db.from('users').update({ account_type: accountType }).eq('id', userId)
+
     return NextResponse.json({ accountTypeSet: true })
   }
 
@@ -278,6 +269,12 @@ export async function POST(request: NextRequest) {
       hours: hours || null,
       service_area: service_area || [],
     }).eq('id', userId)
+    // Send business profile live email (async)
+    const { data: bizUser } = await db.from('users').select('email, name').eq('id', userId).single()
+    if (bizUser?.email && !bizUser.email.endsWith('@example.com')) {
+      sendEmail(bizUser.email, businessProfileLiveEmail(bizUser.name || 'there', business_name.trim(), slug)).catch(() => {})
+    }
+
     return NextResponse.json({ businessSet: true, slug })
   }
 
@@ -286,6 +283,11 @@ export async function POST(request: NextRequest) {
     const { address, lat, lng } = body
     if (!userId || !address || lat == null || lng == null) {
       return NextResponse.json({ error: 'Address with coordinates required' }, { status: 400 })
+    }
+
+    // Validate coordinates are within NYC metro area
+    if (lat < 40.4 || lat > 41.0 || lng < -74.3 || lng > -73.6) {
+      return NextResponse.json({ error: 'Address must be in the New York City area' }, { status: 400 })
     }
 
     const db = getSupabaseAdmin()
@@ -311,7 +313,15 @@ export async function POST(request: NextRequest) {
       .eq('email', email)
       .single()
 
-    if (!user || !user.pin || user.pin !== hashPin(pin)) {
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid email or PIN' }, { status: 401 })
+    }
+
+    if (!user.pin) {
+      return NextResponse.json({ error: 'Account setup incomplete. Use the verification code option to log in and set your PIN.' }, { status: 401 })
+    }
+
+    if (user.pin !== hashPin(pin)) {
       return NextResponse.json({ error: 'Invalid email or PIN' }, { status: 401 })
     }
 

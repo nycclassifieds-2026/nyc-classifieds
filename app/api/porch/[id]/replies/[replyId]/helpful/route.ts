@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { sendEmail } from '@/lib/email'
+import { helpfulVoteEmail } from '@/lib/email-templates'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
@@ -56,7 +58,6 @@ export async function POST(
       .delete()
       .eq('id', existingVote.id)
 
-    newCount = Math.max(0, (reply.helpful_count || 0) - 1)
     voted = false
   } else {
     // Add vote
@@ -67,15 +68,40 @@ export async function POST(
         user_id: numericUserId,
       })
 
-    newCount = (reply.helpful_count || 0) + 1
     voted = true
   }
+
+  // Recount from source of truth to avoid race conditions
+  const { count } = await db
+    .from('porch_helpful_votes')
+    .select('id', { count: 'exact', head: true })
+    .eq('reply_id', parsedReplyId)
+
+  newCount = count || 0
 
   // Update the denormalized count on the reply
   await db
     .from('porch_replies')
     .update({ helpful_count: newCount })
     .eq('id', parsedReplyId)
+
+  // Notify reply author when someone votes helpful (async, only on new votes)
+  if (voted) {
+    ;(async () => {
+      try {
+        const { data: replyData } = await db.from('porch_replies').select('user_id').eq('id', parsedReplyId).single()
+        if (!replyData || replyData.user_id === numericUserId) return // don't notify self-votes
+        const { data: replyAuthor } = await db.from('users').select('email, name').eq('id', replyData.user_id).single()
+        if (!replyAuthor?.email || replyAuthor.email.endsWith('@example.com')) return
+        const { data: voter } = await db.from('users').select('name').eq('id', numericUserId).single()
+        const { data: postData } = await db.from('porch_posts').select('title').eq('id', postId).single()
+        await sendEmail(
+          replyAuthor.email,
+          helpfulVoteEmail(replyAuthor.name || 'there', voter?.name || 'Someone', postData?.title || 'a post', postId),
+        )
+      } catch {}
+    })()
+  }
 
   return NextResponse.json({ helpful_count: newCount, voted })
 }

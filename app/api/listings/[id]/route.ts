@@ -15,6 +15,7 @@ export async function GET(
     .from('listings')
     .select('*, users!inner(id, name, verified, created_at)')
     .eq('id', id)
+    .neq('status', 'removed')
     .single()
 
   if (error || !listing) {

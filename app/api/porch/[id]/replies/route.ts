@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { moderateFields } from '@/lib/porch-moderation'
+import { sendEmail } from '@/lib/email'
+import { porchReplyEmail } from '@/lib/email-templates'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const MAX_REPLIES_PER_THREAD = 3
@@ -109,6 +111,26 @@ export async function POST(
     entity_id: reply.id,
     ip,
   })
+
+  // Send email notification to post author (async, don't block response)
+  ;(async () => {
+    try {
+      const { data: postData } = await db
+        .from('porch_posts')
+        .select('title, user_id, users!inner(email, name)')
+        .eq('id', postId)
+        .single()
+      if (!postData) return
+      const postAuthor = postData.users as unknown as { email: string; name: string | null }
+      if (!postAuthor?.email || postAuthor.email.endsWith('@example.com')) return
+      if (String(postData.user_id) === userId) return // don't notify self-replies
+      const { data: replier } = await db.from('users').select('name').eq('id', userId).single()
+      await sendEmail(
+        postAuthor.email,
+        porchReplyEmail(postAuthor.name || 'there', replier?.name || 'Someone', postData.title, postId),
+      )
+    } catch {}
+  })()
 
   return NextResponse.json({ id: reply.id, reply }, { status: 201 })
 }

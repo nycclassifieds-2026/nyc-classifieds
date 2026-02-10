@@ -368,7 +368,7 @@ export default function PorchPostClient({ postId }: PorchPostClientProps) {
           <Avatar user={userObj || { name: 'Anonymous', selfie_url: null }} size={40} />
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Link href={`/user/${userObj?.id}`} style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827', textDecoration: 'none' }}>
+              <Link href={`#`} style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827', textDecoration: 'none' }}>
                 {userObj?.name || 'Anonymous'}
               </Link>
               {userObj?.verified && <VerifiedBadge size={16} />}
@@ -409,7 +409,7 @@ export default function PorchPostClient({ postId }: PorchPostClientProps) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Avatar user={replyUser || { name: 'Anonymous', selfie_url: null }} size={28} />
-                  <Link href={`/user/${replyUser?.id}`} style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#111827', textDecoration: 'none' }}>
+                  <Link href={`#`} style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#111827', textDecoration: 'none' }}>
                     {replyUser?.name || 'Anonymous'}
                   </Link>
                   {replyUser?.verified && <VerifiedBadge size={13} />}

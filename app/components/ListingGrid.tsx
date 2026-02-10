@@ -36,7 +36,7 @@ export default function ListingGrid({ listings }: Props) {
   return (
     <div className="listing-grid" style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))',
       gap: 'var(--sp-4)',
     }}>
       {listings.map(listing => (

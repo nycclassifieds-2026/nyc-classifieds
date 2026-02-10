@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { requireAdmin, logAdminAction } from '@/lib/admin-auth'
+import { sendEmail } from '@/lib/email'
+import { listingRemovedEmail } from '@/lib/email-templates'
 
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request, 'moderator')
@@ -46,6 +48,18 @@ export async function PATCH(request: NextRequest) {
   }
 
   const db = getSupabaseAdmin()
+
+  // If removing, notify the listing owner
+  if (status === 'removed') {
+    const { data: listing } = await db.from('listings').select('title, user_id, users!inner(email, name)').eq('id', id).single()
+    if (listing) {
+      const owner = listing.users as unknown as { email: string; name: string | null }
+      if (owner?.email && !owner.email.endsWith('@example.com')) {
+        sendEmail(owner.email, listingRemovedEmail(owner.name || 'there', listing.title)).catch(() => {})
+      }
+    }
+  }
+
   await db.from('listings').update({ status }).eq('id', id)
   await logAdminAction(request, auth.email, 'admin_change_listing_status', 'listing', id, { status })
 
