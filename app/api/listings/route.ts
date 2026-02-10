@@ -10,6 +10,8 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
   const category = searchParams.get('category')
   const subcategory = searchParams.get('subcategory')
+  const borough = searchParams.get('borough')
+  const neighborhood = searchParams.get('neighborhood')
   const sort = searchParams.get('sort') || 'newest'
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
   const minPrice = searchParams.get('minPrice')
@@ -23,6 +25,8 @@ export async function GET(request: NextRequest) {
 
   if (category) query = query.eq('category_slug', category)
   if (subcategory) query = query.eq('subcategory_slug', subcategory)
+  if (borough) query = query.ilike('location', `%${borough}%`)
+  if (neighborhood) query = query.ilike('location', `%${neighborhood}%`)
   if (minPrice) query = query.gte('price', parseInt(minPrice))
   if (maxPrice) query = query.lte('price', parseInt(maxPrice))
 
@@ -61,10 +65,10 @@ export async function POST(request: NextRequest) {
 
   const db = getSupabaseAdmin()
 
-  // Check verified
+  // Check verified + account type
   const { data: user } = await db
     .from('users')
-    .select('verified')
+    .select('verified, account_type')
     .eq('id', userId)
     .single()
 
@@ -74,6 +78,11 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json()
   const { title, description, price, category_slug, subcategory_slug, images, location } = body
+
+  // Services requires business profile
+  if (category_slug === 'services' && user.account_type !== 'business') {
+    return NextResponse.json({ error: 'Business profile required to post services. Create a free business profile to offer services.' }, { status: 403 })
+  }
 
   if (!title?.trim() || !category_slug) {
     return NextResponse.json({ error: 'Title and category required' }, { status: 400 })

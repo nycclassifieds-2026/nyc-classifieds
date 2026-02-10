@@ -27,12 +27,18 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin()
   const { data: user } = await db
     .from('users')
-    .select('id, email, name, verified')
+    .select('id, email, name, verified, role, banned, account_type, business_name, business_slug, business_category, website, phone, business_description, hours, service_area, photo_gallery, selfie_url')
     .eq('id', userId)
     .single()
 
   if (!user) {
     const res = NextResponse.json({ authenticated: false })
+    res.cookies.delete(COOKIE_NAME)
+    return res
+  }
+
+  if (user.banned) {
+    const res = NextResponse.json({ authenticated: false, error: 'Account is banned' })
     res.cookies.delete(COOKIE_NAME)
     return res
   }
@@ -46,13 +52,20 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     authenticated: true,
-    user: { id: user.id, email: user.email, name: user.name, verified: user.verified },
+    user: {
+      id: user.id, email: user.email, name: user.name, verified: user.verified, role: user.role,
+      account_type: user.account_type, business_name: user.business_name, business_slug: user.business_slug,
+      business_category: user.business_category, website: user.website, phone: user.phone,
+      business_description: user.business_description, hours: user.hours, service_area: user.service_area,
+      photo_gallery: user.photo_gallery, selfie_url: user.selfie_url,
+    },
     unreadMessages: count || 0,
   })
 }
 
 // POST — signup/login/verify/set-pin
 export async function POST(request: NextRequest) {
+  try {
   const ip = getClientIp(request.headers)
   const body = await request.json()
   const { action } = body
@@ -126,15 +139,19 @@ export async function POST(request: NextRequest) {
     // Create or get user
     let { data: user } = await db
       .from('users')
-      .select('id, pin, verified')
+      .select('id, pin, verified, banned')
       .eq('email', email)
       .single()
+
+    if (user?.banned) {
+      return NextResponse.json({ error: 'Account is banned' }, { status: 403 })
+    }
 
     if (!user) {
       const { data: newUser } = await db
         .from('users')
         .insert({ email })
-        .select('id, pin, verified')
+        .select('id, pin, verified, banned')
         .single()
       user = newUser
     }
@@ -201,6 +218,69 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ nameSet: true })
   }
 
+  if (action === 'set-account-type') {
+    const userId = request.cookies.get(COOKIE_NAME)?.value
+    const accountType = body.account_type
+    if (!userId || !['personal', 'business'].includes(accountType)) {
+      return NextResponse.json({ error: 'Valid account type required' }, { status: 400 })
+    }
+
+    const db = getSupabaseAdmin()
+    await db.from('users').update({ account_type: accountType }).eq('id', userId)
+    return NextResponse.json({ accountTypeSet: true })
+  }
+
+  if (action === 'set-business') {
+    const userId = request.cookies.get(COOKIE_NAME)?.value
+    if (!userId) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+
+    const { business_name, business_category, website, phone, business_description, hours, service_area } = body
+    if (!business_name?.trim()) {
+      return NextResponse.json({ error: 'Business name required' }, { status: 400 })
+    }
+
+    const db = getSupabaseAdmin()
+
+    // Get user's neighborhood for slug
+    const { data: usr } = await db.from('users').select('address').eq('id', userId).single()
+    const neighborhood = usr?.address?.split(',')[0]?.trim() || ''
+
+    // Generate unique slug: joes-plumbing-east-village
+    const baseSlug = `${business_name.trim()}-${neighborhood}`
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+
+    // Check for collisions
+    let slug = baseSlug
+    let counter = 0
+    while (true) {
+      const { data: existing } = await db
+        .from('users')
+        .select('id')
+        .eq('business_slug', slug)
+        .neq('id', userId)
+        .single()
+      if (!existing) break
+      counter++
+      slug = `${baseSlug}-${counter}`
+    }
+
+    await db.from('users').update({
+      business_name: business_name.trim(),
+      business_slug: slug,
+      business_category: business_category?.trim() || null,
+      website: website?.trim() || null,
+      phone: phone?.trim() || null,
+      business_description: business_description?.trim() || null,
+      hours: hours || null,
+      service_area: service_area || [],
+    }).eq('id', userId)
+    return NextResponse.json({ businessSet: true, slug })
+  }
+
   if (action === 'set-address') {
     const userId = request.cookies.get(COOKIE_NAME)?.value
     const { address, lat, lng } = body
@@ -227,12 +307,16 @@ export async function POST(request: NextRequest) {
     const db = getSupabaseAdmin()
     const { data: user } = await db
       .from('users')
-      .select('id, pin, name, verified')
+      .select('id, pin, name, verified, banned')
       .eq('email', email)
       .single()
 
     if (!user || !user.pin || user.pin !== hashPin(pin)) {
       return NextResponse.json({ error: 'Invalid email or PIN' }, { status: 401 })
+    }
+
+    if (user.banned) {
+      return NextResponse.json({ error: 'Account is banned' }, { status: 403 })
     }
 
     const res = NextResponse.json({
@@ -256,4 +340,8 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
+  } catch (err) {
+    console.error('Auth POST error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

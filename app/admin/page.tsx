@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import AdminClient from './AdminClient'
 
 export const metadata: Metadata = {
-  title: 'Admin — Moderation',
+  title: 'Admin Dashboard — NYC Classifieds',
 }
 
 export default function AdminPage() {

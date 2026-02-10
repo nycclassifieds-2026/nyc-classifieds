@@ -27,17 +27,18 @@ export default function HomeListings() {
   }, [])
 
   if (loading) {
-    return <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Loading...</div>
+    return <div style={{ padding: 'var(--sp-12)', textAlign: 'center', color: 'var(--gray-400)', fontSize: '0.875rem' }}>Loading...</div>
   }
 
   if (listings.length === 0) {
     return (
       <div style={{
-        padding: '3rem',
+        padding: 'var(--sp-12)',
         textAlign: 'center',
-        color: '#94a3b8',
-        border: '1px dashed #e2e8f0',
-        borderRadius: '0.75rem',
+        color: 'var(--gray-400)',
+        border: '1px dashed var(--gray-200)',
+        borderRadius: '8px',
+        fontSize: '0.875rem',
       }}>
         No listings yet. Be the first to post!
       </div>

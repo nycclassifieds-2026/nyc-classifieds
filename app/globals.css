@@ -1,31 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display&display=swap');
 @import "tailwindcss";
 
+/* ─── Design System: The NYC Classifieds ─── */
 :root {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-card: #ffffff;
-  --border-color: #e2e8f0;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --accent-blue: #2563eb;
-  --accent-green: #16a34a;
-  --accent-orange: #ea580c;
-  --gradient-primary: linear-gradient(135deg, #2563eb, #3b82f6);
-  --gradient-cta: linear-gradient(135deg, #2563eb, #1d4ed8);
-  --gradient-success: linear-gradient(135deg, #16a34a, #15803d);
+  /* Primary */
+  --blue-700: #1a56db;
+  --blue-600: #2563eb;
+  --blue-500: #3b82f6;
+  --blue-50:  #eff6ff;
+
+  /* Neutrals */
+  --gray-900: #111827;
+  --gray-700: #374151;
+  --gray-500: #6b7280;
+  --gray-400: #9ca3af;
+  --gray-200: #e5e7eb;
+  --gray-100: #f3f4f6;
+  --gray-50:  #f9fafb;
+  --white:    #ffffff;
+
+  /* Semantic */
+  --green-600: #16a34a;
+  --green-50:  #f0fdf4;
+  --red-600:   #dc2626;
+  --red-50:    #fef2f2;
+  --amber-600: #d97706;
+  --amber-50:  #fffbeb;
+
+  /* Category Accents */
+  --cat-barter:     #7c3aed;
+  --cat-community:  #059669;
+  --cat-for-sale:   #2563eb;
+  --cat-gigs:       #d97706;
+  --cat-housing:    #dc2626;
+  --cat-jobs:       #0891b2;
+  --cat-personals:  #db2777;
+  --cat-pets:       #65a30d;
+  --cat-rentals:    #7c3aed;
+  --cat-resumes:    #4b5563;
+  --cat-services:   #ea580c;
+
+  /* Typography */
+  --font-sans:  'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+
+  /* Spacing */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-12: 3rem;
+
+  /* Layout */
+  --max-width: 1050px;
+  --header-height: 56px;
 }
 
 @theme inline {
-  --color-background: var(--bg-primary);
-  --color-foreground: var(--text-primary);
-  --color-accent: var(--accent-blue);
-  --color-muted: var(--text-muted);
-  --color-secondary: var(--text-secondary);
-  --color-border: var(--border-color);
-  --color-card: var(--bg-card);
-  --color-success: var(--accent-green);
-  --color-warning: var(--accent-orange);
+  --color-background: var(--gray-50);
+  --color-foreground: var(--gray-900);
+  --color-accent: var(--blue-700);
+  --color-muted: var(--gray-500);
+  --color-secondary: var(--gray-700);
+  --color-border: var(--gray-200);
+  --color-card: var(--white);
+  --color-success: var(--green-600);
+  --color-warning: var(--amber-600);
 }
 
 * {
@@ -35,22 +77,51 @@
 }
 
 body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* ─── Typography ─── */
+h1, h2, h3 {
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+/* Serif headings */
+.font-serif {
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
+}
+
+/* ─── Links ─── */
 a {
   color: inherit;
   text-decoration: none;
 }
 
+a.link {
+  color: var(--blue-700);
+  text-decoration: none;
+}
+
+a.link:hover {
+  color: var(--blue-600);
+  text-decoration: underline;
+}
+
+/* ─── Focus ─── */
 :focus-visible {
-  outline: 2px solid var(--accent-blue);
+  outline: 2px solid var(--blue-500);
   outline-offset: 2px;
 }
 
+/* ─── Skip to content ─── */
 .skip-to-content {
   position: absolute;
   left: -9999px;
@@ -67,11 +138,44 @@ a {
   height: auto;
   overflow: visible;
   padding: 0.5rem 1rem;
-  background: var(--accent-blue);
+  background: var(--blue-700);
   color: #fff;
   font-weight: 600;
 }
 
+/* ─── Screen reader only ─── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ─── Footer ─── */
+.footer-heading {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  margin-bottom: 6px;
+}
+
+.footer-link {
+  display: block;
+  font-size: 0.8125rem;
+  color: #d1d5db;
+  line-height: 1.55;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* ─── Responsive ─── */
 @media (max-width: 768px) {
   main {
     padding-left: 1rem !important;
@@ -83,4 +187,5 @@ a {
     padding-right: 0 !important;
     max-width: 100% !important;
   }
+
 }

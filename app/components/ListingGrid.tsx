@@ -21,11 +21,12 @@ export default function ListingGrid({ listings }: Props) {
   if (listings.length === 0) {
     return (
       <div style={{
-        padding: '3rem',
+        padding: 'var(--sp-12)',
         textAlign: 'center',
-        color: '#94a3b8',
-        border: '1px dashed #e2e8f0',
-        borderRadius: '0.75rem',
+        color: 'var(--gray-400)',
+        border: '1px dashed var(--gray-200)',
+        borderRadius: '8px',
+        fontSize: '0.875rem',
       }}>
         No listings found
       </div>
@@ -35,8 +36,8 @@ export default function ListingGrid({ listings }: Props) {
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-      gap: '1rem',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+      gap: 'var(--sp-4)',
     }}>
       {listings.map(listing => (
         <ListingCard key={listing.id} {...listing} />

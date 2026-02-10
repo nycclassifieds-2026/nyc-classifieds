@@ -2,18 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import ImageUploader from '@/app/components/ImageUploader'
-
-const categories = [
-  { slug: 'for-sale', name: 'For Sale', subcategories: ['Electronics', 'Furniture', 'Clothing', 'Vehicles', 'Sports & Outdoors', 'Books & Media', 'Toys & Games', 'Other'] },
-  { slug: 'housing', name: 'Housing', subcategories: ['Apartments', 'Rooms', 'Sublets', 'Real Estate', 'Parking', 'Storage'] },
-  { slug: 'services', name: 'Services', subcategories: ['Home Repair', 'Cleaning', 'Tutoring', 'Beauty', 'Legal', 'Financial', 'Tech', 'Other'] },
-  { slug: 'jobs', name: 'Jobs', subcategories: ['Full-time', 'Part-time', 'Freelance', 'Internships'] },
-  { slug: 'community', name: 'Community', subcategories: ['Events', 'Groups', 'Lost & Found', 'Volunteers', 'Announcements'] },
-  { slug: 'gigs', name: 'Gigs', subcategories: ['Quick Tasks', 'Events', 'Moving', 'Delivery', 'Other'] },
-]
-
-const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+import { categories, slugify } from '@/lib/data'
 
 export default function PostListingClient() {
   const router = useRouter()
@@ -27,6 +18,7 @@ export default function PostListingClient() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [authed, setAuthed] = useState<boolean | null>(null)
+  const [accountType, setAccountType] = useState<string>('personal')
 
   useEffect(() => {
     fetch('/api/auth')
@@ -36,17 +28,20 @@ export default function PostListingClient() {
           setAuthed(false)
         } else {
           setAuthed(true)
+          setAccountType(d.user.account_type || 'personal')
         }
       })
       .catch(() => setAuthed(false))
   }, [])
 
   const selectedCategory = categories.find(c => c.slug === categorySlug)
+  const isServicesBlocked = categorySlug === 'services' && accountType !== 'business'
 
   const handleSubmit = async () => {
     setError('')
     if (!title.trim()) { setError('Title required'); return }
     if (!categorySlug) { setError('Category required'); return }
+    if (isServicesBlocked) { setError('Business profile required to post services'); return }
 
     setLoading(true)
     try {
@@ -81,12 +76,8 @@ export default function PostListingClient() {
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>Verification Required</h1>
         <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>You need a verified account to post listings.</p>
         <a href="/signup" style={{
-          display: 'inline-block',
-          padding: '0.75rem 1.5rem',
-          backgroundColor: '#2563eb',
-          color: '#fff',
-          borderRadius: '0.5rem',
-          fontWeight: 600,
+          display: 'inline-block', padding: '0.75rem 1.5rem',
+          backgroundColor: '#2563eb', color: '#fff', borderRadius: '0.5rem', fontWeight: 600,
         }}>
           Sign Up & Verify
         </a>
@@ -100,23 +91,15 @@ export default function PostListingClient() {
 
       <div style={{ marginBottom: '1.25rem' }}>
         <label style={labelStyle}>Title *</label>
-        <input
-          type="text"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          placeholder="What are you listing?"
-          maxLength={200}
-          style={inputStyle}
-        />
+        <input type="text" value={title} onChange={e => setTitle(e.target.value)}
+          placeholder="What are you listing?" maxLength={200} style={inputStyle} />
       </div>
 
       <div style={{ marginBottom: '1.25rem' }}>
         <label style={labelStyle}>Category *</label>
-        <select
-          value={categorySlug}
+        <select value={categorySlug}
           onChange={e => { setCategorySlug(e.target.value); setSubcategorySlug('') }}
-          style={inputStyle}
-        >
+          style={inputStyle}>
           <option value="">Select category</option>
           {categories.map(c => (
             <option key={c.slug} value={c.slug}>{c.name}</option>
@@ -124,94 +107,86 @@ export default function PostListingClient() {
         </select>
       </div>
 
-      {selectedCategory && (
+      {/* Services business profile notice */}
+      {isServicesBlocked && (
+        <div style={{
+          padding: '16px', borderRadius: '8px', border: '1px solid #fbbf24',
+          backgroundColor: '#fffbeb', marginBottom: '1.25rem',
+        }}>
+          <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#92400e', marginBottom: '6px' }}>
+            Business profile required
+          </p>
+          <p style={{ fontSize: '0.8125rem', color: '#78350f', marginBottom: '10px' }}>
+            To offer services, you need a business profile. It&apos;s free — you don&apos;t need to be a registered business. Just create a profile so customers can find you, see your hours, and read about what you offer.
+          </p>
+          <Link href="/signup" style={{
+            display: 'inline-block', padding: '6px 14px', borderRadius: '6px',
+            backgroundColor: '#2563eb', color: '#fff', fontSize: '0.8125rem', fontWeight: 600,
+          }}>
+            Create Business Profile
+          </Link>
+        </div>
+      )}
+
+      {selectedCategory && !isServicesBlocked && (
         <div style={{ marginBottom: '1.25rem' }}>
           <label style={labelStyle}>Subcategory</label>
-          <select
-            value={subcategorySlug}
-            onChange={e => setSubcategorySlug(e.target.value)}
-            style={inputStyle}
-          >
+          <select value={subcategorySlug} onChange={e => setSubcategorySlug(e.target.value)} style={inputStyle}>
             <option value="">All</option>
-            {selectedCategory.subcategories.map(s => (
+            {selectedCategory.subs.map(s => (
               <option key={s} value={slugify(s)}>{s}</option>
             ))}
           </select>
         </div>
       )}
 
-      <div style={{ marginBottom: '1.25rem' }}>
-        <label style={labelStyle}>Price ($)</label>
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          value={priceStr}
-          onChange={e => setPriceStr(e.target.value)}
-          placeholder="Leave empty for free / negotiable"
-          style={inputStyle}
-        />
-      </div>
+      {!isServicesBlocked && (
+        <>
+          <div style={{ marginBottom: '1.25rem' }}>
+            <label style={labelStyle}>Price ($)</label>
+            <input type="number" min="0" step="0.01" value={priceStr}
+              onChange={e => setPriceStr(e.target.value)}
+              placeholder="Leave empty for free / negotiable" style={inputStyle} />
+          </div>
 
-      <div style={{ marginBottom: '1.25rem' }}>
-        <label style={labelStyle}>Description</label>
-        <textarea
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          placeholder="Describe your listing..."
-          rows={5}
-          style={{ ...inputStyle, resize: 'vertical' }}
-        />
-      </div>
+          <div style={{ marginBottom: '1.25rem' }}>
+            <label style={labelStyle}>Description</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)}
+              placeholder="Describe your listing..." rows={5}
+              style={{ ...inputStyle, resize: 'vertical' }} />
+          </div>
 
-      <div style={{ marginBottom: '1.25rem' }}>
-        <label style={labelStyle}>Location</label>
-        <input
-          type="text"
-          value={location}
-          onChange={e => setLocation(e.target.value)}
-          placeholder="e.g. Upper West Side, Williamsburg"
-          style={inputStyle}
-        />
-      </div>
+          <div style={{ marginBottom: '1.25rem' }}>
+            <label style={labelStyle}>Location</label>
+            <input type="text" value={location} onChange={e => setLocation(e.target.value)}
+              placeholder="e.g. Upper West Side, Williamsburg" style={inputStyle} />
+          </div>
 
-      <div style={{ marginBottom: '1.5rem' }}>
-        <label style={labelStyle}>Photos</label>
-        <ImageUploader images={images} onChange={setImages} />
-      </div>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={labelStyle}>Photos</label>
+            <ImageUploader images={images} onChange={setImages} />
+          </div>
 
-      {error && <p style={{ color: '#dc2626', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</p>}
+          {error && <p style={{ color: '#dc2626', fontSize: '0.875rem', marginBottom: '1rem' }}>{error}</p>}
 
-      <button onClick={handleSubmit} disabled={loading} style={{
-        width: '100%',
-        padding: '0.75rem',
-        borderRadius: '0.5rem',
-        border: 'none',
-        backgroundColor: '#2563eb',
-        color: '#fff',
-        fontSize: '1rem',
-        fontWeight: 600,
-        cursor: 'pointer',
-      }}>
-        {loading ? 'Posting...' : 'Post Listing'}
-      </button>
+          <button onClick={handleSubmit} disabled={loading} style={{
+            width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: 'none',
+            backgroundColor: '#2563eb', color: '#fff', fontSize: '1rem', fontWeight: 600, cursor: 'pointer',
+          }}>
+            {loading ? 'Posting...' : 'Post Listing'}
+          </button>
+        </>
+      )}
     </main>
   )
 }
 
 const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: '0.875rem',
-  fontWeight: 600,
-  color: '#334155',
-  marginBottom: '0.375rem',
+  display: 'block', fontSize: '0.875rem', fontWeight: 600,
+  color: '#334155', marginBottom: '0.375rem',
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.75rem 1rem',
-  borderRadius: '0.5rem',
-  border: '1px solid #e2e8f0',
-  fontSize: '1rem',
-  outline: 'none',
+  width: '100%', padding: '0.75rem 1rem', borderRadius: '0.5rem',
+  border: '1px solid #e2e8f0', fontSize: '1rem', outline: 'none',
 }

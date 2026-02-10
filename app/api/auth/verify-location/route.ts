@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { haversineDistance } from '@/lib/geocode'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
-const MAX_DISTANCE_MILES = 1
+const MAX_DISTANCE_MILES = 0.01
 
 export async function POST(request: NextRequest) {
   const userId = request.cookies.get(COOKIE_NAME)?.value
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
   if (distance > MAX_DISTANCE_MILES) {
     return NextResponse.json({
-      error: `Location mismatch. Your selfie was taken ${distance.toFixed(1)} miles from your registered address. Must be within ${MAX_DISTANCE_MILES} mile.`,
+      error: `Location mismatch. You appear to be ${(distance * 5280).toFixed(0)} feet from your registered address. You must be at your address to verify.`,
       distance,
     }, { status: 400 })
   }

@@ -13,26 +13,46 @@ interface ListingCardProps {
   users: { name: string; verified: boolean }
 }
 
+const categoryColors: Record<string, string> = {
+  'for-sale': 'var(--cat-for-sale)',
+  'housing': 'var(--cat-housing)',
+  'jobs': 'var(--cat-jobs)',
+  'services': 'var(--cat-services)',
+  'gigs': 'var(--cat-gigs)',
+  'community': 'var(--cat-community)',
+  'personals': 'var(--cat-personals)',
+  'pets': 'var(--cat-pets)',
+  'barter': 'var(--cat-barter)',
+  'rentals': 'var(--cat-rentals)',
+  'resumes': 'var(--cat-resumes)',
+}
+
 export default function ListingCard({ id, title, price, images, location, category_slug, created_at, users }: ListingCardProps) {
   const timeAgo = getTimeAgo(created_at)
+  const catColor = categoryColors[category_slug] || 'var(--gray-500)'
 
   return (
     <Link href={`/listings/${category_slug}/${id}`} style={{
       display: 'block',
-      border: '1px solid #e2e8f0',
-      borderRadius: '0.75rem',
+      border: '1px solid var(--gray-200)',
+      borderRadius: '8px',
       overflow: 'hidden',
-      backgroundColor: '#fff',
-      transition: 'box-shadow 0.15s',
-    }}>
+      backgroundColor: 'var(--white)',
+      transition: 'box-shadow 150ms ease',
+    }}
+    onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)')}
+    onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+    >
+      {/* Image */}
       <div style={{
         width: '100%',
         aspectRatio: '4/3',
-        backgroundColor: '#f1f5f9',
+        backgroundColor: 'var(--gray-100)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
+        position: 'relative',
       }}>
         {images[0] ? (
           <img
@@ -41,27 +61,64 @@ export default function ListingCard({ id, title, price, images, location, catego
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         ) : (
-          <span style={{ color: '#94a3b8', fontSize: '2rem' }}>&#128247;</span>
+          <span style={{ color: 'var(--gray-400)', fontSize: '1.5rem' }}>&#128247;</span>
         )}
+        {/* Category pill */}
+        <span style={{
+          position: 'absolute',
+          top: '8px',
+          left: '8px',
+          fontSize: '0.6875rem',
+          fontWeight: 600,
+          padding: '2px 8px',
+          borderRadius: '4px',
+          backgroundColor: 'var(--white)',
+          color: catColor,
+          border: `1px solid ${catColor}20`,
+        }}>
+          {category_slug.replace(/-/g, ' ')}
+        </span>
       </div>
+
+      {/* Content */}
       <div style={{ padding: '0.75rem' }}>
-        <div style={{ fontWeight: 700, fontSize: '1.125rem', color: '#0f172a', marginBottom: '0.25rem' }}>
-          {price != null ? `$${(price / 100).toLocaleString()}` : 'Free'}
+        <div style={{
+          fontWeight: 600,
+          fontSize: '1rem',
+          color: price === 0 || price == null ? 'var(--green-600)' : 'var(--gray-900)',
+          marginBottom: '0.125rem',
+        }}>
+          {price != null && price > 0 ? `$${(price / 100).toLocaleString()}` : 'Free'}
         </div>
         <div style={{
           fontSize: '0.875rem',
-          color: '#334155',
+          color: 'var(--gray-700)',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
-          marginBottom: '0.5rem',
+          marginBottom: '0.375rem',
+          lineHeight: 1.4,
         }}>
           {title}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: '#94a3b8' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          fontSize: '0.8125rem',
+          color: 'var(--gray-500)',
+        }}>
           <span>{location || 'NYC'}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-            {users.verified && <span style={{ color: '#2563eb' }} title="Verified">&#10003;</span>}
+            {users.verified && (
+              <span style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--green-600)',
+              }} />
+            )}
             {timeAgo}
           </span>
         </div>
