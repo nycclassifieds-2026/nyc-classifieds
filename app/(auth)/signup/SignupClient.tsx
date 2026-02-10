@@ -265,7 +265,7 @@ export default function SignupClient() {
             backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem',
             padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: '0.8125rem', color: '#1e40af', lineHeight: 1.5,
           }}>
-            Use your phone to sign up — you&apos;ll need camera access and location services to verify your address.
+            You&apos;ll need camera access and location services enabled to complete signup. Works on phone or laptop.
           </div>
           <input type="email" placeholder="you@example.com" value={email}
             onChange={e => setEmail(e.target.value)}

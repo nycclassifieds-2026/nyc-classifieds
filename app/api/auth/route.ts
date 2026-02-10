@@ -77,18 +77,11 @@ export async function POST(request: NextRequest) {
     const code = String(Math.floor(100000 + Math.random() * 900000))
     const db = getSupabaseAdmin()
 
-    // Mark old codes as used
-    await db
-      .from('user_verification_codes')
-      .update({ used: true })
-      .eq('email', email)
-      .eq('used', false)
-
-    // Insert new code
+    // Insert new code (old codes stay valid until they expire naturally)
     await db.from('user_verification_codes').insert({
       email,
       code,
-      expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
     })
 
     // Send email via shared helper
