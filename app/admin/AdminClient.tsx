@@ -363,17 +363,22 @@ export default function AdminClient() {
   const [pinError, setPinError] = useState(false)
 
   const handlePinSubmit = async () => {
-    // Verify PIN server-side via auth check (user must be admin/moderator)
+    // Client-side PIN gate + server-side role check
+    if (pinInput !== '2179') {
+      setPinError(true)
+      setPinInput('')
+      return
+    }
     try {
       const res = await fetch('/api/auth')
       const data = await res.json()
       if (data.authenticated && (data.user?.role === 'admin' || data.user?.role === 'moderator')) {
         setPinUnlocked(true)
-      setPinError(false)
-    } else {
-      setPinError(true)
-      setPinInput('')
-    }
+        setPinError(false)
+      } else {
+        setPinError(true)
+        setPinInput('')
+      }
     } catch {
       setPinError(true)
       setPinInput('')
@@ -384,9 +389,28 @@ export default function AdminClient() {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '1rem' }}>
         <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: colors.text }}>Admin Access</h1>
-        <p style={{ color: colors.textMuted, fontSize: '0.875rem' }}>You must be logged in as an admin or moderator.</p>
-        {pinError && <p style={{ color: colors.danger, fontSize: '0.8125rem', margin: 0 }}>Access denied. You must have admin or moderator role.</p>}
-        <button style={btnPrimary} onClick={handlePinSubmit}>Continue to Admin</button>
+        <p style={{ color: colors.textMuted, fontSize: '0.875rem' }}>Enter PIN to continue.</p>
+        <input
+          type="password"
+          inputMode="numeric"
+          maxLength={4}
+          placeholder="4-digit PIN"
+          value={pinInput}
+          onChange={e => setPinInput(e.target.value.replace(/\D/g, ''))}
+          onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
+          style={{
+            padding: '0.5rem 1rem',
+            borderRadius: '0.5rem',
+            border: `1px solid ${pinError ? colors.danger : colors.border}`,
+            fontSize: '1rem',
+            textAlign: 'center',
+            width: '120px',
+            outline: 'none',
+            letterSpacing: '0.25em',
+          }}
+        />
+        {pinError && <p style={{ color: colors.danger, fontSize: '0.8125rem', margin: 0 }}>Access denied.</p>}
+        <button style={btnPrimary} onClick={handlePinSubmit} disabled={pinInput.length !== 4}>Continue</button>
       </div>
     )
   }
