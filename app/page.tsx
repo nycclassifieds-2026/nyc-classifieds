@@ -75,7 +75,7 @@ export default function Home() {
           Classifieds in New York City
         </h2>
         <div className="home-category-grid" style={{
-          display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0 20px',
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0 20px',
           borderTop: '1px solid #e5e7eb', paddingTop: '12px',
         }}>
           {homepageColumns.map((col, ci) => (

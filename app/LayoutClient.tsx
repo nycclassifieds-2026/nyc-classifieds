@@ -5,11 +5,23 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { boroughs, categories, neighborhoodSlug } from '@/lib/data'
 
+function useIsMobile(breakpoint = 640) {
+  const [mobile, setMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setMobile(window.innerWidth < breakpoint)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [breakpoint])
+  return mobile
+}
+
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const hideNav = pathname?.startsWith('/admin')
   const [user, setUser] = useState<{ name?: string } | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
+  const mobile = useIsMobile()
 
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' })
@@ -23,81 +35,84 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
       .catch(() => setUser(null))
   }, [pathname])
 
+  const isClassifieds = pathname === '/' || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island')
+  const isPorch = pathname?.startsWith('/porch')
+
   return (
     <>
       {!hideNav && (
         <header style={{
           backgroundColor: '#ffffff',
           borderBottom: '1px solid #e5e7eb',
-          height: '56px',
+          height: mobile ? '48px' : '56px',
           position: 'sticky',
           top: 0,
           zIndex: 1000,
           display: 'flex',
           alignItems: 'center',
         }}>
-          <div className="header-inner" style={{
+          <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             maxWidth: '1050px',
             width: '100%',
             margin: '0 auto',
-            padding: '0 24px',
+            padding: mobile ? '0 12px' : '0 24px',
           }}>
             {/* Logo */}
-            <Link href="/" className="header-logo" style={{
+            <Link href="/" style={{
               fontFamily: "'DM Sans', sans-serif",
-              fontSize: '1.5rem',
+              fontSize: mobile ? '1.05rem' : '1.5rem',
               letterSpacing: '-0.02em',
               flexShrink: 0,
               textDecoration: 'none',
               whiteSpace: 'nowrap',
             }}>
-              <span style={{ color: '#1f2937', fontWeight: 400 }}>The </span>
+              {!mobile && <span style={{ color: '#1f2937', fontWeight: 400 }}>The </span>}
               <span style={{ color: '#2563eb', fontWeight: 700 }}>NYC</span>
               <span style={{ color: '#1f2937', fontWeight: 400 }}> Classifieds</span>
             </Link>
 
             {/* Section tabs */}
-            <nav className="header-nav-tabs" style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '32px' }}>
+            <nav style={{ display: 'flex', alignItems: 'center', gap: mobile ? '0' : '4px', marginLeft: mobile ? '8px' : '32px' }}>
               <Link href="/" style={{
-                padding: '6px 14px',
-                fontSize: '0.8125rem',
-                fontWeight: pathname === '/' || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island') ? 600 : 500,
-                color: pathname === '/' || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island') ? '#111827' : '#6b7280',
-                borderBottom: pathname === '/' || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island') ? '2px solid #1a56db' : '2px solid transparent',
+                padding: mobile ? '6px 8px' : '6px 14px',
+                fontSize: mobile ? '0.75rem' : '0.8125rem',
+                fontWeight: isClassifieds ? 600 : 500,
+                color: isClassifieds ? '#111827' : '#6b7280',
+                borderBottom: isClassifieds ? '2px solid #1a56db' : '2px solid transparent',
                 fontFamily: "'DM Sans', sans-serif",
                 whiteSpace: 'nowrap',
               }}>
                 Classifieds
               </Link>
               <Link href="/porch" style={{
-                padding: '6px 14px',
-                fontSize: '0.8125rem',
-                fontWeight: pathname?.startsWith('/porch') ? 600 : 500,
-                color: pathname?.startsWith('/porch') ? '#111827' : '#6b7280',
-                borderBottom: pathname?.startsWith('/porch') ? '2px solid #059669' : '2px solid transparent',
+                padding: mobile ? '6px 8px' : '6px 14px',
+                fontSize: mobile ? '0.75rem' : '0.8125rem',
+                fontWeight: isPorch ? 600 : 500,
+                color: isPorch ? '#111827' : '#6b7280',
+                borderBottom: isPorch ? '2px solid #059669' : '2px solid transparent',
                 fontFamily: "'DM Sans', sans-serif",
                 whiteSpace: 'nowrap',
               }}>
-                The Porch
+                Porch
               </Link>
             </nav>
 
             <div style={{ flex: 1 }} />
 
             {/* Right nav: Post | Account */}
-            <nav className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-              {/* Post button — always visible */}
-              <Link href="/listings/new" className="header-post-btn" style={{
+            <nav style={{ display: 'flex', alignItems: 'center', gap: mobile ? '8px' : '12px', flexShrink: 0 }}>
+              <Link href="/listings/new" style={{
                 backgroundColor: '#1a56db',
                 color: '#ffffff',
-                padding: '7px 18px',
+                padding: mobile ? '5px 10px' : '7px 18px',
                 borderRadius: '6px',
-                fontSize: '0.875rem',
+                fontSize: mobile ? '0.75rem' : '0.875rem',
                 fontWeight: 600,
                 fontFamily: "'DM Sans', sans-serif",
+                whiteSpace: 'nowrap',
               }}>
                 Post
               </Link>
@@ -105,8 +120,8 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
               {/* Account */}
               {user ? (
                 <Link href="/account" style={{
-                  width: '32px',
-                  height: '32px',
+                  width: mobile ? '28px' : '32px',
+                  height: mobile ? '28px' : '32px',
                   borderRadius: '50%',
                   backgroundColor: '#f3f4f6',
                   border: '1px solid #e5e7eb',
@@ -114,9 +129,10 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#6b7280',
-                  fontSize: '13px',
+                  fontSize: mobile ? '11px' : '13px',
                   fontWeight: 600,
                   position: 'relative',
+                  flexShrink: 0,
                 }}>
                   {user.name ? user.name[0].toUpperCase() : '?'}
                   {unreadCount > 0 && (
@@ -141,8 +157,8 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                 </Link>
               ) : (
                 <Link href="/login" style={{
-                  width: '32px',
-                  height: '32px',
+                  width: mobile ? '28px' : '32px',
+                  height: mobile ? '28px' : '32px',
                   borderRadius: '50%',
                   backgroundColor: '#f3f4f6',
                   border: '1px solid #e5e7eb',
@@ -150,8 +166,9 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#6b7280',
+                  flexShrink: 0,
                 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width={mobile ? '14' : '16'} height={mobile ? '14' : '16'} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                     <circle cx="12" cy="7" r="4" />
                   </svg>
@@ -169,12 +186,11 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
           backgroundColor: '#111827',
           marginTop: '48px',
         }}>
-          <div style={{ maxWidth: '1050px', margin: '0 auto', padding: '48px 24px 24px' }}>
-            {/* 5-column grid, manually balanced */}
-            <div className="footer-grid" style={{
+          <div style={{ maxWidth: '1050px', margin: '0 auto', padding: mobile ? '32px 16px 20px' : '48px 24px 24px' }}>
+            <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(5, 1fr)',
-              gap: '0 20px',
+              gridTemplateColumns: mobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)',
+              gap: mobile ? '24px 16px' : '0 20px',
             }}>
               {/* Col 1: Categories + Bronx + Staten Island */}
               <div>
@@ -202,7 +218,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                 </div>
               ))}
 
-              {/* Col 5 (~31): Company + placeholder for balance */}
+              {/* Col 5: Company */}
               <div>
                 <div className="footer-heading">Company</div>
                 {[
@@ -222,13 +238,15 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
             </div>
 
             {/* Copyright bar */}
-            <div className="footer-bottom" style={{
+            <div style={{
               borderTop: '1px solid #1f2937',
               marginTop: '24px',
               paddingTop: '16px',
               display: 'flex',
+              flexDirection: mobile ? 'column' : 'row',
               justifyContent: 'space-between',
-              alignItems: 'center',
+              alignItems: mobile ? 'center' : 'center',
+              gap: mobile ? '4px' : '0',
             }}>
               <span style={{
                 fontFamily: "'DM Sans', sans-serif",
