@@ -16,17 +16,72 @@ interface Suggestion {
   matchEnd: number
 }
 
-// Flatten all subcategories with their parent category for context
+// Flatten data
 const allSubs = categories.flatMap(c => c.subs)
 const categoryNames = categories.map(c => c.name)
 const boroughNames = boroughs.map(b => b.name)
 const allNeighborhoods = boroughs.flatMap(b => b.neighborhoods)
 
-export default function SearchAutocomplete({ initialQuery = '', onSearch, placeholder = 'Search all of NYC...', autoFocus = false }: SearchAutocompleteProps) {
+// All searchable terms (categories + subcategories) for "{term} in {location}" combos
+const allTerms = [...new Set([...categoryNames, ...allSubs])]
+
+// NYC abbreviation map for neighborhood/borough matching
+const nycAbbreviations: Record<string, string[]> = {
+  'lic': ['Long Island City'],
+  'ues': ['Upper East Side'],
+  'uws': ['Upper West Side'],
+  'les': ['Lower East Side'],
+  'fidi': ['Financial District'],
+  'bk': ['Brooklyn'],
+  'si': ['Staten Island'],
+  'ev': ['East Village'],
+  'wv': ['West Village'],
+  'bpc': ['Battery Park City'],
+  'hk': ["Hell's Kitchen"],
+  'soho': ['SoHo'],
+  'noho': ['NoHo'],
+  'dumbo': ['DUMBO'],
+  'eny': ['East New York'],
+  'dtown bk': ['Downtown Brooklyn'],
+  'bed stuy': ['Bed-Stuy'],
+  'bedstuy': ['Bed-Stuy'],
+  'fh': ['Forest Hills'],
+  'jh': ['Jackson Heights'],
+  'ri': ['Roosevelt Island'],
+}
+
+// Rotating placeholder tips
+const searchTips = [
+  'apartments in east village',
+  'landscaper in astoria',
+  'cars in queens',
+  'jobs in brooklyn',
+  'plumber in park slope',
+  'furniture in manhattan',
+  'dog walker in harlem',
+  'rooms in williamsburg',
+  'electrician in the bronx',
+  'bikes in greenpoint',
+  'babysitter in cobble hill',
+  'moving help in bushwick',
+]
+
+function matchesLocation(name: string, query: string): boolean {
+  const nameLower = name.toLowerCase()
+  const qLower = query.toLowerCase()
+  if (nameLower.startsWith(qLower) || nameLower.includes(qLower)) return true
+  // Check abbreviations
+  const abbrevMatches = nycAbbreviations[qLower]
+  if (abbrevMatches) return abbrevMatches.some(a => a.toLowerCase() === nameLower)
+  return false
+}
+
+export default function SearchAutocomplete({ initialQuery = '', onSearch, placeholder, autoFocus = false }: SearchAutocompleteProps) {
   const [query, setQuery] = useState(initialQuery)
   const [open, setOpen] = useState(false)
   const [selectedIdx, setSelectedIdx] = useState(-1)
   const [listening, setListening] = useState(false)
+  const [tipIdx, setTipIdx] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,37 +90,55 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
   // Check for speech recognition support
   const hasSpeech = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
 
-  // Eagerly computed: subs + "{sub} in {borough}" combos + category names + borough names
+  // Rotate placeholder tips
+  useEffect(() => {
+    if (placeholder) return // custom placeholder overrides tips
+    const interval = setInterval(() => {
+      setTipIdx(i => (i + 1) % searchTips.length)
+    }, 3500)
+    return () => clearInterval(interval)
+  }, [placeholder])
+
+  const currentPlaceholder = placeholder || searchTips[tipIdx]
+
+  // Eagerly computed base suggestions: terms + "{term} in {borough}" combos + borough names
   const baseSuggestions = useMemo(() => {
     const items: string[] = []
-    // Category names
     for (const name of categoryNames) items.push(name)
-    // Subcategory names
     for (const sub of allSubs) items.push(sub)
-    // "{sub} in {borough}" combos
-    for (const sub of allSubs) {
+    // "{term} in {borough}" for both category names and subcategories
+    for (const term of allTerms) {
       for (const b of boroughNames) {
-        items.push(`${sub} in ${b}`)
+        items.push(`${term} in ${b}`)
       }
     }
-    // Borough names
     for (const name of boroughNames) items.push(name)
     return items
   }, [])
 
   // Generate neighborhood combos lazily based on input
   const getNeighborhoodSuggestions = useCallback((term: string, location: string): string[] => {
-    const locLower = location.toLowerCase()
     const results: string[] = []
-    for (const n of allNeighborhoods) {
-      if (n.toLowerCase().startsWith(locLower) || n.toLowerCase().includes(locLower)) {
-        // Match term against subs
-        const termLower = term.toLowerCase()
-        for (const sub of allSubs) {
-          if (sub.toLowerCase().startsWith(termLower) || sub.toLowerCase().includes(termLower)) {
-            results.push(`${sub} in ${n}`)
-            if (results.length >= 20) return results
-          }
+    const termLower = term.toLowerCase()
+    const matchingNeighborhoods = allNeighborhoods.filter(n => matchesLocation(n, location))
+    // Also check boroughs via abbreviations
+    const matchingBoroughs = boroughNames.filter(b => matchesLocation(b, location))
+
+    for (const n of matchingNeighborhoods) {
+      for (const t of allTerms) {
+        if (t.toLowerCase().startsWith(termLower) || t.toLowerCase().includes(termLower)) {
+          results.push(`${t} in ${n}`)
+          if (results.length >= 20) return results
+        }
+      }
+    }
+    // Borough abbreviation matches (e.g. "bk" → "Brooklyn")
+    for (const b of matchingBoroughs) {
+      for (const t of allTerms) {
+        if (t.toLowerCase().startsWith(termLower) || t.toLowerCase().includes(termLower)) {
+          const combo = `${t} in ${b}`
+          if (!results.includes(combo)) results.push(combo)
+          if (results.length >= 20) return results
         }
       }
     }
@@ -84,11 +157,9 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
       const term = q.slice(0, inIdx).trim()
       const location = q.slice(inIdx + 4).trim()
       if (location) {
-        // Filter base suggestions + generate neighborhood combos
-        const locLower = location.toLowerCase()
         const termLower = term.toLowerCase()
-
         candidates = []
+
         // From base suggestions (borough combos)
         for (const s of baseSuggestions) {
           const sLower = s.toLowerCase()
@@ -97,11 +168,11 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
           const sTerm = sLower.slice(0, sInIdx)
           const sLoc = sLower.slice(sInIdx + 4)
           if ((sTerm.startsWith(termLower) || sTerm.includes(termLower)) &&
-              (sLoc.startsWith(locLower) || sLoc.includes(locLower))) {
+              matchesLocation(s.slice(sInIdx + 4), location)) {
             candidates.push(s)
           }
         }
-        // Neighborhood combos
+        // Neighborhood combos (lazy)
         const nhSuggestions = getNeighborhoodSuggestions(term, location)
         candidates.push(...nhSuggestions)
 
@@ -111,7 +182,10 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
         const termLower = term.toLowerCase()
         candidates = baseSuggestions.filter(s => {
           const sLower = s.toLowerCase()
-          return sLower.includes(' in ') && sLower.startsWith(termLower)
+          const sInIdx = sLower.indexOf(' in ')
+          if (sInIdx === -1) return false
+          const sTerm = sLower.slice(0, sInIdx)
+          return sTerm.startsWith(termLower) || sTerm.includes(termLower)
         })
         matchTerm = term
       }
@@ -135,7 +209,7 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
       }
     }
 
-    // Sort: exact prefix first, then includes
+    // Sort: exact prefix first, then includes, then by length
     const qLower = matchTerm.toLowerCase()
     unique.sort((a, b) => {
       const aPrefix = a.toLowerCase().startsWith(qLower) ? 0 : 1
@@ -273,7 +347,7 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
             onChange={e => { setQuery(e.target.value); setOpen(true) }}
             onFocus={() => { if (query.trim()) setOpen(true) }}
             onKeyDown={handleKeyDown}
-            placeholder={placeholder}
+            placeholder={currentPlaceholder}
             autoFocus={autoFocus}
             aria-label="Search classifieds in New York City"
             autoComplete="off"

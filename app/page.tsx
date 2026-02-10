@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { homepageColumns, boroughs, categories, slugify } from '@/lib/data'
 import { websiteSchema, organizationSchema, faqSchema, collectionPageSchema } from '@/lib/seo'
 import HomeSearch from './components/HomeSearch'
+import BoroughNav from './components/BoroughNav'
 
 export default function Home() {
   const categoryItems = categories.map(c => ({ name: c.name, url: `/listings/${c.slug}` }))
@@ -39,15 +40,7 @@ export default function Home() {
         <div style={{ marginBottom: '12px' }}>
           <HomeSearch />
         </div>
-        <nav aria-label="Browse by borough" className="home-borough-nav" style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '4px' }}>
-          {boroughs.map(b => (
-            <Link key={b.slug} href={`/${b.slug}`} style={{
-              color: '#1a56db', fontSize: '1rem', fontWeight: 500, textDecoration: 'none',
-            }}>
-              {b.name}
-            </Link>
-          ))}
-        </nav>
+        <BoroughNav />
         <p style={{ fontSize: '0.875rem', color: '#000000', paddingBottom: '16px', borderBottom: '1px solid #e5e7eb' }}>
           <strong>Free.</strong> Real. Local. Verified NYC classifieds.
         </p>
