@@ -123,12 +123,12 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                   width: mobile ? '28px' : '32px',
                   height: mobile ? '28px' : '32px',
                   borderRadius: '50%',
-                  backgroundColor: '#f3f4f6',
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: '#1a56db',
+                  border: '1px solid #1a56db',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#6b7280',
+                  color: '#ffffff',
                   fontSize: mobile ? '11px' : '13px',
                   fontWeight: 600,
                   position: 'relative',
@@ -187,11 +187,12 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
           marginTop: '48px',
         }}>
           <div style={{ maxWidth: '1050px', margin: '0 auto', padding: mobile ? '32px 16px 20px' : '48px 24px 24px' }}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: mobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)',
-              gap: mobile ? '24px 16px' : '0 20px',
-            }}>
+            {!mobile && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(5, 1fr)',
+                gap: '0 20px',
+              }}>
               {/* Col 1: Categories + Bronx + Staten Island */}
               <div>
                 <div className="footer-heading">Categories</div>
@@ -235,17 +236,18 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                   <Link key={l.href} href={l.href} className="footer-link">{l.label}</Link>
                 ))}
               </div>
-            </div>
+              </div>
+            )}
 
             {/* Copyright bar */}
             <div style={{
-              borderTop: '1px solid #1f2937',
-              marginTop: '24px',
-              paddingTop: '16px',
+              borderTop: mobile ? 'none' : '1px solid #1f2937',
+              marginTop: mobile ? '0' : '24px',
+              paddingTop: mobile ? '0' : '16px',
               display: 'flex',
               flexDirection: mobile ? 'column' : 'row',
               justifyContent: 'space-between',
-              alignItems: mobile ? 'center' : 'center',
+              alignItems: 'center',
               gap: mobile ? '4px' : '0',
             }}>
               <span style={{
