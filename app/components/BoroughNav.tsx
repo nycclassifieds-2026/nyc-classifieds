@@ -1,21 +1,37 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { boroughs, neighborhoodSlug } from '@/lib/data'
+import { boroughs, neighborhoodSlug, findNeighborhood } from '@/lib/data'
+
+interface PendingSelection {
+  boroughSlug: string
+  nhSlug: string
+  nhName: string
+  boroughName: string
+}
 
 export default function BoroughNav() {
-  const router = useRouter()
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [pending, setPending] = useState<PendingSelection | null>(null)
 
-  const selectNeighborhood = (boroughSlug: string, nhSlug: string) => {
-    localStorage.setItem('home', `${boroughSlug}/${nhSlug}`)
+  const handleNeighborhoodClick = (boroughSlug: string, nhSlug: string) => {
+    const b = boroughs.find(b => b.slug === boroughSlug)
+    const nh = findNeighborhood(boroughSlug, nhSlug)
+    if (!b || !nh) return
+    setPending({ boroughSlug, nhSlug, nhName: nh.name, boroughName: b.name })
+  }
+
+  const confirmSave = () => {
+    if (!pending) return
+    localStorage.setItem('home', `${pending.boroughSlug}/${pending.nhSlug}`)
+    setPending(null)
     setExpanded(null)
-    // Refresh so HomeCategoryGrid picks up the new home
-    router.refresh()
-    // Force re-render by navigating to same page
     window.location.reload()
+  }
+
+  const cancelSave = () => {
+    setPending(null)
   }
 
   return (
@@ -42,7 +58,57 @@ export default function BoroughNav() {
         ))}
       </nav>
 
-      {expanded && (() => {
+      {/* Confirmation popup */}
+      {pending && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          padding: '10px 14px',
+          margin: '8px 0',
+          backgroundColor: '#fffbeb',
+          border: '1px solid #fde68a',
+          borderRadius: '8px',
+          fontSize: '0.875rem',
+          fontFamily: "'DM Sans', sans-serif",
+          color: '#111827',
+          flexWrap: 'wrap',
+        }}>
+          <span>Save <strong>{pending.nhName}, {pending.boroughName}</strong> as your neighborhood?</span>
+          <button
+            onClick={confirmSave}
+            style={{
+              backgroundColor: '#1a56db',
+              color: '#ffffff',
+              padding: '5px 16px',
+              borderRadius: '6px',
+              border: 'none',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              fontFamily: "'DM Sans', sans-serif",
+              cursor: 'pointer',
+            }}
+          >
+            Yes
+          </button>
+          <button
+            onClick={cancelSave}
+            style={{
+              color: '#6b7280',
+              fontSize: '0.8125rem',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Not now
+          </button>
+        </div>
+      )}
+
+      {expanded && !pending && (() => {
         const borough = boroughs.find(b => b.slug === expanded)
         if (!borough) return null
         return (
@@ -67,7 +133,7 @@ export default function BoroughNav() {
             {borough.neighborhoods.map(n => (
               <button
                 key={n}
-                onClick={() => selectNeighborhood(borough.slug, neighborhoodSlug(n))}
+                onClick={() => handleNeighborhoodClick(borough.slug, neighborhoodSlug(n))}
                 style={{
                   fontSize: '0.8125rem',
                   color: '#1a56db',
