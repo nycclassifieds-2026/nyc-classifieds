@@ -268,9 +268,10 @@ a.link:hover {
     font-size: 0.75rem !important;
   }
 
-  /* Homepage: single column on very small */
+  /* Homepage: always 2 cols, even on small screens */
   .home-category-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0 8px !important;
   }
 
   .footer-grid {
