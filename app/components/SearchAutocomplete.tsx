@@ -141,12 +141,16 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
   const [selectedIdx, setSelectedIdx] = useState(-1)
   const [listening, setListening] = useState(false)
   const [tipIdx, setTipIdx] = useState(0)
+  const [hasSpeech, setHasSpeech] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null)
 
-  const hasSpeech = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
+  // Detect speech support after mount (SSR-safe)
+  useEffect(() => {
+    setHasSpeech('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
+  }, [])
 
   // Rotate placeholder tips
   useEffect(() => {
@@ -358,9 +362,16 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
     recognition.maxAlternatives = 1
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript
+      const transcript = event.results[0][0].transcript as string
       setQuery(transcript)
-      setOpen(true)
+      // Auto-navigate: try to resolve to a real page
+      const url = buildUrl(transcript)
+      if (url && !url.startsWith('/search')) {
+        router.push(url)
+      } else {
+        // Fall back to search
+        onSearch(transcript)
+      }
     }
 
     recognition.onend = () => {
