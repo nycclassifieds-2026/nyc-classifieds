@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { homepageColumns, boroughs, categories, slugify } from '@/lib/data'
 import { websiteSchema, organizationSchema, faqSchema, collectionPageSchema } from '@/lib/seo'
+import HomeSearch from './components/HomeSearch'
 
 export default function Home() {
   const categoryItems = categories.map(c => ({ name: c.name, url: `/listings/${c.slug}` }))
@@ -35,26 +36,9 @@ export default function Home() {
       {/* Search + boroughs */}
       <section style={{ padding: '8px 0 0' }}>
         <h1 className="sr-only">Free Classifieds in New York City — Housing, Jobs, Services, For Sale & More</h1>
-        <form action="/search" method="GET" role="search" aria-label="Search all NYC classifieds" className="home-search-form" style={{ display: 'flex', gap: '8px', maxWidth: '480px', marginBottom: '12px' }}>
-          <input
-            type="text"
-            name="q"
-            placeholder="Search all of NYC..."
-            aria-label="Search classifieds in New York City"
-            style={{
-              flex: 1, padding: '10px 16px', borderRadius: '8px', border: '1px solid #1a56db',
-              fontSize: '0.9375rem', fontFamily: "'DM Sans', sans-serif", outline: 'none',
-              color: '#111827', backgroundColor: '#ffffff',
-            }}
-          />
-          <button type="submit" style={{
-            backgroundColor: 'transparent', color: '#1a56db', padding: '10px 16px',
-            borderRadius: '6px', border: '1px solid #1a56db', fontSize: '0.875rem',
-            fontWeight: 500, fontFamily: "'DM Sans', sans-serif", cursor: 'pointer',
-          }}>
-            Search
-          </button>
-        </form>
+        <div style={{ marginBottom: '12px' }}>
+          <HomeSearch />
+        </div>
         <nav aria-label="Browse by borough" className="home-borough-nav" style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '4px' }}>
           {boroughs.map(b => (
             <Link key={b.slug} href={`/${b.slug}`} style={{

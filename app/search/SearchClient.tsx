@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import ListingGrid from '@/app/components/ListingGrid'
+import SearchAutocomplete from '@/app/components/SearchAutocomplete'
 
 interface Listing {
   id: number
@@ -71,45 +72,25 @@ export default function SearchClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSearch = useCallback((q: string) => {
+    setQuery(q)
     setPage(1)
-    doSearch(query, category, sort, 1)
-  }
+    doSearch(q, category, sort, 1)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, sort])
 
   return (
     <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Search Listings</h1>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-        <input
-          type="text"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
+      <div style={{ marginBottom: '1rem' }}>
+        <SearchAutocomplete
+          initialQuery={query}
+          onSearch={handleSearch}
           placeholder="Search listings..."
-          style={{
-            flex: 1,
-            minWidth: '200px',
-            padding: '0.75rem 1rem',
-            borderRadius: '0.5rem',
-            border: '1px solid #e2e8f0',
-            fontSize: '1rem',
-            outline: 'none',
-          }}
+          autoFocus
         />
-        <button type="submit" style={{
-          padding: '0.75rem 1.5rem',
-          borderRadius: '0.5rem',
-          border: 'none',
-          backgroundColor: '#2563eb',
-          color: '#fff',
-          fontSize: '1rem',
-          fontWeight: 600,
-          cursor: 'pointer',
-        }}>
-          Search
-        </button>
-      </form>
+      </div>
 
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
         <select
