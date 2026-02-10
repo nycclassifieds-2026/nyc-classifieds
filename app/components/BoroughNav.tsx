@@ -1,11 +1,22 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { boroughs, neighborhoodSlug } from '@/lib/data'
 
 export default function BoroughNav() {
+  const router = useRouter()
   const [expanded, setExpanded] = useState<string | null>(null)
+
+  const selectNeighborhood = (boroughSlug: string, nhSlug: string) => {
+    localStorage.setItem('home', `${boroughSlug}/${nhSlug}`)
+    setExpanded(null)
+    // Refresh so HomeCategoryGrid picks up the new home
+    router.refresh()
+    // Force re-render by navigating to same page
+    window.location.reload()
+  }
 
   return (
     <div>
@@ -54,18 +65,22 @@ export default function BoroughNav() {
               All {borough.name}
             </Link>
             {borough.neighborhoods.map(n => (
-              <Link
+              <button
                 key={n}
-                href={`/${borough.slug}/${neighborhoodSlug(n)}`}
+                onClick={() => selectNeighborhood(borough.slug, neighborhoodSlug(n))}
                 style={{
                   fontSize: '0.8125rem',
                   color: '#1a56db',
                   textDecoration: 'none',
                   fontFamily: "'DM Sans', sans-serif",
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
                 }}
               >
                 {n}
-              </Link>
+              </button>
             ))}
           </div>
         )
