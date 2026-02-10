@@ -433,19 +433,11 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
     })
   }, [])
 
-  const startVoice = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.abort()
-      recognitionRef.current = null
-      setListening(false)
-      setVoiceStatus(null)
-      return
-    }
-
+  // Core recognition starter (called after mic permission is secured)
+  const launchRecognition = useCallback(() => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SR) return
 
-    // Pause any playing media so mic picks up voice clearly
     pauseMedia()
 
     const recognition = new SR()
@@ -455,7 +447,6 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
     recognition.continuous = false
 
     recognition.onaudiostart = () => {
-      // Mic is live — play beep and show prompt
       playBeep()
       setVoiceStatus('Listening... speak now')
     }
@@ -470,7 +461,6 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
       setQuery(cleaned)
       setOpen(true)
       setVoiceStatus(null)
-      // Auto-navigate if it maps to a real page
       const url = buildUrl(cleaned)
       if (url && !url.startsWith('/search')) {
         router.push(url)
@@ -482,7 +472,6 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
     recognition.onend = () => {
       setListening(false)
       recognitionRef.current = null
-      // Clear status after a moment if no result came
       setTimeout(() => setVoiceStatus(null), 1500)
     }
 
@@ -515,6 +504,56 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
       recognitionRef.current = null
       setTimeout(() => setVoiceStatus(null), 10000)
     }
+  }, [pauseMedia, playBeep, router, onSearch])
+
+  const startVoice = async () => {
+    // Toggle off if already listening
+    if (recognitionRef.current) {
+      recognitionRef.current.abort()
+      recognitionRef.current = null
+      setListening(false)
+      setVoiceStatus(null)
+      return
+    }
+
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SR) {
+      setVoiceStatus('Voice search is not supported in this browser — try Chrome or Safari')
+      setTimeout(() => setVoiceStatus(null), 10000)
+      return
+    }
+
+    // Check mic permission state first
+    let permState: string | null = null
+    try {
+      const perm = await navigator.permissions.query({ name: 'microphone' as PermissionName })
+      permState = perm.state
+    } catch { /* permissions API not available, proceed anyway */ }
+
+    if (permState === 'denied') {
+      // Already explicitly denied — give clear instructions
+      setVoiceStatus('Microphone is blocked. Click the lock icon next to the URL, find Microphone, and set it to Allow. Then tap the mic again.')
+      setTimeout(() => setVoiceStatus(null), 10000)
+      return
+    }
+
+    if (permState === 'prompt' || permState === null) {
+      // First time or unknown — request mic access via getUserMedia to trigger the browser prompt
+      setVoiceStatus('Allow microphone access when your browser asks...')
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        // Got access — stop the stream immediately, then start recognition
+        stream.getTracks().forEach(t => t.stop())
+        launchRecognition()
+      } catch {
+        setVoiceStatus('Microphone access was denied. To enable: click the lock icon next to the URL, find Microphone, set it to Allow, then tap the mic again.')
+        setTimeout(() => setVoiceStatus(null), 10000)
+      }
+      return
+    }
+
+    // Permission is 'granted' — go straight to recognition
+    launchRecognition()
   }
 
   const renderHighlighted = (s: Suggestion) => {
