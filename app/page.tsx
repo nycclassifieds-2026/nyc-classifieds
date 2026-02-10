@@ -3,6 +3,7 @@ import { websiteSchema, organizationSchema, faqSchema, collectionPageSchema } fr
 import HomeSearch from './components/HomeSearch'
 import BoroughNav from './components/BoroughNav'
 import HomeCategoryGrid from './components/HomeCategoryGrid'
+import HomepageAd from './components/HomepageAd'
 
 export default function Home() {
   const categoryItems = categories.map(c => ({ name: c.name, url: `/listings/${c.slug}` }))
@@ -34,13 +35,23 @@ export default function Home() {
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(s) }} />
       ))}
 
-      {/* Search + boroughs */}
-      <section style={{ padding: '8px 0 0' }}>
+      {/* Mobile ad — above search */}
+      <div className="mobile-only-ad">
+        <HomepageAd />
+      </div>
+
+      {/* Desktop: search left, ad right | Mobile: stacked */}
+      <section className="homepage-top" style={{ padding: '8px 0 0', marginBottom: '0' }}>
         <h1 className="sr-only">Free Classifieds in New York City — Housing, Jobs, Services, For Sale & More</h1>
-        <div style={{ marginBottom: '12px' }}>
-          <HomeSearch />
+        <div className="homepage-top-left">
+          <div style={{ marginBottom: '12px' }}>
+            <HomeSearch />
+          </div>
+          <BoroughNav />
         </div>
-        <BoroughNav />
+        <div className="desktop-only-ad homepage-top-right">
+          <HomepageAd />
+        </div>
       </section>
 
       {/* Categories — localized when home is set */}

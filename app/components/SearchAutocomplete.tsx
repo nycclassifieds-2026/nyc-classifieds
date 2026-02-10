@@ -148,8 +148,18 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
   const recognitionRef = useRef<any>(null)
 
   // Detect speech support after mount (SSR-safe)
+  // Actually try to instantiate — iOS Safari lies about support
   useEffect(() => {
-    setHasSpeech('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
+    try {
+      const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      if (SR) {
+        const test = new SR()
+        test.abort()
+        setHasSpeech(true)
+      }
+    } catch {
+      setHasSpeech(false)
+    }
   }, [])
 
   // Rotate placeholder tips
@@ -364,12 +374,12 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript as string
       setQuery(transcript)
-      // Auto-navigate: try to resolve to a real page
+      setOpen(true)
+      // Auto-navigate if it maps to a real page
       const url = buildUrl(transcript)
       if (url && !url.startsWith('/search')) {
         router.push(url)
       } else {
-        // Fall back to search
         onSearch(transcript)
       }
     }
@@ -379,14 +389,26 @@ export default function SearchAutocomplete({ initialQuery = '', onSearch, placeh
       recognitionRef.current = null
     }
 
-    recognition.onerror = () => {
+    recognition.onerror = (e: any) => {
       setListening(false)
       recognitionRef.current = null
+      // 'not-allowed' means user denied mic permission
+      // 'no-speech' means no voice detected
+      if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
+        setHasSpeech(false)
+      }
     }
 
     recognitionRef.current = recognition
     setListening(true)
-    recognition.start()
+    try {
+      recognition.start()
+    } catch {
+      // Browser blocked or doesn't actually support it
+      setListening(false)
+      recognitionRef.current = null
+      setHasSpeech(false)
+    }
   }
 
   const renderHighlighted = (s: Suggestion) => {

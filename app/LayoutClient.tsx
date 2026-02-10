@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { boroughs, categories, neighborhoodSlug } from '@/lib/data'
+import { boroughs, categories, neighborhoodSlug, findNeighborhood } from '@/lib/data'
 import SearchAutocomplete from './components/SearchAutocomplete'
+import HomepageAd from './components/HomepageAd'
+import Walkthrough from './components/Walkthrough'
 
 function useIsMobile(breakpoint = 640) {
   const [mobile, setMobile] = useState(false)
@@ -25,7 +27,22 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   const isSearchPage = pathname === '/search'
   const [user, setUser] = useState<{ name?: string } | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [homeName, setHomeName] = useState<string | null>(null)
+  const [showLocationPicker, setShowLocationPicker] = useState(false)
+  const [pickerBorough, setPickerBorough] = useState<string | null>(null)
   const mobile = useIsMobile()
+
+  useEffect(() => {
+    const saved = localStorage.getItem('home')
+    if (saved) {
+      const [bSlug, nSlug] = saved.split('/')
+      if (bSlug && nSlug) {
+        const nh = findNeighborhood(bSlug, nSlug)
+        const b = boroughs.find(b => b.slug === bSlug)
+        if (nh && b) setHomeName(`${nh.name}, ${b.name}`)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     fetch('/api/auth', { credentials: 'same-origin' })
@@ -91,7 +108,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
               }}>
                 Classifieds
               </Link>
-              <Link href="/porch" style={{
+              <Link href="/porch" data-walkthrough="porch-tab" style={{
                 padding: mobile ? '6px 8px' : '6px 14px',
                 fontSize: mobile ? '0.75rem' : '0.8125rem',
                 fontWeight: isPorch ? 600 : 500,
@@ -108,7 +125,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 
             {/* Right nav: Post | Account */}
             <nav style={{ display: 'flex', alignItems: 'center', gap: mobile ? '8px' : '12px', flexShrink: 0 }}>
-              <Link href="/listings/new" style={{
+              <Link href="/listings/new" data-walkthrough="post-button" style={{
                 backgroundColor: '#1a56db',
                 color: '#ffffff',
                 padding: mobile ? '5px 10px' : '7px 18px',
@@ -189,11 +206,35 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
           margin: '0 auto',
           padding: mobile ? '8px 12px' : '10px 24px',
         }}>
-          <SearchAutocomplete
-            onSearch={(q) => router.push(`/search?q=${encodeURIComponent(q)}`)}
-          />
+          {/* Mobile ad — above search */}
+          <div className="mobile-only-ad">
+            <HomepageAd />
+          </div>
+          <div className="homepage-top" style={{ margin: 0 }}>
+            <div className="homepage-top-left">
+              <SearchAutocomplete
+                onSearch={(q) => router.push(`/search?q=${encodeURIComponent(q)}`)}
+              />
+            </div>
+            <div className="desktop-only-ad homepage-top-right">
+              <HomepageAd />
+            </div>
+          </div>
+          <div style={{ padding: mobile ? '6px 0 0' : '8px 0 0', fontFamily: "'DM Sans', sans-serif" }}>
+            {homeName && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px', fontSize: '0.875rem', color: '#111827' }}>
+                <span style={{ color: '#d97706', fontSize: '1rem' }}>&#9733;</span>
+                <span>{homeName}</span>
+              </div>
+            )}
+            <p style={{ fontSize: '0.8125rem', color: '#000000', margin: 0 }}>
+              <strong>Free.</strong> Real. Local. Verified NYC classifieds.
+            </p>
+          </div>
         </div>
       )}
+
+      {isHomepage && <Walkthrough />}
 
       {children}
 

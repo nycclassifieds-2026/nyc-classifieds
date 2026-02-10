@@ -14,7 +14,7 @@ interface TodoItem {
   category: string
 }
 
-type Tab = 'home' | 'users' | 'listings' | 'porch' | 'moderation' | 'analytics' | 'docs'
+type Tab = 'home' | 'users' | 'listings' | 'porch' | 'moderation' | 'analytics' | 'ads' | 'docs'
 
 // ─── Styles ───────────────────────────────────────────────────
 const colors = {
@@ -422,6 +422,7 @@ export default function AdminClient() {
     { key: 'porch', label: 'Porch Posts', icon: '\u2601' },
     { key: 'moderation', label: 'Moderation', icon: '\u2691' },
     { key: 'analytics', label: 'Analytics', icon: '\u2605' },
+    { key: 'ads', label: 'Ads', icon: '\u2606' },
     { key: 'docs', label: 'Docs', icon: '\u2637' },
   ]
 
@@ -450,6 +451,7 @@ export default function AdminClient() {
         {tab === 'porch' && <PorchTab />}
         {tab === 'moderation' && <ModerationTab />}
         {tab === 'analytics' && <AnalyticsTab />}
+        {tab === 'ads' && <AdsTab />}
         {tab === 'docs' && <DocsTab />}
       </main>
     </div>
@@ -1618,6 +1620,401 @@ create_porch_post, create_porch_reply`,
           </details>
         ))}
       </div>
+    </div>
+  )
+}
+
+// ─── Ads Tab ─────────────────────────────────────────────────
+
+const AD_BOROUGHS = [
+  { name: 'Manhattan', slug: 'manhattan', neighborhoods: ['Alphabet City','Battery Park City','Carnegie Hill','Chelsea','Chinatown','East Harlem','East Village','Financial District','Flatiron','Gramercy','Greenwich Village','Hamilton Heights','Harlem',"Hell's Kitchen",'Hudson Yards','Inwood','Kips Bay','Koreatown','Lenox Hill','Lincoln Square','Little Italy','Lower East Side','Manhattan Valley','Meatpacking District','Midtown East','Midtown West','Morningside Heights','Murray Hill','NoHo','Nolita','Roosevelt Island','SoHo','Stuyvesant Town','Sugar Hill','Times Square','Tribeca','Two Bridges','Upper East Side','Upper West Side','Washington Heights','West Village'] },
+  { name: 'Brooklyn', slug: 'brooklyn', neighborhoods: ['Bay Ridge','Bed-Stuy','Bensonhurst','Boerum Hill','Borough Park','Brighton Beach','Brooklyn Heights','Brownsville','Bushwick','Canarsie','Carroll Gardens','Clinton Hill','Cobble Hill','Coney Island','Crown Heights','Downtown Brooklyn','DUMBO','Dyker Heights','East New York','Flatbush','Fort Greene','Greenpoint','Kensington','Midwood','Park Slope','Prospect Heights','Red Hook','Sheepshead Bay','Sunset Park','Williamsburg'] },
+  { name: 'Queens', slug: 'queens', neighborhoods: ['Astoria','Bayside','Bellerose','Briarwood','College Point','Corona','Douglaston','Elmhurst','Far Rockaway','Flushing','Forest Hills','Fresh Meadows','Glen Oaks','Howard Beach','Jackson Heights','Jamaica','Kew Gardens','Little Neck','Long Island City','Maspeth','Middle Village','Ozone Park','Rego Park','Ridgewood','Rockaway Beach','St. Albans','Sunnyside','Whitestone','Woodhaven','Woodside'] },
+  { name: 'The Bronx', slug: 'bronx', neighborhoods: ['Belmont','Concourse','Fordham','Highbridge','Hunts Point','Kingsbridge','Morris Park','Mott Haven','Norwood','Pelham Bay','Riverdale','South Bronx','Throgs Neck','Tremont','Wakefield'] },
+  { name: 'Staten Island', slug: 'staten-island', neighborhoods: ['Annadale','Eltingville','Great Kills','Huguenot','New Dorp',"Prince's Bay",'St. George','Stapleton','Tompkinsville','Tottenville'] },
+]
+
+const AD_CATEGORIES = [
+  { name: 'Housing', slug: 'housing' },
+  { name: 'Jobs', slug: 'jobs' },
+  { name: 'For Sale', slug: 'for-sale' },
+  { name: 'Services', slug: 'services' },
+  { name: 'Gigs', slug: 'gigs' },
+  { name: 'Community', slug: 'community' },
+  { name: 'Tickets & Events', slug: 'tickets' },
+  { name: 'Pets', slug: 'pets' },
+  { name: 'Personals', slug: 'personals' },
+  { name: 'Barter', slug: 'barter' },
+  { name: 'Rentals & Lending', slug: 'rentals' },
+  { name: 'Resumes', slug: 'resumes' },
+]
+
+function nhSlug(name: string) {
+  return name.toLowerCase().replace(/ /g, '-').replace(/'/g, '').replace(/\./g, '')
+}
+
+interface AdRow {
+  id: number
+  type: string
+  advertiser: string
+  image_url: string
+  link_url: string
+  category_slug: string | null
+  borough_slug: string | null
+  neighborhood_slug: string | null
+  active: boolean
+  starts_at: string
+  expires_at: string
+  created_at: string
+}
+
+function AdsTab() {
+  const [ads, setAds] = useState<AdRow[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [loading, setLoading] = useState(true)
+  const [filterType, setFilterType] = useState('')
+  const [filterActive, setFilterActive] = useState('')
+
+  // Form state
+  const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [formType, setFormType] = useState<'homepage' | 'neighborhood' | 'borough' | 'all-nyc'>('homepage')
+  const [formAdvertiser, setFormAdvertiser] = useState('')
+  const [formImageUrl, setFormImageUrl] = useState('')
+  const [formLinkUrl, setFormLinkUrl] = useState('')
+  const [formCategory, setFormCategory] = useState('')
+  const [formBorough, setFormBorough] = useState('')
+  const [formNeighborhood, setFormNeighborhood] = useState('')
+  const [formError, setFormError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const limit = 50
+  const totalPages = Math.ceil(total / limit)
+
+  const fetchAds = useCallback(async () => {
+    setLoading(true)
+    const params = new URLSearchParams({ page: String(page) })
+    if (filterType) params.set('type', filterType)
+    if (filterActive) params.set('active', filterActive)
+    const data = await api(`/api/admin/ads?${params}`)
+    setAds(data.ads || [])
+    setTotal(data.total || 0)
+    setLoading(false)
+  }, [page, filterType, filterActive])
+
+  useEffect(() => { fetchAds() }, [fetchAds])
+
+  const selectedBorough = AD_BOROUGHS.find(b => b.slug === formBorough)
+
+  const resetForm = () => {
+    setEditingId(null)
+    setFormType('homepage')
+    setFormAdvertiser('')
+    setFormImageUrl('')
+    setFormLinkUrl('')
+    setFormCategory('')
+    setFormBorough('')
+    setFormNeighborhood('')
+    setFormError('')
+    setShowForm(false)
+  }
+
+  const startEdit = (ad: AdRow) => {
+    setEditingId(ad.id)
+    setFormType(ad.type as 'homepage' | 'neighborhood' | 'borough' | 'all-nyc')
+    setFormAdvertiser(ad.advertiser)
+    setFormImageUrl(ad.image_url)
+    setFormLinkUrl(ad.link_url)
+    setFormCategory(ad.category_slug || '')
+    setFormBorough(ad.borough_slug || '')
+    setFormNeighborhood(ad.neighborhood_slug || '')
+    setFormError('')
+    setShowForm(true)
+  }
+
+  const handleSave = async () => {
+    setFormError('')
+    if (!formAdvertiser.trim()) { setFormError('Advertiser name is required'); return }
+    if (!formImageUrl.trim()) { setFormError('Image URL is required'); return }
+    if (formType === 'neighborhood' && (!formCategory || !formBorough || !formNeighborhood)) {
+      setFormError('Category, borough, and neighborhood are all required for neighborhood ads')
+      return
+    }
+    if (formType === 'borough' && (!formCategory || !formBorough)) {
+      setFormError('Category and borough are required for borough ads')
+      return
+    }
+    if (formType === 'all-nyc' && !formCategory) {
+      setFormError('Category is required for all-NYC ads')
+      return
+    }
+
+    setSaving(true)
+    const payload = {
+      type: formType,
+      advertiser: formAdvertiser.trim(),
+      image_url: formImageUrl.trim(),
+      link_url: formLinkUrl.trim(),
+      category_slug: formType !== 'homepage' ? formCategory : null,
+      borough_slug: (formType === 'neighborhood' || formType === 'borough') ? formBorough : null,
+      neighborhood_slug: formType === 'neighborhood' ? formNeighborhood : null,
+    }
+
+    let res
+    if (editingId) {
+      res = await api('/api/admin/ads', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingId, ...payload }) })
+    } else {
+      res = await api('/api/admin/ads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    }
+
+    setSaving(false)
+    if (res.error) { setFormError(res.error); return }
+    resetForm()
+    fetchAds()
+  }
+
+  const toggleActive = async (ad: AdRow) => {
+    await api('/api/admin/ads', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: ad.id, active: !ad.active }) })
+    fetchAds()
+  }
+
+  const deleteAd = async (ad: AdRow) => {
+    if (!confirm(`Delete ad from "${ad.advertiser}"?`)) return
+    await api('/api/admin/ads', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: ad.id }) })
+    fetchAds()
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Ads</h2>
+        <button style={btnPrimary} onClick={() => { resetForm(); setShowForm(true) }}>+ New Ad</button>
+      </div>
+
+      {/* Program overview */}
+      <div style={{ ...cardStyle, marginBottom: '1rem', fontSize: '0.8125rem', color: colors.textMuted, lineHeight: 1.6 }}>
+        <strong style={{ color: colors.text }}>Ad Program</strong>
+        <div style={{ marginTop: '0.375rem' }}>
+          <span style={badge('#7c3aed', '#ede9fe')}>Homepage</span>{' '}
+          1 banner on the homepage — all visitors.
+        </div>
+        <div style={{ marginTop: '0.25rem' }}>
+          <span style={badge('#059669', '#dcfce7')}>All NYC</span>{' '}
+          1 ad per category — city-wide fallback when no borough or neighborhood ad exists.
+        </div>
+        <div style={{ marginTop: '0.25rem' }}>
+          <span style={badge('#d97706', '#fff7ed')}>Borough</span>{' '}
+          1 ad per category per borough — fallback when no neighborhood ad exists.
+        </div>
+        <div style={{ marginTop: '0.25rem' }}>
+          <span style={badge(colors.primary, '#dbeafe')}>Neighborhood</span>{' '}
+          1 ad per category per neighborhood — most specific, shown first.
+        </div>
+      </div>
+
+      {/* Create / Edit form */}
+      {showForm && (
+        <div style={{ ...cardStyle, marginBottom: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, margin: 0 }}>
+              {editingId ? 'Edit Ad' : 'New Ad'}
+            </h3>
+            <button style={{ ...btnOutline, fontSize: '0.6875rem' }} onClick={resetForm}>Cancel</button>
+          </div>
+
+          {/* Type toggle */}
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+            {([
+              { key: 'homepage', label: 'Homepage' },
+              { key: 'all-nyc', label: 'All NYC' },
+              { key: 'borough', label: 'Borough' },
+              { key: 'neighborhood', label: 'Neighborhood' },
+            ] as const).map(t => (
+              <button
+                key={t.key}
+                onClick={() => setFormType(t.key)}
+                style={{
+                  padding: '0.375rem 1rem',
+                  borderRadius: '0.375rem',
+                  border: `1px solid ${formType === t.key ? colors.primary : colors.border}`,
+                  backgroundColor: formType === t.key ? colors.primary : colors.bgWhite,
+                  color: formType === t.key ? '#fff' : colors.text,
+                  fontSize: '0.8125rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Fields */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+            <div>
+              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, display: 'block', marginBottom: '0.25rem' }}>Advertiser</label>
+              <input style={{ ...inputStyle, width: '100%' }} value={formAdvertiser} onChange={e => setFormAdvertiser(e.target.value)} placeholder="Business name" />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, display: 'block', marginBottom: '0.25rem' }}>Link URL</label>
+              <input style={{ ...inputStyle, width: '100%' }} value={formLinkUrl} onChange={e => setFormLinkUrl(e.target.value)} placeholder="https://..." />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '0.75rem' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, display: 'block', marginBottom: '0.25rem' }}>Image URL</label>
+            <input style={{ ...inputStyle, width: '100%' }} value={formImageUrl} onChange={e => setFormImageUrl(e.target.value)} placeholder="https://...image.jpg" />
+          </div>
+
+          {formImageUrl && (
+            <div style={{ marginBottom: '0.75rem', padding: '0.5rem', border: `1px solid ${colors.border}`, borderRadius: '0.5rem', backgroundColor: colors.bg }}>
+              <div style={{ fontSize: '0.6875rem', color: colors.textLight, marginBottom: '0.375rem' }}>Preview</div>
+              <img src={formImageUrl} alt="Ad preview" style={{ maxWidth: '100%', maxHeight: '120px', borderRadius: '0.375rem', objectFit: 'contain' }} />
+            </div>
+          )}
+
+          {/* Category targeting */}
+          {/* Targeting fields — shown based on type */}
+          {formType !== 'homepage' && (
+            <div style={{ display: 'grid', gridTemplateColumns: formType === 'all-nyc' ? '1fr' : formType === 'borough' ? '1fr 1fr' : '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              <div>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, display: 'block', marginBottom: '0.25rem' }}>Category</label>
+                <select style={{ ...selectStyle, width: '100%' }} value={formCategory} onChange={e => setFormCategory(e.target.value)}>
+                  <option value="">Select...</option>
+                  {AD_CATEGORIES.map(c => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+                </select>
+              </div>
+              {(formType === 'borough' || formType === 'neighborhood') && (
+                <div>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, display: 'block', marginBottom: '0.25rem' }}>Borough</label>
+                  <select style={{ ...selectStyle, width: '100%' }} value={formBorough} onChange={e => { setFormBorough(e.target.value); setFormNeighborhood('') }}>
+                    <option value="">Select...</option>
+                    {AD_BOROUGHS.map(b => <option key={b.slug} value={b.slug}>{b.name}</option>)}
+                  </select>
+                </div>
+              )}
+              {formType === 'neighborhood' && (
+                <div>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, display: 'block', marginBottom: '0.25rem' }}>Neighborhood</label>
+                  <select style={{ ...selectStyle, width: '100%' }} value={formNeighborhood} onChange={e => setFormNeighborhood(e.target.value)} disabled={!formBorough}>
+                    <option value="">Select...</option>
+                    {selectedBorough?.neighborhoods.map(n => <option key={n} value={nhSlug(n)}>{n}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+
+          {formError && (
+            <div style={{ fontSize: '0.8125rem', color: colors.danger, marginBottom: '0.75rem' }}>{formError}</div>
+          )}
+
+          <button style={{ ...btnPrimary, padding: '0.5rem 1.5rem', fontSize: '0.8125rem' }} onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving...' : editingId ? 'Update Ad' : 'Create Ad'}
+          </button>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center' }}>
+        <select style={selectStyle} value={filterType} onChange={e => { setFilterType(e.target.value); setPage(1) }}>
+          <option value="">All types</option>
+          <option value="homepage">Homepage</option>
+          <option value="all-nyc">All NYC</option>
+          <option value="borough">Borough</option>
+          <option value="neighborhood">Neighborhood</option>
+        </select>
+        <select style={selectStyle} value={filterActive} onChange={e => { setFilterActive(e.target.value); setPage(1) }}>
+          <option value="">All status</option>
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+        <span style={{ fontSize: '0.75rem', color: colors.textLight }}>{total} ad{total !== 1 ? 's' : ''}</span>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <div style={{ color: colors.textMuted, fontSize: '0.875rem' }}>Loading...</div>
+      ) : ads.length === 0 ? (
+        <div style={{ ...cardStyle, textAlign: 'center', color: colors.textMuted, padding: '2rem', fontSize: '0.875rem' }}>
+          No ads yet. Click &quot;+ New Ad&quot; to create one.
+        </div>
+      ) : (
+        <div style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={thStyle}>Type</th>
+                <th style={thStyle}>Advertiser</th>
+                <th style={thStyle}>Slot</th>
+                <th style={thStyle}>Status</th>
+                <th style={thStyle}>Expires</th>
+                <th style={thStyle}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ads.map(ad => {
+                const expired = new Date(ad.expires_at) < new Date()
+                const catName = AD_CATEGORIES.find(c => c.slug === ad.category_slug)?.name
+                const borName = AD_BOROUGHS.find(b => b.slug === ad.borough_slug)?.name
+
+                return (
+                  <tr key={ad.id}>
+                    <td style={tdStyle}>
+                      {ad.type === 'homepage' && <span style={badge('#7c3aed', '#ede9fe')}>Homepage</span>}
+                      {ad.type === 'all-nyc' && <span style={badge('#059669', '#dcfce7')}>All NYC</span>}
+                      {ad.type === 'borough' && <span style={badge('#d97706', '#fff7ed')}>Borough</span>}
+                      {ad.type === 'neighborhood' && <span style={badge(colors.primary, '#dbeafe')}>Neighborhood</span>}
+                    </td>
+                    <td style={tdStyle}>
+                      <div style={{ fontWeight: 500 }}>{ad.advertiser}</div>
+                      {ad.image_url && (
+                        <img src={ad.image_url} alt="" style={{ maxWidth: '80px', maxHeight: '32px', marginTop: '2px', borderRadius: '3px', objectFit: 'contain' }} />
+                      )}
+                    </td>
+                    <td style={{ ...tdStyle, fontSize: '0.8125rem' }}>
+                      {ad.type === 'homepage' && <span style={{ color: colors.textMuted }}>Homepage banner</span>}
+                      {ad.type === 'all-nyc' && <span>{catName} &middot; All NYC</span>}
+                      {ad.type === 'borough' && <span>{catName} &middot; {borName}</span>}
+                      {ad.type === 'neighborhood' && <span>{catName} &middot; {borName} &middot; {ad.neighborhood_slug}</span>}
+                    </td>
+                    <td style={tdStyle}>
+                      {expired
+                        ? <span style={badge(colors.warning, '#fff7ed')}>Expired</span>
+                        : ad.active
+                          ? <span style={badge(colors.success, '#dcfce7')}>Active</span>
+                          : <span style={badge(colors.textLight, '#f1f5f9')}>Inactive</span>
+                      }
+                    </td>
+                    <td style={{ ...tdStyle, fontSize: '0.8125rem', color: colors.textMuted }}>
+                      {formatDate(ad.expires_at)}
+                    </td>
+                    <td style={tdStyle}>
+                      <div style={{ display: 'flex', gap: '0.375rem' }}>
+                        <button style={btnOutline} onClick={() => startEdit(ad)}>Edit</button>
+                        <button style={btnOutline} onClick={() => toggleActive(ad)}>
+                          {ad.active ? 'Pause' : 'Activate'}
+                        </button>
+                        <button style={btnDanger} onClick={() => deleteAd(ad)}>Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'center', marginTop: '1rem' }}>
+          <button style={btnOutline} disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Prev</button>
+          <span style={{ fontSize: '0.75rem', color: colors.textMuted }}>Page {page} of {totalPages}</span>
+          <button style={btnOutline} disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next</button>
+        </div>
+      )}
     </div>
   )
 }

@@ -81,16 +81,21 @@ export async function POST(request: NextRequest) {
     details: { distance: distance.toFixed(3), lat: geoLat, lon: geoLon },
   })
 
-  // Send verification success email (async, don't block response)
-  ;(async () => {
-    try {
-      const { data: u } = await db.from('users').select('email, name, address').eq('id', userId).single()
-      if (!u?.email || u.email.endsWith('@example.com')) return
+  // Send verification + welcome emails before returning
+  try {
+    const { data: u } = await db.from('users').select('email, name, address').eq('id', userId).single()
+    if (u?.email && !u.email.endsWith('@example.com')) {
       const nh = u.address?.split(',')[0]?.trim() || ''
-      await sendEmail(u.email, verificationSuccessEmail(u.name || 'there', nh))
-      await sendEmail(u.email, welcomeEmail(u.name || 'there', nh))
-    } catch {}
-  })()
+      const [verRes, welRes] = await Promise.all([
+        sendEmail(u.email, verificationSuccessEmail(u.name || 'there', nh)),
+        sendEmail(u.email, welcomeEmail(u.name || 'there', nh)),
+      ])
+      if (verRes.error) console.error('Verification email failed:', verRes.error)
+      if (welRes.error) console.error('Welcome email failed:', welRes.error)
+    }
+  } catch (err) {
+    console.error('Signup email error:', err)
+  }
 
   return NextResponse.json({ verified: true, distance: distance.toFixed(2) })
 }

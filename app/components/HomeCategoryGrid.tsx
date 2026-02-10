@@ -54,7 +54,7 @@ export default function HomeCategoryGrid() {
     : 'Free Classifieds in New York City'
 
   return (
-    <section aria-label="Browse classifieds by category" style={{ padding: '20px 0 0' }}>
+    <section aria-label="Browse classifieds by category" style={{ padding: '10px 0 0' }}>
       {/* Home indicator */}
       {home && (
         <div style={{

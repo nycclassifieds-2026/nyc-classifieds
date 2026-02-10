@@ -175,8 +175,33 @@ a.link:hover {
   white-space: nowrap;
 }
 
+/* ─── Homepage top: search left, ad right on desktop ─── */
+.homepage-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+.homepage-top-left { min-width: 0; }
+.homepage-top-right {
+  min-width: 0;
+  display: flex;
+}
+.homepage-top-right > * { width: 100%; }
+
+/* ─── Ad placements ─── */
+.mobile-only-ad { display: none; }
+.desktop-only-ad { display: flex; }
+
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
+  .homepage-top {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .mobile-only-ad { display: block; margin: 4px 0 8px; }
+  .desktop-only-ad { display: none !important; }
+
   main {
     padding-left: 1rem !important;
     padding-right: 1rem !important;

@@ -20,11 +20,15 @@ export default function BoroughNav() {
     const nh = findNeighborhood(boroughSlug, nhSlug)
     if (!b || !nh) return
     setPending({ boroughSlug, nhSlug, nhName: nh.name, boroughName: b.name })
+    window.dispatchEvent(new CustomEvent('walkthrough:neighborhood-clicked'))
   }
 
   const confirmSave = () => {
     if (!pending) return
     localStorage.setItem('home', `${pending.boroughSlug}/${pending.nhSlug}`)
+    // Persist walkthrough to step 4 before reload
+    try { localStorage.setItem('walkthrough_step', '4') } catch {}
+    window.dispatchEvent(new CustomEvent('walkthrough:home-saved'))
     setPending(null)
     setExpanded(null)
     window.location.reload()
@@ -36,11 +40,23 @@ export default function BoroughNav() {
 
   return (
     <div>
-      <nav aria-label="Browse by borough" className="home-borough-nav" style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '4px' }}>
+      <p style={{
+        fontSize: '0.75rem',
+        color: '#6b7280',
+        margin: '0 0 6px',
+        fontFamily: "'DM Sans', sans-serif",
+      }}>
+        Pick your borough to set your neighborhood
+      </p>
+      <nav aria-label="Browse by borough" className="home-borough-nav" data-walkthrough="borough-nav" style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '4px' }}>
         {boroughs.map(b => (
           <button
             key={b.slug}
-            onClick={() => setExpanded(expanded === b.slug ? null : b.slug)}
+            onClick={() => {
+              const willExpand = expanded !== b.slug
+              setExpanded(willExpand ? b.slug : null)
+              if (willExpand) window.dispatchEvent(new CustomEvent('walkthrough:borough-expanded'))
+            }}
             style={{
               color: expanded === b.slug ? '#111827' : '#1a56db',
               fontSize: '1rem',
@@ -60,7 +76,7 @@ export default function BoroughNav() {
 
       {/* Confirmation popup */}
       {pending && (
-        <div style={{
+        <div data-walkthrough="save-confirm" style={{
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
@@ -112,7 +128,7 @@ export default function BoroughNav() {
         const borough = boroughs.find(b => b.slug === expanded)
         if (!borough) return null
         return (
-          <div style={{
+          <div data-walkthrough="neighborhood-list" style={{
             display: 'flex',
             flexWrap: 'wrap',
             gap: '4px 12px',
