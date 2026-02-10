@@ -36,7 +36,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
           display: 'flex',
           alignItems: 'center',
         }}>
-          <div style={{
+          <div className="header-inner" style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -46,12 +46,13 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
             padding: '0 24px',
           }}>
             {/* Logo */}
-            <Link href="/" style={{
+            <Link href="/" className="header-logo" style={{
               fontFamily: "'DM Sans', sans-serif",
               fontSize: '1.5rem',
               letterSpacing: '-0.02em',
               flexShrink: 0,
               textDecoration: 'none',
+              whiteSpace: 'nowrap',
             }}>
               <span style={{ color: '#1f2937', fontWeight: 400 }}>The </span>
               <span style={{ color: '#2563eb', fontWeight: 700 }}>NYC</span>
@@ -59,7 +60,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
             </Link>
 
             {/* Section tabs */}
-            <nav style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '32px' }}>
+            <nav className="header-nav-tabs" style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '32px' }}>
               <Link href="/" style={{
                 padding: '6px 14px',
                 fontSize: '0.8125rem',
@@ -67,6 +68,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                 color: pathname === '/' || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island') ? '#111827' : '#6b7280',
                 borderBottom: pathname === '/' || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island') ? '2px solid #1a56db' : '2px solid transparent',
                 fontFamily: "'DM Sans', sans-serif",
+                whiteSpace: 'nowrap',
               }}>
                 Classifieds
               </Link>
@@ -77,6 +79,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                 color: pathname?.startsWith('/porch') ? '#111827' : '#6b7280',
                 borderBottom: pathname?.startsWith('/porch') ? '2px solid #059669' : '2px solid transparent',
                 fontFamily: "'DM Sans', sans-serif",
+                whiteSpace: 'nowrap',
               }}>
                 The Porch
               </Link>
@@ -85,9 +88,9 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
             <div style={{ flex: 1 }} />
 
             {/* Right nav: Post | Account */}
-            <nav style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+            <nav className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
               {/* Post button — always visible */}
-              <Link href="/listings/new" style={{
+              <Link href="/listings/new" className="header-post-btn" style={{
                 backgroundColor: '#1a56db',
                 color: '#ffffff',
                 padding: '7px 18px',
@@ -168,7 +171,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
         }}>
           <div style={{ maxWidth: '1050px', margin: '0 auto', padding: '48px 24px 24px' }}>
             {/* 5-column grid, manually balanced */}
-            <div style={{
+            <div className="footer-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(5, 1fr)',
               gap: '0 20px',
@@ -219,7 +222,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
             </div>
 
             {/* Copyright bar */}
-            <div style={{
+            <div className="footer-bottom" style={{
               borderTop: '1px solid #1f2937',
               marginTop: '24px',
               paddingTop: '16px',

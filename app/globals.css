@@ -182,10 +182,93 @@ a.link:hover {
     padding-right: 1rem !important;
   }
 
-  main > div {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+  /* Header: shrink logo, tighten padding */
+  .header-inner {
+    padding: 0 12px !important;
+  }
+
+  .header-logo {
+    font-size: 1.125rem !important;
+  }
+
+  .header-nav-tabs {
+    margin-left: 12px !important;
+    gap: 0 !important;
+  }
+
+  .header-nav-tabs a {
+    padding: 6px 8px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .header-right {
+    gap: 8px !important;
+  }
+
+  .header-post-btn {
+    padding: 6px 12px !important;
+    font-size: 0.8125rem !important;
+  }
+
+  /* Homepage: categories 2 cols on mobile */
+  .home-category-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0 12px !important;
+  }
+
+  /* Homepage: search full width */
+  .home-search-form {
     max-width: 100% !important;
   }
 
+  /* Homepage: borough nav wraps nicely */
+  .home-borough-nav {
+    gap: 10px 14px !important;
+    font-size: 0.875rem !important;
+  }
+
+  .home-borough-nav a {
+    font-size: 0.875rem !important;
+  }
+
+  /* Footer: 2 cols on mobile */
+  .footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 24px 16px !important;
+  }
+
+  .footer-bottom {
+    flex-direction: column !important;
+    gap: 4px !important;
+    text-align: center !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-logo {
+    font-size: 1rem !important;
+  }
+
+  .header-nav-tabs {
+    margin-left: 8px !important;
+  }
+
+  .header-nav-tabs a {
+    padding: 6px 6px !important;
+    font-size: 0.6875rem !important;
+  }
+
+  .header-post-btn {
+    padding: 5px 10px !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Homepage: single column on very small */
+  .home-category-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+  }
 }

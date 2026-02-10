@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin()
   let query = db
     .from('listings')
-    .select('id, title, price, images, location, category_slug, subcategory_slug, created_at, user_id, users!inner(name, verified)', { count: 'exact' })
+    .select('id, title, price, images, location, category_slug, subcategory_slug, created_at, user_id, users!inner(name, verified, selfie_url)', { count: 'exact' })
     .eq('status', 'active')
 
   if (category) query = query.eq('category_slug', category)
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
   // Check verified + account type
   const { data: user } = await db
     .from('users')
-    .select('verified, account_type')
+    .select('verified')
     .eq('id', userId)
     .single()
 
@@ -78,11 +78,6 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json()
   const { title, description, price, category_slug, subcategory_slug, images, location } = body
-
-  // Services requires business profile
-  if (category_slug === 'services' && user.account_type !== 'business') {
-    return NextResponse.json({ error: 'Business profile required to post services. Create a free business profile to offer services.' }, { status: 403 })
-  }
 
   if (!title?.trim() || !category_slug) {
     return NextResponse.json({ error: 'Title and category required' }, { status: 400 })

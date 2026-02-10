@@ -11,7 +11,7 @@ interface Listing {
   location: string | null
   category_slug: string
   created_at: string
-  users: { name: string; verified: boolean }
+  users: { name: string; verified: boolean; selfie_url?: string | null }
 }
 
 export default function HomeListings() {

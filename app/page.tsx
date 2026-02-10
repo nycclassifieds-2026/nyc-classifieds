@@ -35,7 +35,7 @@ export default function Home() {
       {/* Search + boroughs */}
       <section style={{ padding: '8px 0 0' }}>
         <h1 className="sr-only">Free Classifieds in New York City — Housing, Jobs, Services, For Sale & More</h1>
-        <form action="/search" method="GET" role="search" aria-label="Search all NYC classifieds" style={{ display: 'flex', gap: '8px', maxWidth: '480px', marginBottom: '12px' }}>
+        <form action="/search" method="GET" role="search" aria-label="Search all NYC classifieds" className="home-search-form" style={{ display: 'flex', gap: '8px', maxWidth: '480px', marginBottom: '12px' }}>
           <input
             type="text"
             name="q"
@@ -55,7 +55,7 @@ export default function Home() {
             Search
           </button>
         </form>
-        <nav aria-label="Browse by borough" style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '4px' }}>
+        <nav aria-label="Browse by borough" className="home-borough-nav" style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '4px' }}>
           {boroughs.map(b => (
             <Link key={b.slug} href={`/${b.slug}`} style={{
               color: '#1a56db', fontSize: '1rem', fontWeight: 500, textDecoration: 'none',
@@ -74,7 +74,7 @@ export default function Home() {
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', marginBottom: '16px' }}>
           Classifieds in New York City
         </h2>
-        <div style={{
+        <div className="home-category-grid" style={{
           display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0 20px',
           borderTop: '1px solid #e5e7eb', paddingTop: '12px',
         }}>

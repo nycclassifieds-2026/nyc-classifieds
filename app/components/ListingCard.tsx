@@ -10,7 +10,7 @@ interface ListingCardProps {
   location: string | null
   category_slug: string
   created_at: string
-  users: { name: string; verified: boolean }
+  users: { name: string; verified: boolean; selfie_url?: string | null }
 }
 
 const categoryColors: Record<string, string> = {
@@ -25,6 +25,13 @@ const categoryColors: Record<string, string> = {
   'barter': 'var(--cat-barter)',
   'rentals': 'var(--cat-rentals)',
   'resumes': 'var(--cat-resumes)',
+}
+
+const COLORS = ['#2563eb','#dc2626','#059669','#d97706','#7c3aed','#db2777','#0891b2','#ea580c']
+function hashColor(name: string) {
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = ((h << 5) - h + name.charCodeAt(i)) | 0
+  return COLORS[Math.abs(h) % COLORS.length]
 }
 
 export default function ListingCard({ id, title, price, images, location, category_slug, created_at, users }: ListingCardProps) {
@@ -88,7 +95,7 @@ export default function ListingCard({ id, title, price, images, location, catego
           color: price === 0 || price == null ? 'var(--green-600)' : 'var(--gray-900)',
           marginBottom: '0.125rem',
         }}>
-          {price != null && price > 0 ? `$${(price / 100).toLocaleString()}` : 'Free'}
+          {price != null && price > 0 ? `$${price.toLocaleString()}` : 'Free'}
         </div>
         <div style={{
           fontSize: '0.875rem',
@@ -105,22 +112,36 @@ export default function ListingCard({ id, title, price, images, location, catego
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          fontSize: '0.8125rem',
+          fontSize: '0.75rem',
           color: 'var(--gray-500)',
         }}>
-          <span>{location || 'NYC'}</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-            {users.verified && (
-              <span style={{
-                display: 'inline-block',
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--green-600)',
+          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+            {/* Avatar */}
+            {users.selfie_url ? (
+              <img src={users.selfie_url} alt="" style={{
+                width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', flexShrink: 0,
               }} />
+            ) : (
+              <span style={{
+                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                backgroundColor: hashColor(users.name),
+                color: '#fff', fontSize: '10px', fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {users.name[0]?.toUpperCase()}
+              </span>
             )}
-            {timeAgo}
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {users.name}
+            </span>
+            {users.verified && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="12" fill="#2563eb"/>
+                <path d="M7.5 12.5l3 3 6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
           </span>
+          <span style={{ flexShrink: 0, marginLeft: '8px' }}>{timeAgo}</span>
         </div>
       </div>
     </Link>
