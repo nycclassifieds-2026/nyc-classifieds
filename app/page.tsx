@@ -48,9 +48,12 @@ export default function Home() {
 
       {/* Categories — 5-col grid */}
       <section aria-label="Browse classifieds by category" style={{ padding: '20px 0 0' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', marginBottom: '4px' }}>
           Free Classifieds in New York City
         </h2>
+        <p style={{ fontSize: '0.875rem', color: '#000000', marginBottom: '16px' }}>
+          <strong>Free.</strong> Real. Local. Verified NYC classifieds.
+        </p>
         <div className="home-category-grid" style={{
           display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0 20px',
           borderTop: '1px solid #e5e7eb', paddingTop: '12px',
