@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { buildMetadata } from '@/lib/seo'
 import PorchClient from './PorchClient'
+import PorchRedirect from '@/app/components/PorchRedirect'
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
@@ -38,6 +39,7 @@ export default function PorchPage() {
 
   return (
     <>
+      <PorchRedirect />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(forumLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>

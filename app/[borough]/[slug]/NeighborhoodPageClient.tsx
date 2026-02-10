@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import BrowsePage from '@/app/components/BrowsePage'
+import NeighborhoodHome from '@/app/components/NeighborhoodHome'
 import { boroughBySlug, findNeighborhood, categories } from '@/lib/data'
 
 export default function NeighborhoodPageClient({ boroughSlug, neighborhoodSlug }: { boroughSlug: string; neighborhoodSlug: string }) {
@@ -11,6 +12,14 @@ export default function NeighborhoodPageClient({ boroughSlug, neighborhoodSlug }
 
   return (
     <>
+      <div style={{ maxWidth: '1050px', margin: '0 auto', padding: '0 24px' }}>
+        <NeighborhoodHome
+          boroughSlug={boroughSlug}
+          neighborhoodSlug={neighborhoodSlug}
+          neighborhoodName={nh.name}
+          boroughName={b.name}
+        />
+      </div>
       <BrowsePage
         title={`Classifieds in ${nh.name}, ${b.name}`}
         breadcrumbs={[

@@ -3,6 +3,7 @@ import { homepageColumns, boroughs, categories, slugify } from '@/lib/data'
 import { websiteSchema, organizationSchema, faqSchema, collectionPageSchema } from '@/lib/seo'
 import HomeSearch from './components/HomeSearch'
 import BoroughNav from './components/BoroughNav'
+import HomeRedirect from './components/HomeRedirect'
 
 export default function Home() {
   const categoryItems = categories.map(c => ({ name: c.name, url: `/listings/${c.slug}` }))
@@ -29,6 +30,7 @@ export default function Home() {
 
   return (
     <main style={{ maxWidth: '1050px', margin: '0 auto', padding: '12px 24px 32px' }}>
+      <HomeRedirect />
       {/* JSON-LD structured data */}
       {schemas.map((s, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(s) }} />
@@ -41,9 +43,6 @@ export default function Home() {
           <HomeSearch />
         </div>
         <BoroughNav />
-        <p style={{ fontSize: '0.875rem', color: '#000000', paddingBottom: '16px', borderBottom: '1px solid #e5e7eb' }}>
-          <strong>Free.</strong> Real. Local. Verified NYC classifieds.
-        </p>
       </section>
 
       {/* Categories — 5-col grid */}
