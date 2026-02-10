@@ -20,17 +20,17 @@ function toRad(deg: number): number {
   return deg * (Math.PI / 180)
 }
 
+// NYC bounding box (all 5 boroughs)
+const NYC_VIEWBOX = '-74.26,40.49,-73.70,40.92'
+
 /**
- * Geocode an address using the Nominatim (OpenStreetMap) API.
- * Free, no API key required. Rate limited to 1 req/s.
+ * Geocode an address using Nominatim (OpenStreetMap). Free, no API key.
  */
 export async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
-  const encoded = encodeURIComponent(address)
+  const biased = address.toLowerCase().includes('new york') ? address : `${address}, New York City`
   const res = await fetch(
-    `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1&countrycodes=us`,
-    {
-      headers: { 'User-Agent': 'NYCClassifieds/1.0' },
-    }
+    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(biased)}&format=json&limit=1&countrycodes=us&viewbox=${NYC_VIEWBOX}&bounded=1`,
+    { headers: { 'User-Agent': 'NYCClassifieds/1.0' } }
   )
 
   if (!res.ok) return null
@@ -44,9 +44,6 @@ export async function geocodeAddress(address: string): Promise<{ lat: number; ln
   }
 }
 
-// NYC bounding box (all 5 boroughs)
-const NYC_VIEWBOX = '-74.26,40.49,-73.70,40.92'
-
 export interface AddressSuggestion {
   display_name: string
   lat: number
@@ -55,41 +52,43 @@ export interface AddressSuggestion {
 
 /**
  * Search for address suggestions within NYC using Nominatim.
- * Appends "New York City" to bias results and filters to NY state.
+ * Uses free-form query with NYC bias for best partial-input results.
  */
 export async function searchAddresses(query: string): Promise<AddressSuggestion[]> {
   const biased = `${query}, New York City`
-  const encoded = encodeURIComponent(biased)
   const res = await fetch(
-    `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=5&countrycodes=us&viewbox=${NYC_VIEWBOX}&bounded=1&addressdetails=1`,
-    {
-      headers: { 'User-Agent': 'NYCClassifieds/1.0' },
-    }
+    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(biased)}&format=json&limit=5&countrycodes=us&viewbox=${NYC_VIEWBOX}&bounded=1&addressdetails=1`,
+    { headers: { 'User-Agent': 'NYCClassifieds/1.0' } }
   )
 
   if (!res.ok) return []
 
-  const data = await res.json()
-  // Filter to only New York state results
+  const data: Array<Record<string, unknown>> = await res.json()
+
   return data
-    .filter((item: { address?: { state?: string } }) =>
-      item.address?.state === 'New York'
-    )
-    .map((item: { display_name: string; lat: string; lon: string; address?: { house_number?: string; road?: string; neighbourhood?: string; suburb?: string; city?: string; borough?: string; postcode?: string } }) => {
-      // Build a clean short display: "150 W 47th St, Midtown, Manhattan, 10036"
-      const a = item.address || {}
+    .filter((item: Record<string, unknown>) => {
+      const addr = item.address as Record<string, string> | undefined
+      return addr?.state === 'New York'
+    })
+    .map((item: Record<string, unknown>) => {
+      const a = (item.address || {}) as Record<string, string>
       const parts: string[] = []
       if (a.house_number && a.road) parts.push(`${a.house_number} ${a.road}`)
       else if (a.road) parts.push(a.road)
-      if (a.neighbourhood || a.suburb) parts.push(a.neighbourhood || a.suburb || '')
-      if (a.borough) parts.push(a.borough)
+      // Nominatim often returns "Manhattan Community Board 5" etc. as neighbourhood — skip those
+      const hood = (a.neighbourhood && !a.neighbourhood.includes('Community Board')) ? a.neighbourhood
+        : (a.suburb && !a.suburb.includes('Community Board')) ? a.suburb : null
+      if (hood) parts.push(hood)
+      // Prefer borough (e.g. "Manhattan") over city ("New York")
+      const boro = (a.borough && !a.borough.includes('Community Board')) ? a.borough : null
+      if (boro) parts.push(boro)
       else if (a.city) parts.push(a.city)
       if (a.postcode) parts.push(a.postcode)
-      const display = parts.filter(Boolean).join(', ') || item.display_name
+      const display = parts.filter(Boolean).join(', ') || (item.display_name as string)
       return {
         display_name: display,
-        lat: parseFloat(item.lat),
-        lng: parseFloat(item.lon),
+        lat: parseFloat(item.lat as string),
+        lng: parseFloat(item.lon as string),
       }
     })
 }

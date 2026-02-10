@@ -232,6 +232,11 @@ export default function SignupClient() {
 
   const currentIdx = visibleSteps.indexOf(step)
 
+  const goBack = () => {
+    setError('')
+    if (currentIdx > 0) setStep(visibleSteps[currentIdx - 1])
+  }
+
   return (
     <main style={{ maxWidth: '480px', margin: '0 auto', padding: '1.5rem', minHeight: 'calc(100vh - 56px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       {/* Progress */}
@@ -295,6 +300,7 @@ export default function SignupClient() {
             {loading ? 'Verifying...' : 'Verify Code'}
           </button>
           <button onClick={() => { setOtp(''); handleSendOtp() }} style={linkBtnStyle}>Resend code</button>
+          <button onClick={goBack} style={backBtnStyle}>Back</button>
         </div>
       )}
 
@@ -317,6 +323,7 @@ export default function SignupClient() {
             </div>
           </button>
           {error && <p style={errorStyle}>{error}</p>}
+          <button onClick={goBack} style={backBtnStyle}>Back</button>
         </div>
       )}
 
@@ -336,6 +343,7 @@ export default function SignupClient() {
           <button onClick={handleSetName} disabled={loading || !firstName.trim() || !lastName.trim()} style={btnStyle}>
             {loading ? 'Saving...' : 'Continue'}
           </button>
+          <button onClick={goBack} style={backBtnStyle}>Back</button>
         </div>
       )}
 
@@ -445,6 +453,7 @@ export default function SignupClient() {
           <p style={{ fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center', marginTop: '0.75rem' }}>
             You can add photos after signup from your profile.
           </p>
+          <button onClick={goBack} style={backBtnStyle}>Back</button>
         </div>
       )}
 
@@ -464,6 +473,7 @@ export default function SignupClient() {
           <button onClick={handleSetPin} disabled={loading || pin.length < 4} style={btnStyle}>
             {loading ? 'Setting...' : 'Set PIN'}
           </button>
+          <button onClick={goBack} style={backBtnStyle}>Back</button>
         </div>
       )}
 
@@ -500,10 +510,7 @@ export default function SignupClient() {
               }}>
                 {addressSuggestions.map((s, i) => (
                   <div key={i} onClick={() => {
-                    // Shorten: take first part before the county/state detail
-                    const parts = s.display_name.split(', ')
-                    const short = parts.slice(0, Math.min(parts.length, 4)).join(', ')
-                    setAddress(short)
+                    setAddress(s.display_name)
                     setCoords({ lat: s.lat, lng: s.lng })
                     setAddressSelected(true)
                     setShowSuggestions(false)
@@ -530,6 +537,7 @@ export default function SignupClient() {
           <button onClick={handleSetAddress} disabled={loading || !address.trim()} style={btnStyle}>
             {loading ? 'Verifying...' : 'Verify Address'}
           </button>
+          <button onClick={goBack} style={backBtnStyle}>Back</button>
         </div>
       )}
 
@@ -549,6 +557,7 @@ export default function SignupClient() {
             Make sure location services are on and you&apos;re at your address. Your phone&apos;s GPS location must match the address you entered.
           </div>
           <SelfieVerification onVerified={handleVerified} />
+          <button onClick={goBack} style={backBtnStyle}>Back</button>
         </div>
       )}
 
@@ -595,6 +604,12 @@ const errorStyle: React.CSSProperties = { color: '#dc2626', fontSize: '0.875rem'
 const linkBtnStyle: React.CSSProperties = {
   display: 'block', width: '100%', textAlign: 'center', background: 'none',
   border: 'none', color: '#2563eb', fontSize: '0.875rem', cursor: 'pointer',
+  marginTop: '0.75rem', padding: '0.5rem',
+}
+
+const backBtnStyle: React.CSSProperties = {
+  display: 'block', width: '100%', textAlign: 'center', background: 'none',
+  border: 'none', color: '#64748b', fontSize: '0.875rem', cursor: 'pointer',
   marginTop: '0.75rem', padding: '0.5rem',
 }
 
