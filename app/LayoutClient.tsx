@@ -62,6 +62,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
       .catch(() => setUser(null))
   }, [pathname])
 
+  const isAuthPage = pathname?.startsWith('/signup') || pathname?.startsWith('/login')
   const isClassifieds = pathname === '/' || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island')
   const isPorch = pathname?.startsWith('/porch')
 
@@ -206,7 +207,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
         </header>
       )}
 
-      {!hideNav && !isHomepage && !isSearchPage && (
+      {!hideNav && !isHomepage && !isSearchPage && !isAuthPage && (
         <div style={{
           maxWidth: '1050px',
           margin: '0 auto',

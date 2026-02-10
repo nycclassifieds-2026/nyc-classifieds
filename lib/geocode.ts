@@ -43,3 +43,34 @@ export async function geocodeAddress(address: string): Promise<{ lat: number; ln
     lng: parseFloat(data[0].lon),
   }
 }
+
+// NYC bounding box (all 5 boroughs)
+const NYC_VIEWBOX = '-74.26,40.49,-73.70,40.92'
+
+export interface AddressSuggestion {
+  display_name: string
+  lat: number
+  lng: number
+}
+
+/**
+ * Search for address suggestions within NYC using Nominatim.
+ */
+export async function searchAddresses(query: string): Promise<AddressSuggestion[]> {
+  const encoded = encodeURIComponent(query)
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=5&countrycodes=us&viewbox=${NYC_VIEWBOX}&bounded=1&addressdetails=1`,
+    {
+      headers: { 'User-Agent': 'NYCClassifieds/1.0' },
+    }
+  )
+
+  if (!res.ok) return []
+
+  const data = await res.json()
+  return data.map((item: { display_name: string; lat: string; lon: string }) => ({
+    display_name: item.display_name,
+    lat: parseFloat(item.lat),
+    lng: parseFloat(item.lon),
+  }))
+}

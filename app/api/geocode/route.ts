@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { geocodeAddress } from '@/lib/geocode'
+import { geocodeAddress, searchAddresses } from '@/lib/geocode'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
@@ -19,4 +19,20 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json(result)
+}
+
+/** Address autocomplete — returns up to 5 NYC suggestions */
+export async function GET(request: NextRequest) {
+  const ip = getClientIp(request.headers)
+  if (!rateLimit(`geocode-ac:${ip}`, 30, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
+  const q = request.nextUrl.searchParams.get('q')
+  if (!q || q.length < 3) {
+    return NextResponse.json([])
+  }
+
+  const results = await searchAddresses(q)
+  return NextResponse.json(results)
 }

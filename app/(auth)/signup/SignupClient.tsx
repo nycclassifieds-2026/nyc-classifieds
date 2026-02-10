@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import SelfieVerification from '@/app/components/SelfieVerification'
 import { boroughs, businessCategories } from '@/lib/data'
@@ -30,7 +30,8 @@ export default function SignupClient() {
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [accountType, setAccountType] = useState<'personal' | 'business'>('personal')
-  const [name, setName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   // Business fields
   const [businessName, setBusinessName] = useState('')
   const [businessCategory, setBusinessCategory] = useState('')
@@ -44,12 +45,47 @@ export default function SignupClient() {
   const [pin, setPin] = useState('')
   const [pinConfirm, setPinConfirm] = useState('')
   const [address, setAddress] = useState('')
+  const [addressSuggestions, setAddressSuggestions] = useState<{ display_name: string; lat: number; lng: number }[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [addressSelected, setAddressSelected] = useState(false)
+  const addressRef = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [userId, setUserId] = useState<string>('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const isBusiness = accountType === 'business'
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (addressRef.current && !addressRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const fetchSuggestions = useCallback((query: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (query.length < 3) {
+      setAddressSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`)
+        if (res.ok) {
+          const data = await res.json()
+          setAddressSuggestions(data)
+          setShowSuggestions(data.length > 0)
+        }
+      } catch {}
+    }, 350)
+  }, [])
 
   const api = async (body: Record<string, unknown>) => {
     setError('')
@@ -96,7 +132,8 @@ export default function SignupClient() {
   }
 
   const handleSetName = async () => {
-    const data = await api({ action: 'set-name', name })
+    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim()
+    const data = await api({ action: 'set-name', name: fullName })
     if (data?.nameSet) {
       setStep(isBusiness ? 'business' : 'pin')
     }
@@ -136,15 +173,25 @@ export default function SignupClient() {
     setLoading(true)
     setError('')
     try {
-      const geoRes = await fetch('/api/geocode', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address }),
-      })
-      const geoData = await geoRes.json()
-      if (!geoRes.ok) throw new Error(geoData.error || 'Could not find address')
-      setCoords({ lat: geoData.lat, lng: geoData.lng })
-      const saveData = await api({ action: 'set-address', address, lat: geoData.lat, lng: geoData.lng })
+      let lat: number, lng: number
+      if (addressSelected && coords) {
+        // Already have coords from autocomplete selection
+        lat = coords.lat
+        lng = coords.lng
+      } else {
+        // Geocode manually typed address
+        const geoRes = await fetch('/api/geocode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address }),
+        })
+        const geoData = await geoRes.json()
+        if (!geoRes.ok) throw new Error(geoData.error || 'Could not find address. Try selecting from the suggestions.')
+        lat = geoData.lat
+        lng = geoData.lng
+        setCoords({ lat, lng })
+      }
+      const saveData = await api({ action: 'set-address', address, lat, lng })
       if (saveData?.addressSet) setStep('selfie')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Address lookup failed')
@@ -214,6 +261,12 @@ export default function SignupClient() {
         <div>
           <h1 style={h1Style}>Create your account</h1>
           <p style={descStyle}>Enter your email to get started.</p>
+          <div style={{
+            backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem',
+            padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: '0.8125rem', color: '#1e40af', lineHeight: 1.5,
+          }}>
+            Use your phone to sign up — you&apos;ll need camera access and location services to verify your address.
+          </div>
           <input type="email" placeholder="you@example.com" value={email}
             onChange={e => setEmail(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSendOtp()}
@@ -271,13 +324,16 @@ export default function SignupClient() {
       {step === 'name' && (
         <div>
           <h1 style={h1Style}>{isBusiness ? 'Your name' : 'What\u2019s your name?'}</h1>
-          <p style={descStyle}>{isBusiness ? 'The contact person for this business.' : 'This is shown on your listings.'}</p>
-          <input type="text" placeholder="Your name" value={name}
-            onChange={e => setName(e.target.value)}
+          <p style={descStyle}>{isBusiness ? 'The contact person for this business.' : 'Your first name is shown on your listings. Last name is kept private.'}</p>
+          <input type="text" placeholder="First name" value={firstName}
+            onChange={e => setFirstName(e.target.value)}
+            style={{ ...inputStyle, marginBottom: '0.75rem' }} />
+          <input type="text" placeholder="Last name" value={lastName}
+            onChange={e => setLastName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSetName()}
             style={inputStyle} />
           {error && <p style={errorStyle}>{error}</p>}
-          <button onClick={handleSetName} disabled={loading || !name.trim()} style={btnStyle}>
+          <button onClick={handleSetName} disabled={loading || !firstName.trim() || !lastName.trim()} style={btnStyle}>
             {loading ? 'Saving...' : 'Continue'}
           </button>
         </div>
@@ -414,18 +470,65 @@ export default function SignupClient() {
       {/* ── Address ── */}
       {step === 'address' && (
         <div>
-          <h1 style={h1Style}>{isBusiness ? 'Business address' : 'Your address'}</h1>
+          <h1 style={h1Style}>{isBusiness ? 'Business address' : 'Your NYC address'}</h1>
           <p style={descStyle}>
             {isBusiness
               ? 'We verify your business is at this location. Your neighborhood is shown publicly.'
-              : 'We verify you live in NYC. Your exact address is never shown publicly.'}
+              : 'We verify you live in NYC. Only your neighborhood is shown — your exact address stays private.'}
           </p>
-          <input type="text" placeholder={isBusiness ? '123 Broadway, New York, NY' : '123 Main St, New York, NY'}
-            value={address} onChange={e => setAddress(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSetAddress()} style={inputStyle} />
+          <p style={{ fontSize: '0.8125rem', color: '#475569', marginBottom: '0.75rem', marginTop: '-0.75rem' }}>
+            Start typing your street address and select from the suggestions.
+          </p>
+          <div ref={addressRef} style={{ position: 'relative' }}>
+            <input type="text" placeholder="e.g. 150 W 47th St, New York"
+              autoComplete="off"
+              value={address}
+              onChange={e => {
+                setAddress(e.target.value)
+                setAddressSelected(false)
+                setCoords(null)
+                fetchSuggestions(e.target.value)
+              }}
+              onFocus={() => { if (addressSuggestions.length > 0) setShowSuggestions(true) }}
+              onKeyDown={e => e.key === 'Enter' && handleSetAddress()}
+              style={inputStyle} />
+            {showSuggestions && addressSuggestions.length > 0 && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '-0.75rem',
+                backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '0.5rem',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 10, maxHeight: '200px', overflowY: 'auto',
+              }}>
+                {addressSuggestions.map((s, i) => (
+                  <div key={i} onClick={() => {
+                    // Shorten: take first part before the county/state detail
+                    const parts = s.display_name.split(', ')
+                    const short = parts.slice(0, Math.min(parts.length, 4)).join(', ')
+                    setAddress(short)
+                    setCoords({ lat: s.lat, lng: s.lng })
+                    setAddressSelected(true)
+                    setShowSuggestions(false)
+                    setError('')
+                  }} style={{
+                    padding: '0.625rem 0.75rem', fontSize: '0.875rem', cursor: 'pointer',
+                    borderBottom: i < addressSuggestions.length - 1 ? '1px solid #f1f5f9' : 'none',
+                    color: '#1f2937',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f0f9ff')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#fff')}>
+                    {s.display_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {addressSelected && (
+            <p style={{ fontSize: '0.8125rem', color: '#16a34a', marginTop: '-0.5rem', marginBottom: '0.75rem' }}>
+              &#10003; Address selected
+            </p>
+          )}
           {error && <p style={errorStyle}>{error}</p>}
           <button onClick={handleSetAddress} disabled={loading || !address.trim()} style={btnStyle}>
-            {loading ? 'Looking up...' : 'Verify Address'}
+            {loading ? 'Verifying...' : 'Verify Address'}
           </button>
         </div>
       )}
@@ -439,6 +542,12 @@ export default function SignupClient() {
               ? <>Take a photo at your business. This becomes your profile photo. You must be at <strong>{address}</strong> right now.</>
               : <>This becomes your profile photo. You must be at <strong>{address}</strong> right now — we verify your exact location.</>}
           </p>
+          <div style={{
+            backgroundColor: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '0.5rem',
+            padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: '0.8125rem', color: '#92400e', lineHeight: 1.5,
+          }}>
+            Make sure location services are on and you&apos;re at your address. Your phone&apos;s GPS location must match the address you entered.
+          </div>
           <SelfieVerification onVerified={handleVerified} />
         </div>
       )}
