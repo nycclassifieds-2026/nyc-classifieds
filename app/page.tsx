@@ -39,21 +39,21 @@ export default function Home() {
       {/* Directory launch banner — red, blinking */}
       <Link href="/signup" className="launch-banner" style={{
         display: 'block',
-        backgroundColor: '#fef2f2',
-        border: '1px solid #fca5a5',
+        backgroundColor: '#f0f5ff',
+        border: '1px solid #c7d7fe',
         borderRadius: '8px',
         padding: '10px 16px',
         marginBottom: '12px',
         textDecoration: 'none',
         fontFamily: "'DM Sans', sans-serif",
         fontSize: '0.8125rem',
-        color: '#7f1d1d',
+        color: '#1e3a5f',
         lineHeight: 1.5,
         textAlign: 'center',
       }}>
-        <span className="launch-blink" style={{ color: '#dc2626', fontWeight: 700 }}>JUST LAUNCHED</span>{' '}
+        <span className="launch-blink" style={{ color: '#1a56db', fontWeight: 700 }}>JUST LAUNCHED</span>{' '}
         We just went live — a free classifieds platform built for real New Yorkers. No fees, no algorithms, no corporate nonsense. It only works if you use it. Post something, tell a neighbor, be one of the first.{' '}
-        <span style={{ color: '#dc2626', fontWeight: 600 }}>Sign up free →</span>
+        <span style={{ color: '#1a56db', fontWeight: 600 }}>Sign up free →</span>
       </Link>
 
       {/* Mobile ad — above search */}
