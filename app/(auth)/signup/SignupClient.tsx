@@ -19,7 +19,6 @@ function defaultHours(): Hours {
   return h
 }
 
-// Flatten all neighborhoods with borough prefix for the service area picker
 const allNeighborhoods = boroughs.flatMap(b =>
   b.neighborhoods.map(n => ({ label: `${n}, ${b.name}`, value: n }))
 )
@@ -29,6 +28,7 @@ export default function SignupClient() {
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
+  const [emailToken, setEmailToken] = useState('')
   const [accountType, setAccountType] = useState<'personal' | 'business'>('personal')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -51,7 +51,6 @@ export default function SignupClient() {
   const addressRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
-  const [userId, setUserId] = useState<string>('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -87,6 +86,7 @@ export default function SignupClient() {
     }, 350)
   }, [])
 
+  // ── API helper (only for OTP send/verify) ──
   const api = async (body: Record<string, unknown>) => {
     setError('')
     setLoading(true)
@@ -116,56 +116,45 @@ export default function SignupClient() {
   const handleVerifyOtp = async () => {
     const data = await api({ action: 'verify-otp', email, code: otp })
     if (data?.verified) {
-      setUserId(String(data.userId))
       if (data.hasPin) {
+        // Existing user — already logged in via cookie
         router.push('/')
       } else {
+        // New signup — store token, continue flow (nothing saved to DB yet)
+        setEmailToken(data.emailToken)
         setStep('type')
       }
     }
   }
 
-  const handleSetType = async (type: 'personal' | 'business') => {
+  // ── Steps 3-7: all client-side only, no API calls ──
+
+  const handleSetType = (type: 'personal' | 'business') => {
     setAccountType(type)
-    const data = await api({ action: 'set-account-type', account_type: type })
-    if (data?.accountTypeSet) setStep('name')
+    setStep('name')
   }
 
-  const handleSetName = async () => {
-    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim()
-    const data = await api({ action: 'set-name', name: fullName })
-    if (data?.nameSet) {
-      setStep(isBusiness ? 'business' : 'pin')
-    }
-  }
-
-  const handleSetBusiness = async () => {
-    if (!businessName.trim()) {
-      setError('Business name required')
+  const handleSetName = () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('First and last name required')
       return
     }
-    if (!businessCategory) {
-      setError('Pick a category')
-      return
-    }
-    const data = await api({
-      action: 'set-business',
-      business_name: businessName,
-      business_category: businessCategory,
-      website,
-      phone,
-      business_description: businessDesc,
-      hours,
-      service_area: serviceArea,
-    })
-    if (data?.businessSet) setStep('pin')
+    setError('')
+    setStep(isBusiness ? 'business' : 'pin')
   }
 
-  const handleSetPin = async () => {
+  const handleSetBusiness = () => {
+    if (!businessName.trim()) { setError('Business name required'); return }
+    if (!businessCategory) { setError('Pick a category'); return }
+    setError('')
+    setStep('pin')
+  }
+
+  const handleSetPin = () => {
     if (pin !== pinConfirm) { setError('PINs do not match'); return }
-    if (!/^\d{4,10}$/.test(pin)) { setError('PIN must be 4–10 digits'); return }
-    const data = await api({ action: 'set-pin', userId, pin })
-    if (data?.pinSet) setStep('address')
+    if (!/^\d{4,10}$/.test(pin)) { setError('PIN must be 4\u201310 digits'); return }
+    setError('')
+    setStep('address')
   }
 
   const handleSetAddress = async () => {
@@ -173,11 +162,9 @@ export default function SignupClient() {
     setLoading(true)
     setError('')
     try {
-      let lat: number, lng: number
       if (addressSelected && coords) {
-        // Already have coords from autocomplete selection
-        lat = coords.lat
-        lng = coords.lng
+        // Already have coords from autocomplete
+        setStep('selfie')
       } else {
         // Geocode manually typed address
         const geoRes = await fetch('/api/geocode', {
@@ -187,17 +174,52 @@ export default function SignupClient() {
         })
         const geoData = await geoRes.json()
         if (!geoRes.ok) throw new Error(geoData.error || 'Could not find address. Try selecting from the suggestions.')
-        lat = geoData.lat
-        lng = geoData.lng
-        setCoords({ lat, lng })
+        setCoords({ lat: geoData.lat, lng: geoData.lng })
+        setStep('selfie')
       }
-      const saveData = await api({ action: 'set-address', address, lat, lng })
-      if (saveData?.addressSet) setStep('selfie')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Address lookup failed')
     } finally {
       setLoading(false)
     }
+  }
+
+  // ── Final step: selfie captured → send EVERYTHING to server at once ──
+  const handleCompleteSignup = async (blob: Blob, geoCoords: { lat: number; lon: number }) => {
+    if (!coords) throw new Error('Address coordinates missing')
+
+    const formData = new FormData()
+    // Auth
+    formData.append('email', email)
+    formData.append('emailToken', emailToken)
+    // User
+    formData.append('name', `${firstName.trim()} ${lastName.trim()}`.trim())
+    formData.append('pin', pin)
+    formData.append('accountType', accountType)
+    formData.append('address', address)
+    formData.append('addressLat', String(coords.lat))
+    formData.append('addressLng', String(coords.lng))
+    // Selfie + geo
+    formData.append('selfie', blob, 'selfie.jpg')
+    formData.append('geoLat', String(geoCoords.lat))
+    formData.append('geoLon', String(geoCoords.lon))
+    // Business (optional)
+    if (isBusiness) {
+      formData.append('businessName', businessName)
+      formData.append('businessCategory', businessCategory)
+      if (website) formData.append('website', website)
+      if (phone) formData.append('phone', phone)
+      if (businessDesc) formData.append('businessDesc', businessDesc)
+      formData.append('hours', JSON.stringify(hours))
+      formData.append('serviceArea', JSON.stringify(serviceArea))
+    }
+
+    const res = await fetch('/api/auth/complete-signup', {
+      method: 'POST',
+      body: formData,
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Signup failed')
   }
 
   const handleVerified = () => {
@@ -309,13 +331,13 @@ export default function SignupClient() {
         <div>
           <h1 style={h1Style}>Are you a person or a business?</h1>
           <p style={descStyle}>Businesses get a free profile page to promote to the neighborhood.</p>
-          <button onClick={() => handleSetType('personal')} disabled={loading} style={{ ...typeCardStyle, borderColor: '#e2e8f0' }}>
+          <button onClick={() => handleSetType('personal')} style={{ ...typeCardStyle, borderColor: '#e2e8f0' }}>
             <div style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>Person</div>
             <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
               Post listings, message sellers, join the community.
             </div>
           </button>
-          <button onClick={() => handleSetType('business')} disabled={loading}
+          <button onClick={() => handleSetType('business')}
             style={{ ...typeCardStyle, borderColor: '#2563eb', backgroundColor: '#eff6ff' }}>
             <div style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>Business</div>
             <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
@@ -331,7 +353,7 @@ export default function SignupClient() {
       {step === 'name' && (
         <div>
           <h1 style={h1Style}>{isBusiness ? 'Your name' : 'What\u2019s your name?'}</h1>
-          <p style={descStyle}>{isBusiness ? 'The contact person for this business.' : 'Your full name is shown on your profile and listings. Use your real name — we do random verification checks.'}</p>
+          <p style={descStyle}>{isBusiness ? 'The contact person for this business.' : 'Your full name is shown on your profile and listings. Use your real name \u2014 we do random verification checks.'}</p>
           <input type="text" placeholder="First name" value={firstName}
             onChange={e => setFirstName(e.target.value)}
             style={{ ...inputStyle, marginBottom: '0.75rem' }} />
@@ -340,8 +362,8 @@ export default function SignupClient() {
             onKeyDown={e => e.key === 'Enter' && handleSetName()}
             style={inputStyle} />
           {error && <p style={errorStyle}>{error}</p>}
-          <button onClick={handleSetName} disabled={loading || !firstName.trim() || !lastName.trim()} style={btnStyle}>
-            {loading ? 'Saving...' : 'Continue'}
+          <button onClick={handleSetName} disabled={!firstName.trim() || !lastName.trim()} style={btnStyle}>
+            Continue
           </button>
           <button onClick={goBack} style={backBtnStyle}>Back</button>
         </div>
@@ -353,12 +375,10 @@ export default function SignupClient() {
           <h1 style={h1Style}>Your business profile</h1>
           <p style={descStyle}>This becomes your free business page on NYC Classifieds. Promote to your whole neighborhood.</p>
 
-          {/* Business Name */}
           <label style={labelStyle}>Business name *</label>
           <input type="text" placeholder="Joe's Plumbing" value={businessName}
             onChange={e => setBusinessName(e.target.value)} style={inputStyle} />
 
-          {/* Category */}
           <label style={labelStyle}>Category *</label>
           <select value={businessCategory} onChange={e => setBusinessCategory(e.target.value)}
             style={{ ...inputStyle, backgroundColor: '#fff' }}>
@@ -366,23 +386,19 @@ export default function SignupClient() {
             {businessCategories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
 
-          {/* Description */}
           <label style={labelStyle}>Tell NYC about your business</label>
           <textarea placeholder="What do you do? What makes you different?" value={businessDesc}
             onChange={e => setBusinessDesc(e.target.value)} rows={3}
             style={{ ...inputStyle, resize: 'vertical' }} />
 
-          {/* Website */}
           <label style={labelStyle}>Website</label>
           <input type="url" placeholder="https://yourbusiness.com" value={website}
             onChange={e => setWebsite(e.target.value)} style={inputStyle} />
 
-          {/* Phone */}
           <label style={labelStyle}>Phone number</label>
           <input type="tel" placeholder="(212) 555-1234" value={phone}
             onChange={e => setPhone(e.target.value)} style={inputStyle} />
 
-          {/* Hours */}
           <label style={labelStyle}>Hours of operation</label>
           <div style={{ marginBottom: '1rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem', overflow: 'hidden' }}>
             {DAYS.map(day => (
@@ -413,7 +429,6 @@ export default function SignupClient() {
             ))}
           </div>
 
-          {/* Service Area */}
           <label style={labelStyle}>Service area — which neighborhoods do you serve?</label>
           <input type="text" placeholder="Search neighborhoods..." value={areaSearch}
             onChange={e => setAreaSearch(e.target.value)}
@@ -447,8 +462,8 @@ export default function SignupClient() {
           </div>
 
           {error && <p style={errorStyle}>{error}</p>}
-          <button onClick={handleSetBusiness} disabled={loading || !businessName.trim() || !businessCategory} style={btnStyle}>
-            {loading ? 'Saving...' : 'Continue'}
+          <button onClick={handleSetBusiness} disabled={!businessName.trim() || !businessCategory} style={btnStyle}>
+            Continue
           </button>
           <p style={{ fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center', marginTop: '0.75rem' }}>
             You can add photos after signup from your profile.
@@ -470,8 +485,8 @@ export default function SignupClient() {
             onKeyDown={e => e.key === 'Enter' && handleSetPin()}
             style={inputStyle} />
           {error && <p style={errorStyle}>{error}</p>}
-          <button onClick={handleSetPin} disabled={loading || pin.length < 4} style={btnStyle}>
-            {loading ? 'Setting...' : 'Set PIN'}
+          <button onClick={handleSetPin} disabled={pin.length < 4} style={btnStyle}>
+            Set PIN
           </button>
           <button onClick={goBack} style={backBtnStyle}>Back</button>
         </div>
@@ -535,7 +550,7 @@ export default function SignupClient() {
           )}
           {error && <p style={errorStyle}>{error}</p>}
           <button onClick={handleSetAddress} disabled={loading || !address.trim()} style={btnStyle}>
-            {loading ? 'Verifying...' : 'Verify Address'}
+            {loading ? 'Verifying...' : 'Continue'}
           </button>
           <button onClick={goBack} style={backBtnStyle}>Back</button>
         </div>
@@ -556,7 +571,7 @@ export default function SignupClient() {
           }}>
             Make sure location services are on and you&apos;re at your address. Your phone&apos;s GPS location must match the address you entered.
           </div>
-          <SelfieVerification onVerified={handleVerified} />
+          <SelfieVerification onVerified={handleVerified} onSubmit={handleCompleteSignup} />
           <button onClick={goBack} style={backBtnStyle}>Back</button>
         </div>
       )}

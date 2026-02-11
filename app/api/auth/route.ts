@@ -3,13 +3,10 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { otpEmail, welcomeEmail, businessProfileLiveEmail } from '@/lib/email-templates'
 import { sendEmail } from '@/lib/email'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import crypto from 'crypto'
+import { signEmailToken, hashPin } from '@/lib/auth-utils'
 const COOKIE_NAME = 'nyc_classifieds_user'
 const isProd = process.env.NODE_ENV === 'production'
 
-function hashPin(pin: string): string {
-  return crypto.createHash('sha256').update(pin + (process.env.SUPABASE_SERVICE_KEY || '')).digest('hex')
-}
 
 // GET — check auth status
 export async function GET(request: NextRequest) {
@@ -117,8 +114,8 @@ export async function POST(request: NextRequest) {
     // Mark used
     await db.from('user_verification_codes').update({ used: true }).eq('id', record.id)
 
-    // Create or get user
-    let { data: user } = await db
+    // Check if user already exists
+    const { data: user } = await db
       .from('users')
       .select('id, pin, verified, banned')
       .eq('email', email)
@@ -128,21 +125,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Account is banned' }, { status: 403 })
     }
 
-    if (!user) {
-      const { data: newUser } = await db
-        .from('users')
-        .insert({ email })
-        .select('id, pin, verified, banned')
-        .single()
-      user = newUser
-    }
-
-    if (!user) {
-      return NextResponse.json({ error: 'Account creation failed' }, { status: 500 })
-    }
-
-    // If user already has PIN → they're logging in via OTP
-    if (user.pin) {
+    // Existing user with PIN → log them in
+    if (user?.pin) {
       const res = NextResponse.json({
         verified: true,
         hasPin: true,
@@ -159,20 +143,13 @@ export async function POST(request: NextRequest) {
       return res
     }
 
-    // New user — needs to set PIN. Set cookie now so subsequent steps work.
-    const res = NextResponse.json({
+    // New or incomplete user → return email token, don't create user yet
+    // Everything gets created at once in /api/auth/complete-signup
+    return NextResponse.json({
       verified: true,
       hasPin: false,
-      userId: user.id,
+      emailToken: signEmailToken(email),
     })
-    res.cookies.set(COOKIE_NAME, String(user.id), {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60,
-      path: '/',
-    })
-    return res
   }
 
   if (action === 'set-pin') {

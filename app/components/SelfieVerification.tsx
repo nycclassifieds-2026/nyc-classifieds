@@ -4,9 +4,11 @@ import { useState, useRef, useCallback } from 'react'
 
 interface Props {
   onVerified: () => void
+  /** When provided, parent handles the upload. Receives (blob, geoCoords). */
+  onSubmit?: (blob: Blob, geoCoords: { lat: number; lon: number }) => Promise<void>
 }
 
-export default function SelfieVerification({ onVerified }: Props) {
+export default function SelfieVerification({ onVerified, onSubmit }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [streaming, setStreaming] = useState(false)
@@ -77,20 +79,27 @@ export default function SelfieVerification({ onVerified }: Props) {
         )
       })
 
-      const formData = new FormData()
-      formData.append('selfie', blob, 'selfie.jpg')
-      formData.append('lat', String(geoCoords.lat))
-      formData.append('lon', String(geoCoords.lon))
+      if (onSubmit) {
+        // Parent handles the full submission (used by signup flow)
+        await onSubmit(blob, geoCoords)
+        onVerified()
+      } else {
+        // Default: call verify-location directly (used by re-verification)
+        const formData = new FormData()
+        formData.append('selfie', blob, 'selfie.jpg')
+        formData.append('lat', String(geoCoords.lat))
+        formData.append('lon', String(geoCoords.lon))
 
-      const res = await fetch('/api/auth/verify-location', {
-        method: 'POST',
-        body: formData,
-      })
+        const res = await fetch('/api/auth/verify-location', {
+          method: 'POST',
+          body: formData,
+        })
 
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Verification failed')
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Verification failed')
 
-      onVerified()
+        onVerified()
+      }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Verification failed'
       setError(msg)
