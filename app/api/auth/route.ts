@@ -34,12 +34,17 @@ export async function GET(request: NextRequest) {
     return res
   }
 
-  // Count unread messages
-  const { count } = await db
-    .from('messages')
-    .select('id', { count: 'exact', head: true })
-    .eq('recipient_id', userId)
-    .eq('read', false)
+  // Count unread messages + notifications
+  const [{ count: msgCount }, { count: notifCount }] = await Promise.all([
+    db.from('messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('recipient_id', userId)
+      .eq('read', false),
+    db.from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('read', false),
+  ])
 
   return NextResponse.json({
     authenticated: true,
@@ -50,7 +55,8 @@ export async function GET(request: NextRequest) {
       business_description: user.business_description, hours: user.hours, service_area: user.service_area,
       photo_gallery: user.photo_gallery, selfie_url: user.selfie_url, address: user.address,
     },
-    unreadMessages: count || 0,
+    unreadMessages: msgCount || 0,
+    unreadNotifications: notifCount || 0,
   })
 }
 

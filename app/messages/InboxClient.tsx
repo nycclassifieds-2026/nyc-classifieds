@@ -31,7 +31,10 @@ export default function InboxClient() {
 
   return (
     <main style={{ maxWidth: '700px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Messages</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+        <Link href="/account" style={{ color: '#2563eb', fontSize: '1.25rem' }}>&larr;</Link>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Messages</h1>
+      </div>
 
       {threads.length === 0 ? (
         <div style={{

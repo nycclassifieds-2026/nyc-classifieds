@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ImageUploader from '@/app/components/ImageUploader'
-import { categories, slugify } from '@/lib/data'
+import { categories, slugify, boroughs } from '@/lib/data'
 
 export default function PostListingClient() {
   const router = useRouter()
@@ -14,11 +14,14 @@ export default function PostListingClient() {
   const [categorySlug, setCategorySlug] = useState('')
   const [subcategorySlug, setSubcategorySlug] = useState('')
   const [images, setImages] = useState<string[]>([])
-  const [location, setLocation] = useState('')
+  const [borough, setBorough] = useState('')
+  const [neighborhood, setNeighborhood] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [authed, setAuthed] = useState<boolean | null>(null)
   const [accountType, setAccountType] = useState<string>('personal')
+  const [businessName, setBusinessName] = useState<string | null>(null)
+  const [userEmail, setUserEmail] = useState<string>('')
 
   useEffect(() => {
     fetch('/api/auth')
@@ -29,23 +32,35 @@ export default function PostListingClient() {
         } else {
           setAuthed(true)
           setAccountType(d.user.account_type || 'personal')
+          setBusinessName(d.user.business_name || null)
+          setUserEmail(d.user.email || '')
         }
       })
       .catch(() => setAuthed(false))
   }, [])
 
   const selectedCategory = categories.find(c => c.slug === categorySlug)
-  const isServicesBlocked = categorySlug === 'services' && accountType !== 'business'
+  const hasBusiness = accountType === 'business' && !!businessName
+  const freeEmailDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'mail.com', 'protonmail.com', 'ymail.com', 'live.com']
+  const hasBusinessEmail = userEmail ? !freeEmailDomains.includes(userEmail.split('@')[1]?.toLowerCase()) : false
+
+  const needsBusiness = ['services', 'jobs'].includes(categorySlug) && !hasBusiness
+  const needsBusinessEmail = categorySlug === 'jobs' && hasBusiness && !hasBusinessEmail
+  const isBlocked = needsBusiness || needsBusinessEmail
 
   const handleSubmit = async () => {
     setError('')
     if (!title.trim()) { setError('Title required'); return }
     if (!categorySlug) { setError('Category required'); return }
-    if (isServicesBlocked) { setError('Business profile required to post services'); return }
+    if (isBlocked) { setError('Requirements not met for this category'); return }
 
     setLoading(true)
     try {
       const price = priceStr ? Math.round(parseFloat(priceStr) * 100) : null
+      const selectedBorough = boroughs.find(b => b.slug === borough)
+      const location = neighborhood && selectedBorough
+        ? `${neighborhood}, ${selectedBorough.name}`
+        : selectedBorough?.name || null
       const res = await fetch('/api/listings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,7 +71,7 @@ export default function PostListingClient() {
           category_slug: categorySlug,
           subcategory_slug: subcategorySlug || null,
           images,
-          location: location || null,
+          location,
         }),
       })
       const data = await res.json()
@@ -107,8 +122,8 @@ export default function PostListingClient() {
         </select>
       </div>
 
-      {/* Services business profile notice */}
-      {isServicesBlocked && (
+      {/* Posting gate notices */}
+      {needsBusiness && (
         <div style={{
           padding: '16px', borderRadius: '8px', border: '1px solid #fbbf24',
           backgroundColor: '#fffbeb', marginBottom: '1.25rem',
@@ -117,9 +132,11 @@ export default function PostListingClient() {
             Business profile required
           </p>
           <p style={{ fontSize: '0.8125rem', color: '#78350f', marginBottom: '10px' }}>
-            To offer services, you need a business profile. It&apos;s free — you don&apos;t need to be a registered business. Just create a profile so customers can find you, see your hours, and read about what you offer.
+            {categorySlug === 'services'
+              ? "To offer services, you need a business profile. It's free — just create a profile so customers can find you, see your hours, and read about what you offer."
+              : "To post jobs, you need a business profile. Set one up so applicants can learn about your company."}
           </p>
-          <Link href="/signup" style={{
+          <Link href="/account" style={{
             display: 'inline-block', padding: '6px 14px', borderRadius: '6px',
             backgroundColor: '#2563eb', color: '#fff', fontSize: '0.8125rem', fontWeight: 600,
           }}>
@@ -128,7 +145,21 @@ export default function PostListingClient() {
         </div>
       )}
 
-      {selectedCategory && !isServicesBlocked && (
+      {needsBusinessEmail && (
+        <div style={{
+          padding: '16px', borderRadius: '8px', border: '1px solid #fbbf24',
+          backgroundColor: '#fffbeb', marginBottom: '1.25rem',
+        }}>
+          <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#92400e', marginBottom: '6px' }}>
+            Business email required
+          </p>
+          <p style={{ fontSize: '0.8125rem', color: '#78350f' }}>
+            Job postings require a business email address (not Gmail, Yahoo, etc.). Update your email in account settings to post jobs.
+          </p>
+        </div>
+      )}
+
+      {selectedCategory && !isBlocked && (
         <div style={{ marginBottom: '1.25rem' }}>
           <label style={labelStyle}>Subcategory</label>
           <select value={subcategorySlug} onChange={e => setSubcategorySlug(e.target.value)} style={inputStyle}>
@@ -140,7 +171,7 @@ export default function PostListingClient() {
         </div>
       )}
 
-      {!isServicesBlocked && (
+      {!isBlocked && (
         <>
           <div style={{ marginBottom: '1.25rem' }}>
             <label style={labelStyle}>Price ($)</label>
@@ -157,10 +188,26 @@ export default function PostListingClient() {
           </div>
 
           <div style={{ marginBottom: '1.25rem' }}>
-            <label style={labelStyle}>Location</label>
-            <input type="text" value={location} onChange={e => setLocation(e.target.value)}
-              placeholder="e.g. Upper West Side, Williamsburg" style={inputStyle} />
+            <label style={labelStyle}>Borough</label>
+            <select value={borough} onChange={e => { setBorough(e.target.value); setNeighborhood('') }} style={inputStyle}>
+              <option value="">Select borough</option>
+              {boroughs.map(b => (
+                <option key={b.slug} value={b.slug}>{b.name}</option>
+              ))}
+            </select>
           </div>
+
+          {borough && (
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={labelStyle}>Neighborhood</label>
+              <select value={neighborhood} onChange={e => setNeighborhood(e.target.value)} style={inputStyle}>
+                <option value="">Select neighborhood</option>
+                {boroughs.find(b => b.slug === borough)?.neighborhoods.map(n => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={labelStyle}>Photos</label>

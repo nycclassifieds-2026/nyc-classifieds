@@ -362,16 +362,33 @@ export default function AccountClient() {
                     {listing.status}
                   </span>
                 </div>
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {listing.status === 'active' && (
-                  <button onClick={() => handleMarkSold(listing.id)} style={smallBtnStyle}>
-                    Mark sold
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                  <Link href={`/listings/${listing.category_slug}/${listing.id}`} style={smallLinkStyle}>
+                    View
+                  </Link>
+                  <Link href={`/listings/edit/${listing.id}`} style={smallLinkStyle}>
+                    Edit
+                  </Link>
+                  <button onClick={() => {
+                    const url = `${window.location.origin}/listings/${listing.category_slug}/${listing.id}`
+                    if (navigator.share) {
+                      navigator.share({ title: listing.title, url })
+                    } else {
+                      navigator.clipboard.writeText(url)
+                      alert('Link copied!')
+                    }
+                  }} style={smallLinkStyle}>
+                    Share
                   </button>
-                )}
-                <button onClick={() => handleDelete(listing.id)} style={{ ...smallBtnStyle, color: '#dc2626' }}>
-                  Remove
-                </button>
+                  {listing.status === 'active' && (
+                    <button onClick={() => handleMarkSold(listing.id)} style={smallLinkStyle}>
+                      Mark sold
+                    </button>
+                  )}
+                  <button onClick={() => handleDelete(listing.id)} style={{ ...smallLinkStyle, color: '#dc2626' }}>
+                    Remove
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -438,12 +455,15 @@ export default function AccountClient() {
   )
 }
 
-const smallBtnStyle: React.CSSProperties = {
-  padding: '0.375rem 0.75rem',
+const smallLinkStyle: React.CSSProperties = {
+  padding: '0.25rem 0.625rem',
   borderRadius: '0.375rem',
   border: '1px solid #e2e8f0',
   backgroundColor: '#fff',
   fontSize: '0.75rem',
   cursor: 'pointer',
-  color: '#475569',
+  color: '#2563eb',
+  fontWeight: 500,
+  textDecoration: 'none',
+  display: 'inline-block',
 }

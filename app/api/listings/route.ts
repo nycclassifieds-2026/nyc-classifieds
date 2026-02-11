@@ -74,10 +74,10 @@ export async function POST(request: NextRequest) {
 
   const db = getSupabaseAdmin()
 
-  // Check verified + account type
+  // Check verified + account type + posting gates
   const { data: user } = await db
     .from('users')
-    .select('verified')
+    .select('verified, account_type, business_name, email')
     .eq('id', userId)
     .single()
 
@@ -90,6 +90,28 @@ export async function POST(request: NextRequest) {
 
   if (!title?.trim() || !category_slug) {
     return NextResponse.json({ error: 'Title and category required' }, { status: 400 })
+  }
+
+  // Posting gates: certain categories require a business profile or specific verification
+  const requiresBusiness = ['services', 'jobs'].includes(category_slug)
+  const requiresBusinessEmail = category_slug === 'jobs'
+  const freeEmailDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'mail.com', 'protonmail.com', 'ymail.com', 'live.com']
+
+  if (requiresBusiness && (user.account_type !== 'business' || !user.business_name)) {
+    return NextResponse.json({
+      error: category_slug === 'services'
+        ? 'A business profile is required to offer services. Go to your account to set one up.'
+        : 'A business profile is required to post jobs. Go to your account to set one up.',
+    }, { status: 403 })
+  }
+
+  if (requiresBusinessEmail && user.email) {
+    const domain = user.email.split('@')[1]?.toLowerCase()
+    if (freeEmailDomains.includes(domain)) {
+      return NextResponse.json({
+        error: 'Job postings require a business email address. Update your email in account settings.',
+      }, { status: 403 })
+    }
   }
 
   if (title.length > 200) {

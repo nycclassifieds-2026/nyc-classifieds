@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { sendEmail } from '@/lib/email'
 import { listingExpiringEmail, listingExpiredEmail, adminDailyDigestEmail, DailyDigestStats } from '@/lib/email-templates'
+import { createNotification } from '@/lib/notifications'
 
 export async function GET(request: NextRequest) {
   // Verify cron secret
@@ -44,6 +45,15 @@ export async function GET(request: NextRequest) {
     const user = listing.users as unknown as { email: string; name: string | null }
     if (!user?.email) continue
 
+    // In-app notification
+    await createNotification(
+      listing.user_id,
+      'listing_expiring',
+      'Your listing expires in 3 days',
+      listing.title,
+      `/listings/${(listing as any).category_slug}/${listing.id}`,
+    )
+
     const template = listingExpiringEmail(
       user.name || 'there',
       listing.title,
@@ -74,6 +84,15 @@ export async function GET(request: NextRequest) {
   for (const listing of expiredListings || []) {
     const user = listing.users as unknown as { email: string; name: string | null }
     if (!user?.email) continue
+
+    // In-app notification
+    await createNotification(
+      listing.user_id,
+      'listing_expired',
+      'Your listing has expired',
+      listing.title,
+      '/account',
+    )
 
     const template = listingExpiredEmail(user.name || 'there', listing.title)
     const result = await sendEmail(user.email, template)

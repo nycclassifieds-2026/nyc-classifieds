@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { requireAdmin, logAdminAction } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/email'
 import { listingRemovedEmail } from '@/lib/email-templates'
+import { createNotification } from '@/lib/notifications'
 
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request, 'moderator')
@@ -53,6 +54,13 @@ export async function PATCH(request: NextRequest) {
   if (status === 'removed') {
     const { data: listing } = await db.from('listings').select('title, user_id, users!inner(email, name)').eq('id', id).single()
     if (listing) {
+      await createNotification(
+        listing.user_id,
+        'listing_removed',
+        'Your listing was removed',
+        listing.title,
+        '/account',
+      )
       const owner = listing.users as unknown as { email: string; name: string | null }
       if (owner?.email && !owner.email.endsWith('@example.com')) {
         sendEmail(owner.email, listingRemovedEmail(owner.name || 'there', listing.title)).catch(() => {})

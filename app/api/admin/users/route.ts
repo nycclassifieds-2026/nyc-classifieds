@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { requireAdmin, logAdminAction } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/email'
 import { accountBannedEmail, accountRestoredEmail, manuallyVerifiedEmail, roleChangedEmail } from '@/lib/email-templates'
+import { createNotification } from '@/lib/notifications'
 
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request, 'moderator')
@@ -70,6 +71,8 @@ export async function PATCH(request: NextRequest) {
     await db.from('users').update({ banned: true }).eq('id', id)
     await logAdminAction(request, auth.email, 'admin_ban_user', 'user', id)
 
+    await createNotification(id, 'account_banned', 'Your account has been suspended', 'Your account was suspended for violating community guidelines.')
+
     if (user?.email && !user.email.endsWith('@example.com')) {
       sendEmail(user.email, accountBannedEmail(user.name || 'there')).catch(() => {})
     }
@@ -81,6 +84,8 @@ export async function PATCH(request: NextRequest) {
     const { data: user } = await db.from('users').select('email, name').eq('id', id).single()
     await db.from('users').update({ banned: false }).eq('id', id)
     await logAdminAction(request, auth.email, 'admin_unban_user', 'user', id)
+
+    await createNotification(id, 'account_restored', 'Your account has been restored', 'Your account is active again. Welcome back.')
 
     if (user?.email && !user.email.endsWith('@example.com')) {
       sendEmail(user.email, accountRestoredEmail(user.name || 'there')).catch(() => {})

@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { sendEmail } from '@/lib/email'
 import { newMessageEmail } from '@/lib/email-templates'
+import { createNotification } from '@/lib/notifications'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
@@ -15,6 +16,13 @@ export async function GET(request: NextRequest) {
 
   const db = getSupabaseAdmin()
   const uid = parseInt(userId)
+
+  // Get user's blocked list
+  const { data: blocks } = await db
+    .from('blocked_users')
+    .select('blocked_id')
+    .eq('blocker_id', uid)
+  const blockedIds = new Set((blocks || []).map(b => b.blocked_id))
 
   // Get all messages where user is sender or recipient, grouped by thread
   const { data: messages } = await db
@@ -41,6 +49,7 @@ export async function GET(request: NextRequest) {
 
   for (const msg of messages) {
     const otherUserId = msg.sender_id === uid ? msg.recipient_id : msg.sender_id
+    if (blockedIds.has(otherUserId)) continue
     const threadId = `${msg.listing_id}-${Math.min(uid, otherUserId)}-${Math.max(uid, otherUserId)}`
 
     if (!threadMap.has(threadId)) {
@@ -109,6 +118,18 @@ export async function POST(request: NextRequest) {
   }
 
   const db = getSupabaseAdmin()
+  const uid = parseInt(userId)
+
+  // Check if either side has blocked the other
+  const { data: blockCheck } = await db
+    .from('blocked_users')
+    .select('id')
+    .or(`and(blocker_id.eq.${uid},blocked_id.eq.${recipient_id}),and(blocker_id.eq.${recipient_id},blocked_id.eq.${uid})`)
+    .limit(1)
+
+  if (blockCheck && blockCheck.length > 0) {
+    return NextResponse.json({ error: 'Unable to send message to this user' }, { status: 403 })
+  }
 
   // Verify listing exists and is active
   const { data: listing } = await db
@@ -126,7 +147,7 @@ export async function POST(request: NextRequest) {
     .from('messages')
     .insert({
       listing_id,
-      sender_id: parseInt(userId),
+      sender_id: uid,
       recipient_id,
       content: content.trim(),
     })
@@ -137,21 +158,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
   }
 
-  // Send email notification to recipient (async, don't block response)
+  // Send email + in-app notification to recipient (async, don't block response)
   ;(async () => {
     try {
       const [recipientResult, senderResult, listingResult] = await Promise.all([
         db.from('users').select('email, name').eq('id', recipient_id).single(),
-        db.from('users').select('name').eq('id', parseInt(userId)).single(),
+        db.from('users').select('name').eq('id', uid).single(),
         db.from('listings').select('title').eq('id', listing_id).single(),
       ])
       const recipient = recipientResult.data
       const sender = senderResult.data
-      const listing = listingResult.data
-      if (recipient?.email && !recipient.email.endsWith('@example.com') && listing?.title) {
+      const listingData = listingResult.data
+      const senderName = sender?.name || 'Someone'
+      const listingTitle = listingData?.title || 'a listing'
+
+      // In-app notification
+      const threadId = `${listing_id}-${Math.min(uid, recipient_id)}-${Math.max(uid, recipient_id)}`
+      await createNotification(
+        recipient_id,
+        'new_message',
+        `New message from ${senderName}`,
+        `Re: ${listingTitle}`,
+        `/messages/${threadId}`,
+      )
+
+      if (recipient?.email && !recipient.email.endsWith('@example.com') && listingData?.title) {
         await sendEmail(
           recipient.email,
-          newMessageEmail(recipient.name || 'there', sender?.name || 'Someone', listing.title),
+          newMessageEmail(recipient.name || 'there', senderName, listingTitle),
         )
       }
     } catch {}

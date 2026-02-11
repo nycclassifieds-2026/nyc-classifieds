@@ -26,6 +26,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   const isSearchPage = pathname === '/search'
   const [user, setUser] = useState<{ name?: string } | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [unreadNotifs, setUnreadNotifs] = useState(0)
   const [homeName, setHomeName] = useState<string | null>(null)
   const [showLocationPicker, setShowLocationPicker] = useState(false)
   const [pickerBorough, setPickerBorough] = useState<string | null>(null)
@@ -57,12 +58,13 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
         if (d.authenticated) {
           setUser(d.user)
           setUnreadCount(d.unreadMessages || 0)
+          setUnreadNotifs(d.unreadNotifications || 0)
         }
       })
       .catch(() => setUser(null))
   }, [pathname])
 
-  const isAppPage = pathname?.startsWith('/signup') || pathname?.startsWith('/login') || pathname?.startsWith('/account') || pathname?.startsWith('/messages') || pathname === '/listings/new'
+  const isAppPage = pathname?.startsWith('/signup') || pathname?.startsWith('/login') || pathname?.startsWith('/account') || pathname?.startsWith('/messages') || pathname?.startsWith('/notifications') || pathname?.startsWith('/forgot-pin') || pathname === '/listings/new'
   const isClassifieds = pathname === '/' || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island')
   const isPorch = pathname?.startsWith('/porch')
 
@@ -144,6 +146,42 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
               }}>
                 {user ? 'Post' : 'Sign Up'}
               </Link>
+
+              {/* Notifications bell */}
+              {user && (
+                <Link href="/notifications" style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#6b7280',
+                  flexShrink: 0,
+                }}>
+                  <svg width={mobile ? '18' : '20'} height={mobile ? '18' : '20'} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                  {unreadNotifs > 0 && (
+                    <span style={{
+                      position: 'absolute',
+                      top: '-4px',
+                      right: '-6px',
+                      backgroundColor: '#dc2626',
+                      color: '#fff',
+                      borderRadius: '50%',
+                      width: '14px',
+                      height: '14px',
+                      fontSize: '9px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 700,
+                    }}>
+                      {unreadNotifs > 9 ? '9+' : unreadNotifs}
+                    </span>
+                  )}
+                </Link>
+              )}
 
               {/* Account */}
               {user ? (

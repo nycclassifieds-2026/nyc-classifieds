@@ -75,7 +75,7 @@ export default function LoginClient() {
       </p>
       <p style={{ textAlign: 'center', marginTop: '0.5rem', color: '#64748b', fontSize: '0.875rem' }}>
         Forgot your PIN?{' '}
-        <a href="/signup" style={{ color: '#2563eb', fontWeight: 500 }}>Verify via email</a>
+        <a href="/forgot-pin" style={{ color: '#2563eb', fontWeight: 500 }}>Reset via email</a>
       </p>
     </main>
   )

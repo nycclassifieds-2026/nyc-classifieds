@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { requireAdmin, logAdminAction } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/email'
 import { listingRemovedEmail, accountBannedEmail, flagResolvedEmail } from '@/lib/email-templates'
+import { createNotification } from '@/lib/notifications'
 
 // GET — list flagged content with joined details
 export async function GET(request: NextRequest) {
@@ -103,6 +104,13 @@ export async function POST(request: NextRequest) {
   // Helper to notify the reporter when their flag is resolved
   const notifyReporter = async (outcome: string) => {
     try {
+      await createNotification(
+        flag.reporter_id,
+        'flag_resolved',
+        'Your report has been reviewed',
+        `Outcome: ${outcome}`,
+        '/notifications',
+      )
       const { data: reporter } = await db.from('users').select('email, name').eq('id', flag.reporter_id).single()
       if (reporter?.email && !reporter.email.endsWith('@example.com')) {
         await sendEmail(reporter.email, flagResolvedEmail(reporter.name || 'there', flag.content_type, outcome))
@@ -117,6 +125,13 @@ export async function POST(request: NextRequest) {
     await logAdminAction(request, auth.email, 'admin_remove_flagged_listing', 'listing', flag.content_id, { flagId })
 
     if (listing) {
+      await createNotification(
+        listing.user_id,
+        'listing_removed',
+        'Your listing was removed',
+        listing.title,
+        '/account',
+      )
       const owner = listing.users as unknown as { email: string; name: string | null }
       if (owner?.email && !owner.email.endsWith('@example.com')) {
         sendEmail(owner.email, listingRemovedEmail(owner.name || 'there', listing.title)).catch(() => {})
@@ -143,6 +158,12 @@ export async function POST(request: NextRequest) {
     await db.from('flagged_content').update({ status: 'resolved' }).eq('id', flagId)
 
     if (bannedUserId) {
+      await createNotification(
+        bannedUserId,
+        'account_banned',
+        'Your account has been suspended',
+        'Your account was suspended for violating community guidelines.',
+      )
       const { data: banned } = await db.from('users').select('email, name').eq('id', bannedUserId).single()
       if (banned?.email && !banned.email.endsWith('@example.com')) {
         sendEmail(banned.email, accountBannedEmail(banned.name || 'there')).catch(() => {})

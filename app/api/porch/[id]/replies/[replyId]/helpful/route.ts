@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { sendEmail } from '@/lib/email'
 import { helpfulVoteEmail } from '@/lib/email-templates'
+import { createNotification } from '@/lib/notifications'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
@@ -92,13 +93,26 @@ export async function POST(
         const { data: replyData } = await db.from('porch_replies').select('user_id').eq('id', parsedReplyId).single()
         if (!replyData || replyData.user_id === numericUserId) return // don't notify self-votes
         const { data: replyAuthor } = await db.from('users').select('email, name').eq('id', replyData.user_id).single()
-        if (!replyAuthor?.email || replyAuthor.email.endsWith('@example.com')) return
         const { data: voter } = await db.from('users').select('name').eq('id', numericUserId).single()
-        const { data: postData } = await db.from('porch_posts').select('title').eq('id', postId).single()
-        await sendEmail(
-          replyAuthor.email,
-          helpfulVoteEmail(replyAuthor.name || 'there', voter?.name || 'Someone', postData?.title || 'a post', postId),
+        const { data: postData } = await db.from('porch_posts').select('title, slug').eq('id', postId).single()
+        const voterName = voter?.name || 'Someone'
+        const postTitle = postData?.title || 'a post'
+
+        // In-app notification
+        await createNotification(
+          replyData.user_id,
+          'helpful_vote',
+          `${voterName} found your reply helpful`,
+          postTitle,
+          `/porch/post/${postId}/${postData?.slug || postId}`,
         )
+
+        if (replyAuthor?.email && !replyAuthor.email.endsWith('@example.com')) {
+          await sendEmail(
+            replyAuthor.email,
+            helpfulVoteEmail(replyAuthor.name || 'there', voterName, postTitle, postId),
+          )
+        }
       } catch {}
     })()
   }

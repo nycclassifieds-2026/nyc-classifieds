@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { requireAdmin, logAdminAction } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/email'
 import { porchPostRemovedEmail } from '@/lib/email-templates'
+import { createNotification } from '@/lib/notifications'
 
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request, 'moderator')
@@ -94,6 +95,13 @@ export async function DELETE(request: NextRequest) {
   // Notify the post author before deleting
   const { data: post } = await db.from('porch_posts').select('title, user_id, users!inner(email, name)').eq('id', id).single()
   if (post) {
+    await createNotification(
+      post.user_id,
+      'porch_post_removed',
+      'Your Porch post was removed',
+      post.title,
+      '/porch',
+    )
     const author = post.users as unknown as { email: string; name: string | null }
     if (author?.email && !author.email.endsWith('@example.com')) {
       sendEmail(author.email, porchPostRemovedEmail(author.name || 'there', post.title)).catch(() => {})
