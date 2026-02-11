@@ -132,7 +132,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 
             {/* Right nav: Post | Account */}
             <nav style={{ display: 'flex', alignItems: 'center', gap: mobile ? '8px' : '12px', flexShrink: 0 }}>
-              <Link href="/listings/new" style={{
+              <Link href={user ? '/listings/new' : '/signup'} style={{
                 backgroundColor: '#1a56db',
                 color: '#ffffff',
                 padding: mobile ? '5px 10px' : '7px 18px',
@@ -142,7 +142,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                 fontFamily: "'DM Sans', sans-serif",
                 whiteSpace: 'nowrap',
               }}>
-                Post
+                {user ? 'Post' : 'Sign Up'}
               </Link>
 
               {/* Account */}
