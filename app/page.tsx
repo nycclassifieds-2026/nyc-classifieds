@@ -40,9 +40,25 @@ export default function Home() {
         <HomepageAd />
       </div>
 
+      {/* Value prop */}
+      <section style={{ padding: '16px 0 12px', fontFamily: "'DM Sans', sans-serif" }}>
+        <h1 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#111827', margin: '0 0 2px', letterSpacing: '-0.01em' }}>
+          Classifieds + community, the way it should be.
+        </h1>
+        <p style={{ fontSize: '0.9rem', color: '#4b5563', margin: '0 0 12px', lineHeight: 1.5 }}>
+          The simplicity of Craigslist. The neighborhood feel of Nextdoor. Every user geo-verified at their NYC address.
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', fontSize: '0.8125rem', color: '#374151' }}>
+          <span><strong style={{ color: '#2563eb' }}>Geo-verified</strong> — Selfie + GPS at your address</span>
+          <span><strong style={{ color: '#2563eb' }}>100% free</strong> — No fees, ever</span>
+          <span><strong style={{ color: '#2563eb' }}>Hyperlocal</strong> — 126+ NYC neighborhoods</span>
+          <span><strong style={{ color: '#2563eb' }}>The Porch</strong> — Alerts, lost pets, neighbor Q&A</span>
+        </div>
+      </section>
+
       {/* Desktop: search left, ad right | Mobile: stacked */}
-      <section className="homepage-top" style={{ padding: '8px 0 0', marginBottom: '0' }}>
-        <h1 className="sr-only">Free Classifieds in New York City — Housing, Jobs, Services, For Sale & More</h1>
+      <section className="homepage-top" style={{ padding: '0', marginBottom: '0' }}>
+        <h2 className="sr-only">Free Classifieds in New York City — Housing, Jobs, Services, For Sale & More</h2>
         <div className="homepage-top-left">
           <div style={{ marginBottom: '12px' }}>
             <HomeSearch />
