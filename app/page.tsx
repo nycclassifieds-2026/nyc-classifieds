@@ -36,13 +36,13 @@ export default function Home() {
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(s) }} />
       ))}
 
-      {/* Directory launch banner — red, blinking */}
-      <Link href="/signup" className="launch-banner" style={{
+      {/* Launch banner */}
+      <Link href="/signup" style={{
         display: 'block',
         backgroundColor: '#f0f5ff',
         border: '1px solid #c7d7fe',
         borderRadius: '8px',
-        padding: '10px 16px',
+        padding: '8px 16px',
         marginBottom: '12px',
         textDecoration: 'none',
         fontFamily: "'DM Sans', sans-serif",
@@ -52,7 +52,7 @@ export default function Home() {
         textAlign: 'center',
       }}>
         <span className="launch-blink" style={{ color: '#1a56db', fontWeight: 700 }}>JUST LAUNCHED</span>{' '}
-        We just went live — a free classifieds platform built for real New Yorkers. No fees, no algorithms, no corporate nonsense. It only works if you use it. Post something, tell a neighbor, be one of the first.{' '}
+        — We just went live. It only works if you use it. Post something, tell a neighbor, be one of the first.{' '}
         <span style={{ color: '#1a56db', fontWeight: 600 }}>Sign up free →</span>
       </Link>
 
@@ -61,14 +61,11 @@ export default function Home() {
         <HomepageAd />
       </div>
 
-      {/* Value prop */}
-      <section style={{ padding: '16px 0 12px', fontFamily: "'DM Sans', sans-serif" }}>
-        <h1 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#111827', margin: '0 0 2px', letterSpacing: '-0.01em' }}>
-          Bringing back what worked — free classifieds & real community (The Porch)
+      {/* Value prop — one line each, no overlap */}
+      <section style={{ padding: '12px 0 10px', fontFamily: "'DM Sans', sans-serif" }}>
+        <h1 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#111827', margin: '0', letterSpacing: '-0.01em' }}>
+          Free classifieds & real community for New York City
         </h1>
-        <p style={{ fontSize: '0.9rem', color: '#4b5563', margin: '0 0 12px', lineHeight: 1.5 }}>
-          The simplicity of old-school classifieds. The neighborhood feel of a real community board. Every user geo-verified at their NYC address.
-        </p>
       </section>
 
       {/* Desktop: search left, ad right | Mobile: stacked */}
