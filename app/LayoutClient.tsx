@@ -275,19 +275,45 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
           margin: '0 auto',
           padding: mobile ? '8px 12px' : '10px 24px',
         }}>
-          {/* Mobile ad — above search */}
-          <div className="mobile-only-ad">
-            <HomepageAd />
-          </div>
+          {/* Mobile ad — classifieds pages only */}
+          {isClassifieds && (
+            <div className="mobile-only-ad">
+              <HomepageAd />
+            </div>
+          )}
           <div className="homepage-top" style={{ margin: 0 }}>
             <div className="homepage-top-left">
               <SearchAutocomplete
                 onSearch={(q) => router.push(`/search?q=${encodeURIComponent(q)}`)}
               />
+              <button
+                onClick={() => {
+                  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+                  setTimeout(() => {
+                    const widget = document.querySelector('[data-feedback-widget]') as HTMLElement
+                    if (widget) widget.click()
+                  }, 600)
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#dc2626',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  fontFamily: "'DM Sans', sans-serif",
+                  cursor: 'pointer',
+                  padding: '6px 0 0',
+                }}
+              >
+                Feedback?
+              </button>
             </div>
-            <div className="desktop-only-ad homepage-top-right">
-              <HomepageAd />
-            </div>
+            {/* Desktop ad — classifieds pages only */}
+            {isClassifieds && (
+              <div className="desktop-only-ad homepage-top-right">
+                <HomepageAd />
+              </div>
+            )}
           </div>
           <div style={{ padding: mobile ? '6px 0 0' : '8px 0 0', fontFamily: "'DM Sans', sans-serif" }}>
             {homeName && (
