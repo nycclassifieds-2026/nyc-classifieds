@@ -62,7 +62,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
       .catch(() => setUser(null))
   }, [pathname])
 
-  const isAuthPage = pathname?.startsWith('/signup') || pathname?.startsWith('/login')
+  const isAuthPage = pathname?.startsWith('/signup') || pathname?.startsWith('/login') || pathname?.startsWith('/account')
   const isClassifieds = pathname === '/' || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island')
   const isPorch = pathname?.startsWith('/porch')
 

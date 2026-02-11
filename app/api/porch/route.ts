@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
   const borough = searchParams.get('borough')
   const neighborhood = searchParams.get('neighborhood')
   const postType = searchParams.get('post_type')
+  const userId = searchParams.get('user')
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
   const pageSize = PAGE_SIZE
 
@@ -59,6 +60,8 @@ export async function GET(request: NextRequest) {
       { count: 'exact' },
     )
     .gt('expires_at', new Date().toISOString())
+
+  if (userId) query = query.eq('user_id', userId)
 
   if (borough) query = query.eq('borough_slug', borough)
   if (neighborhood) query = query.eq('neighborhood_slug', neighborhood)

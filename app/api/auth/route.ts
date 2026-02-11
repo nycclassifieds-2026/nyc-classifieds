@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin()
   const { data: user } = await db
     .from('users')
-    .select('id, email, name, verified, role, banned, account_type, business_name, business_slug, business_category, website, phone, business_description, hours, service_area, photo_gallery, selfie_url')
+    .select('id, email, name, verified, role, banned, account_type, business_name, business_slug, business_category, website, phone, business_description, hours, service_area, photo_gallery, selfie_url, address')
     .eq('id', userId)
     .single()
 
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       account_type: user.account_type, business_name: user.business_name, business_slug: user.business_slug,
       business_category: user.business_category, website: user.website, phone: user.phone,
       business_description: user.business_description, hours: user.hours, service_area: user.service_area,
-      photo_gallery: user.photo_gallery, selfie_url: user.selfie_url,
+      photo_gallery: user.photo_gallery, selfie_url: user.selfie_url, address: user.address,
     },
     unreadMessages: count || 0,
   })
