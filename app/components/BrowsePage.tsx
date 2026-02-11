@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import ListingGrid, { getDisplayMode } from './ListingGrid'
+import CategoryAd from './CategoryAd'
 import { type Category, slugify } from '@/lib/data'
 
 interface Listing {
@@ -184,6 +185,15 @@ export default function BrowsePage({
           </select>
         </div>
       </div>
+
+      {/* Category Ad */}
+      {effectiveCategorySlug && (
+        <CategoryAd
+          categorySlug={effectiveCategorySlug}
+          borough={borough || ''}
+          neighborhood={neighborhood || ''}
+        />
+      )}
 
       {/* Listings */}
       {loading ? (
