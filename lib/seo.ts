@@ -189,6 +189,10 @@ export function articleSchema(opts: {
   url: string
   datePublished: string
   author: string
+  category?: string
+  tags?: string[]
+  wordCount?: number
+  articleBody?: string
 }) {
   return {
     '@context': 'https://schema.org',
@@ -197,9 +201,46 @@ export function articleSchema(opts: {
     description: opts.description,
     url: `${SITE_URL}${opts.url}`,
     datePublished: opts.datePublished,
-    author: { '@type': 'Organization', name: opts.author },
-    publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
-    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}${opts.url}` },
+    dateModified: opts.datePublished,
+    inLanguage: 'en-US',
+    author: {
+      '@type': 'Organization',
+      name: opts.author,
+      url: SITE_URL,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/icon-512.png`,
+        width: 512,
+        height: 512,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `${SITE_URL}${opts.url}`,
+    },
+    isPartOf: {
+      '@type': 'Blog',
+      name: `${SITE_NAME} Blog`,
+      url: `${SITE_URL}/blog`,
+    },
+    ...(opts.category && { articleSection: opts.category }),
+    ...(opts.tags && opts.tags.length > 0 && { keywords: opts.tags.join(', ') }),
+    ...(opts.wordCount && { wordCount: opts.wordCount }),
+    ...(opts.articleBody && { articleBody: opts.articleBody }),
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['[data-article-headline]', '[data-article-body]'],
+    },
+    about: {
+      '@type': 'Thing',
+      name: opts.category || 'NYC Classifieds',
+      description: opts.description,
+    },
   }
 }
 

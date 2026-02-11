@@ -115,7 +115,7 @@ export default function BlogPostClient({
       </div>
 
       {/* Title */}
-      <h1 style={{ fontSize: '2.25rem', fontWeight: 700, color: '#111827', marginBottom: '12px', lineHeight: 1.25, maxWidth: '720px' }}>
+      <h1 data-article-headline style={{ fontSize: '2.25rem', fontWeight: 700, color: '#111827', marginBottom: '12px', lineHeight: 1.25, maxWidth: '720px' }}>
         {post.title}
       </h1>
 
@@ -249,7 +249,7 @@ export default function BlogPostClient({
 
         {/* Article body */}
         <article style={{ flex: 1, minWidth: 0, maxWidth: '640px' }}>
-          <div style={{ color: '#374151', lineHeight: 1.8, fontSize: '1.0625rem' }}>
+          <div data-article-body style={{ color: '#374151', lineHeight: 1.8, fontSize: '1.0625rem' }}>
             {paragraphs.map((para, i) => {
               if (para.startsWith('## ')) {
                 return (

@@ -27,6 +27,20 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const post = getPostBySlug(slug)
   if (!post) notFound()
 
+  // Estimate read time
+  const wordCount = post.content.split(/\s+/).length
+  const readTime = Math.max(1, Math.round(wordCount / 250))
+
+  // Strip markdown for articleBody (clean text for AI crawlers)
+  const articleBody = post.content
+    .replace(/##\s?/g, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/^- /gm, '')
+    .replace(/^\d+\.\s/gm, '')
+    .replace(/\n{2,}/g, '\n')
+    .trim()
+
   const schemas = [
     articleSchema({
       title: post.title,
@@ -34,6 +48,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       url: `/blog/${post.slug}`,
       datePublished: post.date,
       author: post.author,
+      category: post.category,
+      tags: post.tags,
+      wordCount,
+      articleBody,
     }),
     breadcrumbSchema([
       { name: 'Blog', url: '/blog' },
@@ -41,10 +59,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       { name: post.title, url: `/blog/${post.slug}` },
     ]),
   ]
-
-  // Estimate read time
-  const wordCount = post.content.split(/\s+/).length
-  const readTime = Math.max(1, Math.round(wordCount / 250))
 
   // Related posts (same category first, then others)
   const related = [
