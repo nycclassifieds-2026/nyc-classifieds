@@ -36,7 +36,16 @@ export default function BoroughNav() {
 
   return (
     <div>
-      <div style={{ textAlign: 'center', margin: '0 0 6px', fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        margin: '0 0 6px',
+        fontFamily: "'DM Sans', sans-serif",
+      }}>
+        <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>
+          Pick your borough to set your neighborhood
+        </p>
         <button
           onClick={() => {
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
@@ -53,20 +62,12 @@ export default function BoroughNav() {
             fontWeight: 600,
             fontFamily: "'DM Sans', sans-serif",
             cursor: 'pointer',
-            padding: '4px 0',
+            padding: 0,
           }}
         >
           Feedback?
         </button>
       </div>
-      <p style={{
-        fontSize: '0.75rem',
-        color: '#6b7280',
-        margin: '0 0 6px',
-        fontFamily: "'DM Sans', sans-serif",
-      }}>
-        Pick your borough to set your neighborhood
-      </p>
       <nav aria-label="Browse by borough" className="home-borough-nav" style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '4px' }}>
         <button
           onClick={() => {

@@ -84,7 +84,7 @@ export default function FeedbackWidget() {
           aria-label="Send feedback"
           style={{
             position: 'fixed',
-            bottom: '24px',
+            bottom: '80px',
             right: '24px',
             width: '48px',
             height: '48px',
@@ -115,7 +115,7 @@ export default function FeedbackWidget() {
         <div
           style={{
             position: 'fixed',
-            bottom: '24px',
+            bottom: '80px',
             right: '24px',
             width: '340px',
             maxWidth: 'calc(100vw - 32px)',
