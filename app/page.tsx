@@ -1,5 +1,6 @@
 import { boroughs, categories } from '@/lib/data'
 import { websiteSchema, organizationSchema, faqSchema, collectionPageSchema } from '@/lib/seo'
+import Link from 'next/link'
 import HomeSearch from './components/HomeSearch'
 import BoroughNav from './components/BoroughNav'
 import HomeCategoryGrid from './components/HomeCategoryGrid'
@@ -34,6 +35,23 @@ export default function Home() {
       {schemas.map((s, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(s) }} />
       ))}
+
+      {/* Directory launch banner */}
+      <Link href="/business" style={{
+        display: 'block',
+        backgroundColor: '#f0f5ff',
+        border: '1px solid #c7d7fe',
+        borderRadius: '8px',
+        padding: '10px 16px',
+        marginBottom: '12px',
+        textDecoration: 'none',
+        fontFamily: "'DM Sans', sans-serif",
+        fontSize: '0.8125rem',
+        color: '#1e3a5f',
+        lineHeight: 1.5,
+      }}>
+        <strong style={{ color: '#1a56db' }}>New: NYC Business Directory</strong> — just launched, for you. Get your business listed for free. But it only works if you use it! <span style={{ color: '#1a56db', fontWeight: 600 }}>Check it out →</span>
+      </Link>
 
       {/* Mobile ad — above search */}
       <div className="mobile-only-ad">
