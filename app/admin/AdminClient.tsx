@@ -362,6 +362,23 @@ export default function AdminClient() {
   const [pinInput, setPinInput] = useState('')
   const [pinError, setPinError] = useState(false)
 
+  // Auto-lock after 60 minutes of inactivity
+  useEffect(() => {
+    if (!pinUnlocked) return
+    let timer: ReturnType<typeof setTimeout>
+    const resetTimer = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => setPinUnlocked(false), 60 * 60 * 1000)
+    }
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'] as const
+    events.forEach(e => window.addEventListener(e, resetTimer))
+    resetTimer()
+    return () => {
+      clearTimeout(timer)
+      events.forEach(e => window.removeEventListener(e, resetTimer))
+    }
+  }, [pinUnlocked])
+
   const handlePinSubmit = async () => {
     // Client-side PIN gate + server-side role check
     if (pinInput !== '2179') {
