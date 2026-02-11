@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { boroughs, categories, neighborhoodSlug, findNeighborhood } from '@/lib/data'
 import SearchAutocomplete from './components/SearchAutocomplete'
 import HomepageAd from './components/HomepageAd'
+import FeedbackWidget from './components/FeedbackWidget'
 
 function useIsMobile(breakpoint = 640) {
   const [mobile, setMobile] = useState(false)
@@ -281,6 +282,8 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 
       {children}
 
+      {!hideNav && <FeedbackWidget />}
+
       {!hideNav && !isAppPage && (
         <footer style={{
           backgroundColor: '#111827',
@@ -353,7 +356,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                 <span style={{ color: '#9ca3af' }}> Classifieds</span>
               </span>
               <span style={{ color: '#4b5563', fontSize: '0.6875rem' }}>
-                Free. Real. Local. &copy; {new Date().getFullYear()}
+                Free. Real. Local. Verified. &copy; {new Date().getFullYear()}
               </span>
             </div>
           </div>

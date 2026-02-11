@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { otpEmail, welcomeEmail, businessProfileLiveEmail } from '@/lib/email-templates'
 import { sendEmail } from '@/lib/email'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { signEmailToken, hashPin } from '@/lib/auth-utils'
+import { signEmailToken, hashPin, verifyPin } from '@/lib/auth-utils'
 const COOKIE_NAME = 'nyc_classifieds_user'
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       res.cookies.set(COOKIE_NAME, String(user.id), {
         httpOnly: true,
         secure: isProd,
-        sameSite: 'lax',
+        sameSite: 'strict',
         maxAge: 30 * 24 * 60 * 60,
         path: '/',
       })
@@ -294,10 +294,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user.pin) {
-      return NextResponse.json({ error: 'Account setup incomplete. Use the verification code option to log in and set your PIN.' }, { status: 401 })
+      return NextResponse.json({ error: 'Invalid email or PIN' }, { status: 401 })
     }
 
-    if (user.pin !== hashPin(pin)) {
+    if (!verifyPin(pin, user.pin)) {
       return NextResponse.json({ error: 'Invalid email or PIN' }, { status: 401 })
     }
 
@@ -312,7 +312,7 @@ export async function POST(request: NextRequest) {
     res.cookies.set(COOKIE_NAME, String(user.id), {
       httpOnly: true,
       secure: isProd,
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 30 * 24 * 60 * 60,
       path: '/',
     })

@@ -13,6 +13,17 @@ export function signEmailToken(email: string): string {
   return `${ts}:${sig}`
 }
 
+/** Constant-time string comparison to prevent timing attacks */
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))
+}
+
+/** Verify a PIN hash matches (constant-time) */
+export function verifyPin(pin: string, storedHash: string): boolean {
+  return safeEqual(hashPin(pin), storedHash)
+}
+
 /** Verify an email token is valid and not expired (default 1 hour) */
 export function verifyEmailToken(email: string, token: string, maxAgeMs = 60 * 60 * 1000): boolean {
   const parts = token.split(':')
@@ -21,5 +32,5 @@ export function verifyEmailToken(email: string, token: string, maxAgeMs = 60 * 6
   const ts = parseInt(tsStr)
   if (isNaN(ts) || Date.now() - ts > maxAgeMs) return false
   const expected = crypto.createHmac('sha256', EMAIL_TOKEN_SECRET).update(`${email}:${ts}`).digest('hex')
-  return sig === expected
+  return safeEqual(sig, expected)
 }

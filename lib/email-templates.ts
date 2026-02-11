@@ -1,7 +1,7 @@
 const HEADER = `<h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">The NYC Classifieds</h1>`
 const WRAPPER_START = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 2rem;">`
 const WRAPPER_END = `</div>`
-const FOOTER = `<p style="color: #94a3b8; font-size: 0.75rem; margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">The NYC Classifieds &mdash; Free. Real. Local.</p>`
+const FOOTER = `<p style="color: #94a3b8; font-size: 0.75rem; margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">The NYC Classifieds &mdash; Free. Real. Local. Verified.</p>`
 const BUTTON = (href: string, text: string) =>
   `<a href="${href}" style="display: inline-block; background: #2563eb; color: #fff; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 600; font-size: 0.875rem; margin-top: 1rem;">${text}</a>`
 
@@ -547,6 +547,82 @@ export function adminNoticeEmail(
         <p style="color: #475569; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">${t}</p>
         ${b ? `<p style="color: #475569; font-size: 0.875rem; margin-bottom: 1rem; white-space: pre-line;">${b}</p>` : ''}
         ${link ? BUTTON(link, 'View Details') : ''}
+        ${FOOTER}
+      ${WRAPPER_END}
+    `,
+  }
+}
+
+export function feedbackConfirmationEmail(
+  name: string,
+  category: string,
+): { subject: string; html: string } {
+  const n = esc(name), c = esc(category)
+  return {
+    subject: 'We received your feedback',
+    html: `
+      ${WRAPPER_START}
+        ${HEADER}
+        <p style="color: #475569; font-size: 0.875rem;">Hi ${n},</p>
+        <p style="color: #475569; font-size: 0.875rem; margin-bottom: 1rem;">
+          Thanks for submitting your ${c} feedback. We read every submission and appreciate you helping us improve The NYC Classifieds.
+        </p>
+        <p style="color: #475569; font-size: 0.875rem;">
+          We'll follow up if we need more details or when we've addressed your feedback.
+        </p>
+        ${FOOTER}
+      ${WRAPPER_END}
+    `,
+  }
+}
+
+export function feedbackAdminAlertEmail(
+  category: string,
+  message: string,
+  submitterName: string,
+  pageUrl: string | null,
+): { subject: string; html: string } {
+  const c = esc(category), m = esc(message), sn = esc(submitterName)
+  return {
+    subject: `New ${c} feedback from ${sn}`,
+    html: `
+      ${WRAPPER_START}
+        ${HEADER}
+        <p style="color: #475569; font-size: 0.875rem; margin-bottom: 0.5rem;">New feedback submitted.</p>
+        <div style="background: #f1f5f9; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+          <p style="color: #475569; font-size: 0.875rem; margin: 0 0 0.5rem;"><strong>From:</strong> ${sn}</p>
+          <p style="color: #475569; font-size: 0.875rem; margin: 0 0 0.5rem;"><strong>Category:</strong> ${c}</p>
+          ${pageUrl ? `<p style="color: #475569; font-size: 0.875rem; margin: 0 0 0.5rem;"><strong>Page:</strong> ${esc(pageUrl)}</p>` : ''}
+          <p style="color: #475569; font-size: 0.875rem; margin: 0;"><strong>Message:</strong> ${m}</p>
+        </div>
+        ${BUTTON(`${BASE_URL}/admin`, 'Review in Admin')}
+        ${FOOTER}
+      ${WRAPPER_END}
+    `,
+  }
+}
+
+export function feedbackReplyEmail(
+  name: string,
+  category: string,
+  replyText: string,
+): { subject: string; html: string } {
+  const n = esc(name), c = esc(category), r = esc(replyText)
+  return {
+    subject: 'We replied to your feedback',
+    html: `
+      ${WRAPPER_START}
+        ${HEADER}
+        <p style="color: #475569; font-size: 0.875rem;">Hi ${n},</p>
+        <p style="color: #475569; font-size: 0.875rem; margin-bottom: 1rem;">
+          We've reviewed your ${c} feedback and have a response for you:
+        </p>
+        <div style="background: #f1f5f9; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+          <p style="color: #475569; font-size: 0.875rem; margin: 0; white-space: pre-line;">${r}</p>
+        </div>
+        <p style="color: #475569; font-size: 0.875rem;">
+          Thanks for helping us improve The NYC Classifieds!
+        </p>
         ${FOOTER}
       ${WRAPPER_END}
     `,

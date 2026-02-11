@@ -14,12 +14,12 @@ export const metadata: Metadata = {
     siteName: 'The NYC Classifieds',
     type: 'website',
     locale: 'en_US',
-    title: 'The NYC Classifieds — Free. Real. Local.',
+    title: 'The NYC Classifieds — Free. Real. Local. Verified.',
     description: 'Free local classifieds for New York City. Geo-verified users only. Housing, jobs, services, for sale, community, and more across all 5 boroughs and 126+ neighborhoods.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'The NYC Classifieds — Free. Real. Local.',
+    title: 'The NYC Classifieds — Free. Real. Local. Verified.',
     description: 'Free classifieds for New York City. Geo-verified, real New Yorkers only.',
   },
   robots: {
