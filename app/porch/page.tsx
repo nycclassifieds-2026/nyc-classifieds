@@ -17,7 +17,7 @@ export default function PorchPage() {
 
   const forumLd = {
     '@context': 'https://schema.org',
-    '@type': 'DiscussionForumPosting',
+    '@type': 'DiscussionForum',
     name: 'The Porch — NYC Neighborhood Feed',
     description: 'Neighborhood-based discussion feed for New York City residents. Recommendations, questions, alerts, lost & found, events, and more.',
     url: `${siteUrl}/porch`,

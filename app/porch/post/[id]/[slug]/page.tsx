@@ -46,7 +46,8 @@ export default async function PorchPostPage({ params }: { params: Promise<{ id: 
   const forumLd = {
     '@context': 'https://schema.org',
     '@type': 'DiscussionForumPosting',
-    name: readableSlug,
+    headline: readableSlug,
+    text: readableSlug,
     url: `${siteUrl}/porch/post/${id}/${slug}`,
     datePublished: new Date().toISOString(),
     author: { '@type': 'Person', name: 'NYC Resident' },

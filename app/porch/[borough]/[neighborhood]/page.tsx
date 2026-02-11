@@ -44,7 +44,7 @@ export default async function PorchNeighborhoodPage({ params }: { params: Promis
 
   const forumLd = {
     '@context': 'https://schema.org',
-    '@type': 'DiscussionForumPosting',
+    '@type': 'DiscussionForum',
     name: `The Porch in ${nh.name}, ${b.name}`,
     description: `Neighborhood discussion feed for ${nh.name}, ${b.name}. Recommendations, questions, alerts, events, and more.`,
     url: `${siteUrl}/porch/${borough}/${neighborhood}`,

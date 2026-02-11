@@ -163,8 +163,8 @@ export function discussionForumSchema(opts: {
 }) {
   return {
     '@context': 'https://schema.org',
-    '@type': 'DiscussionForumPosting',
-    headline: opts.name,
+    '@type': 'DiscussionForum',
+    name: opts.name,
     description: opts.description,
     url: `${SITE_URL}${opts.url}`,
     author: { '@type': 'Organization', name: SITE_NAME },

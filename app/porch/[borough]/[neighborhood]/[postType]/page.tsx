@@ -51,7 +51,7 @@ export default async function PorchPostTypePage({ params }: { params: Promise<{ 
 
   const forumLd = {
     '@context': 'https://schema.org',
-    '@type': 'DiscussionForumPosting',
+    '@type': 'DiscussionForum',
     name: `${pt.name} in ${nh.name}, ${b.name}`,
     description: `${pt.name} posts from the ${nh.name} neighborhood in ${b.name}.`,
     url: `${siteUrl}/porch/${borough}/${neighborhood}/${postType}`,
