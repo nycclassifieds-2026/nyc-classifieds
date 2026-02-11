@@ -61,11 +61,17 @@ export default function Home() {
         <HomepageAd />
       </div>
 
-      {/* Value prop — one line each, no overlap */}
+      {/* Value prop */}
       <section style={{ padding: '12px 0 10px', fontFamily: "'DM Sans', sans-serif" }}>
-        <h1 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#111827', margin: '0', letterSpacing: '-0.01em' }}>
+        <h1 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#111827', margin: '0 0 8px', letterSpacing: '-0.01em' }}>
           Free classifieds & real community for New York City
         </h1>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', fontSize: '0.8125rem', color: '#374151' }}>
+          <span><strong style={{ color: '#2563eb' }}>Geo-verified</strong> — Selfie + GPS at your address</span>
+          <span><strong style={{ color: '#2563eb' }}>100% free</strong> — No fees, ever</span>
+          <span><strong style={{ color: '#2563eb' }}>Hyperlocal</strong> — 126+ NYC neighborhoods</span>
+          <span><strong style={{ color: '#2563eb' }}>The Porch</strong> — Alerts, lost pets, neighbor Q&A</span>
+        </div>
       </section>
 
       {/* Desktop: search left, ad right | Mobile: stacked */}
@@ -77,23 +83,8 @@ export default function Home() {
           </div>
           <BoroughNav />
         </div>
-        <div className="desktop-only-ad" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div className="homepage-top-right">
-            <HomepageAd />
-          </div>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '4px 12px',
-            fontSize: '0.75rem',
-            color: '#374151',
-            fontFamily: "'DM Sans', sans-serif",
-          }}>
-            <span><strong style={{ color: '#2563eb' }}>Geo-verified</strong> — Selfie + GPS at your address</span>
-            <span><strong style={{ color: '#2563eb' }}>100% free</strong> — No fees, ever</span>
-            <span><strong style={{ color: '#2563eb' }}>Hyperlocal</strong> — 126+ NYC neighborhoods</span>
-            <span><strong style={{ color: '#2563eb' }}>The Porch</strong> — Alerts, lost pets, neighbor Q&A</span>
-          </div>
+        <div className="desktop-only-ad homepage-top-right">
+          <HomepageAd />
         </div>
       </section>
 
