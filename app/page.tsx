@@ -43,7 +43,7 @@ export default function Home() {
       {/* Value prop */}
       <section style={{ padding: '16px 0 12px', fontFamily: "'DM Sans', sans-serif" }}>
         <h1 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#111827', margin: '0 0 2px', letterSpacing: '-0.01em' }}>
-          Classifieds + community, the way it should be.
+          Bringing back what worked — free classifieds & real community (The Porch)
         </h1>
         <p style={{ fontSize: '0.9rem', color: '#4b5563', margin: '0 0 12px', lineHeight: 1.5 }}>
           The simplicity of old-school classifieds. The neighborhood feel of a real community board. Every user geo-verified at their NYC address.

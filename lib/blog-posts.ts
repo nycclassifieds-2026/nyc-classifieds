@@ -3,9 +3,22 @@ export interface BlogPost {
   title: string
   date: string
   author: string
+  category: string
+  tags: string[]
   excerpt: string
   content: string
 }
+
+export const BLOG_CATEGORIES = [
+  'All Posts',
+  'Updates',
+  'Features',
+  'Community',
+  'Safety',
+  'Guides',
+] as const
+
+export type BlogCategory = (typeof BLOG_CATEGORIES)[number]
 
 export const blogPosts: BlogPost[] = [
   {
@@ -13,6 +26,8 @@ export const blogPosts: BlogPost[] = [
     title: 'Why We Built NYC Classifieds',
     date: '2026-01-15',
     author: 'The NYC Classifieds Team',
+    category: 'Updates',
+    tags: ['launch', 'origin story', 'NYC', 'announcement'],
     excerpt: 'New York has 8 million stories, but the platforms people use to connect locally are broken. We built NYC Classifieds to fix that.',
     content: `New York City has 8 million people living within 302 square miles. We ride the same subways, walk the same blocks, and rely on the same bodegas — yet somehow, connecting with the person two floors down feels harder than ever.
 
@@ -51,6 +66,8 @@ If you've ever wished there was a better way to connect with your neighbors and 
     title: 'How Geo-Verification Works — And Why It Matters',
     date: '2026-01-22',
     author: 'The NYC Classifieds Team',
+    category: 'Guides',
+    tags: ['verification', 'trust', 'security', 'how it works'],
     excerpt: 'Every user on NYC Classifieds is verified with a selfie and GPS check. Here\'s how it works and why trust is the foundation of everything we do.',
     content: `The biggest problem with online classifieds isn't the interface or the features — it's trust. When you respond to a listing, you have no idea if the person on the other end is real, local, or even in the same state.
 
@@ -103,6 +120,8 @@ It's a small step that makes a massive difference. And it's why NYC Classifieds 
     title: 'Introducing The Porch — Your Neighborhood\'s Digital Front Stoop',
     date: '2026-01-29',
     author: 'The NYC Classifieds Team',
+    category: 'Features',
+    tags: ['the porch', 'community', 'neighborhoods', 'launch'],
     excerpt: 'The Porch is where NYC neighbors share recommendations, post alerts, organize events, and build real community — neighborhood by neighborhood.',
     content: `Classifieds are great for buying and selling. But neighborhoods need more than transactions — they need conversation. That's why we built The Porch.
 
@@ -157,6 +176,8 @@ Whether you've lived in your neighborhood for 30 years or 30 days, The Porch is 
     title: 'Free Forever — Why We\'ll Never Charge to Post',
     date: '2026-02-05',
     author: 'The NYC Classifieds Team',
+    category: 'Updates',
+    tags: ['free', 'commitment', 'announcement'],
     excerpt: 'Posting on NYC Classifieds is free, and it always will be. Here\'s why we made that commitment and how we plan to sustain it.',
     content: `When we launched NYC Classifieds, we made a simple promise: it's free to post, and it always will be. No listing fees, no premium tiers, no paywalls on community features.
 
@@ -206,6 +227,8 @@ Keeping it free is the most important decision we've made. And we're sticking wi
     title: 'Security and Trust on NYC Classifieds',
     date: '2026-02-10',
     author: 'The NYC Classifieds Team',
+    category: 'Safety',
+    tags: ['security', 'trust', 'moderation', 'safety tips'],
     excerpt: 'From geo-verification to moderation to flagging, here\'s how we keep NYC Classifieds safe and trustworthy for everyone.',
     content: `Trust isn't just a feature — it's the foundation of NYC Classifieds. Every design decision we make starts with the question: does this make our users safer?
 
@@ -273,4 +296,9 @@ export function getPostBySlug(slug: string): BlogPost | undefined {
 
 export function getAllSlugs(): string[] {
   return blogPosts.map(p => p.slug)
+}
+
+export function getPostsByCategory(category: string): BlogPost[] {
+  if (category === 'All Posts') return blogPosts
+  return blogPosts.filter(p => p.category === category)
 }
