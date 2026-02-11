@@ -62,7 +62,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
       .catch(() => setUser(null))
   }, [pathname])
 
-  const isAuthPage = pathname?.startsWith('/signup') || pathname?.startsWith('/login') || pathname?.startsWith('/account')
+  const isAppPage = pathname?.startsWith('/signup') || pathname?.startsWith('/login') || pathname?.startsWith('/account') || pathname?.startsWith('/messages') || pathname === '/listings/new'
   const isClassifieds = pathname === '/' || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island')
   const isPorch = pathname?.startsWith('/porch')
 
@@ -207,7 +207,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
         </header>
       )}
 
-      {!hideNav && !isHomepage && !isSearchPage && !isAuthPage && (
+      {!hideNav && !isHomepage && !isSearchPage && !isAppPage && (
         <div style={{
           maxWidth: '1050px',
           margin: '0 auto',
@@ -243,7 +243,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 
       {children}
 
-      {!hideNav && !isAuthPage && (
+      {!hideNav && !isAppPage && (
         <footer style={{
           backgroundColor: '#111827',
           marginTop: '48px',
