@@ -85,11 +85,11 @@ export default function BusinessDirectoryClient() {
             marginBottom: '12px',
             fontFamily: "'DM Sans', sans-serif",
           }}>
-            We built this directory to help NYC small businesses get discovered — completely free.
-            Every business that signs up gets a profile page, appears in search, and is visible to thousands
-            of New Yorkers browsing our classifieds. No fees, no catches. If you want to go further — post
-            listings, run ads, or boost your visibility — those options are here too, but the directory
-            listing is always free.
+            We just launched this directory to help NYC small businesses get discovered — completely
+            free. No fees, no catches. Every business that signs up gets a profile page, shows up in search,
+            and is visible to New Yorkers browsing our classifieds every day. But it only works if you use
+            it. <Link href="/signup" style={{ color: '#1a56db', fontWeight: 600 }}>Sign up as a business</Link>,
+            claim your spot, and help us build something real for the neighborhood.
           </p>
           <SearchAutocomplete
             initialQuery={query}
