@@ -117,6 +117,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }
   }
 
+  // Business directory
+  entries.push({ url: `${SITE_URL}/business`, lastModified: now, changeFrequency: 'daily', priority: 0.9 })
+
   // Static pages (only include pages that actually exist)
   for (const page of ['search', 'porch']) {
     entries.push({

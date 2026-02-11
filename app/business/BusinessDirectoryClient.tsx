@@ -78,6 +78,19 @@ export default function BusinessDirectoryClient() {
 
       <div className="homepage-top" style={{ margin: 0, marginBottom: '1rem' }}>
         <div className="homepage-top-left">
+          <p style={{
+            fontSize: '0.8125rem',
+            color: '#475569',
+            lineHeight: 1.6,
+            marginBottom: '12px',
+            fontFamily: "'DM Sans', sans-serif",
+          }}>
+            We built this directory to help NYC small businesses get discovered — completely free.
+            Every business that signs up gets a profile page, appears in search, and is visible to thousands
+            of New Yorkers browsing our classifieds. No fees, no catches. If you want to go further — post
+            listings, run ads, or boost your visibility — those options are here too, but the directory
+            listing is always free.
+          </p>
           <SearchAutocomplete
             initialQuery={query}
             onSearch={handleSearch}
