@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Script from 'next/script'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { boroughs, categories, neighborhoodSlug, findNeighborhood } from '@/lib/data'
@@ -335,6 +336,19 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 
       {!hideNav && <FeedbackWidget />}
       {!hideNav && user && <PushPrompt />}
+
+      {/* Tawk.to live chat */}
+      <Script id="tawk-to" strategy="lazyOnload">{`
+        var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+        (function(){
+          var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+          s1.async=true;
+          s1.src='https://embed.tawk.to/6823effa7c5b09190cd447fe/1ir662r4n';
+          s1.charset='UTF-8';
+          s1.setAttribute('crossorigin','*');
+          s0.parentNode.insertBefore(s1,s0);
+        })();
+      `}</Script>
 
       {!hideNav && !isAppPage && (
         <footer style={{
