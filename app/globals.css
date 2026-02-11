@@ -190,6 +190,14 @@ a.link:hover {
   animation-iteration-count: 3;
 }
 
+@keyframes launch-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.launch-blink {
+  animation: launch-blink 1.2s ease-in-out infinite;
+}
+
 /* ─── Homepage top: search left, ad right on desktop ─── */
 .homepage-top {
   display: grid;

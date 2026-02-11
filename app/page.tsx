@@ -36,21 +36,24 @@ export default function Home() {
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(s) }} />
       ))}
 
-      {/* Directory launch banner */}
-      <Link href="/business" style={{
+      {/* Directory launch banner — red, blinking */}
+      <Link href="/business" className="launch-banner" style={{
         display: 'block',
-        backgroundColor: '#f0f5ff',
-        border: '1px solid #c7d7fe',
+        backgroundColor: '#fef2f2',
+        border: '1px solid #fca5a5',
         borderRadius: '8px',
         padding: '10px 16px',
         marginBottom: '12px',
         textDecoration: 'none',
         fontFamily: "'DM Sans', sans-serif",
         fontSize: '0.8125rem',
-        color: '#1e3a5f',
+        color: '#7f1d1d',
         lineHeight: 1.5,
+        textAlign: 'center',
       }}>
-        <strong style={{ color: '#1a56db' }}>New: NYC Business Directory</strong> — just launched, for you. Get your business listed for free. But it only works if you use it! <span style={{ color: '#1a56db', fontWeight: 600 }}>Check it out →</span>
+        <span className="launch-blink" style={{ color: '#dc2626', fontWeight: 700 }}>NEW</span>{' '}
+        NYC Business Directory — just launched, for you. Get your business listed for free. Only works if you use it!{' '}
+        <span style={{ color: '#dc2626', fontWeight: 600 }}>Check it out →</span>
       </Link>
 
       {/* Mobile ad — above search */}
@@ -66,12 +69,6 @@ export default function Home() {
         <p style={{ fontSize: '0.9rem', color: '#4b5563', margin: '0 0 12px', lineHeight: 1.5 }}>
           The simplicity of old-school classifieds. The neighborhood feel of a real community board. Every user geo-verified at their NYC address.
         </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', fontSize: '0.8125rem', color: '#374151' }}>
-          <span><strong style={{ color: '#2563eb' }}>Geo-verified</strong> — Selfie + GPS at your address</span>
-          <span><strong style={{ color: '#2563eb' }}>100% free</strong> — No fees, ever</span>
-          <span><strong style={{ color: '#2563eb' }}>Hyperlocal</strong> — 126+ NYC neighborhoods</span>
-          <span><strong style={{ color: '#2563eb' }}>The Porch</strong> — Alerts, lost pets, neighbor Q&A</span>
-        </div>
       </section>
 
       {/* Desktop: search left, ad right | Mobile: stacked */}
@@ -87,6 +84,22 @@ export default function Home() {
           <HomepageAd />
         </div>
       </section>
+
+      {/* Feature pills — 2 columns under ad */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '6px 24px',
+        fontSize: '0.8125rem',
+        color: '#374151',
+        fontFamily: "'DM Sans', sans-serif",
+        padding: '10px 0 0',
+      }}>
+        <span><strong style={{ color: '#2563eb' }}>Geo-verified</strong> — Selfie + GPS at your address</span>
+        <span><strong style={{ color: '#2563eb' }}>100% free</strong> — No fees, ever</span>
+        <span><strong style={{ color: '#2563eb' }}>Hyperlocal</strong> — 126+ NYC neighborhoods</span>
+        <span><strong style={{ color: '#2563eb' }}>The Porch</strong> — Alerts, lost pets, neighbor Q&A</span>
+      </div>
 
       {/* Categories — localized when home is set */}
       <HomeCategoryGrid />
