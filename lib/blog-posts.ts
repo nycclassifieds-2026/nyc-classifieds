@@ -29,7 +29,7 @@ export const blogPosts: BlogPost[] = [
     author: 'The NYC Classifieds Team',
     category: 'Updates',
     tags: ['roadmap', 'features', 'future', 'product'],
-    excerpt: 'We\'ve been heads-down building for six weeks. Here\'s a look at what\'s coming to NYC Classifieds in the weeks ahead.',
+    excerpt: 'We\'ve been heads-down building for six weeks. Here\'s a look at what\'s coming to The NYC Classifieds in the weeks ahead.',
     content: `Six weeks in. The foundation is laid, the walls are up, and people are actually walking through the door. Now comes the part where we make this thing genuinely great.
 
 We\'ve been listening to every piece of feedback that comes through, reading every flag report, watching which features get used and which ones collect dust. And we have a clear picture of where to go next.
@@ -60,7 +60,7 @@ We ship fast because we\'re small. Most of these features will roll out over the
 
 We\'re building this in public, so you\'ll hear about it as it happens. And if there\'s something you want that isn\'t on this list, tell us. We read everything. Seriously. We\'re a small team and your feedback goes straight to the people writing the code.
 
-This is still early. The best version of NYC Classifieds hasn\'t been built yet. But it\'s getting closer every day.`,
+This is still early. The best version of The NYC Classifieds hasn\'t been built yet. But it\'s getting closer every day.`,
   },
   {
     slug: 'first-10-days-what-google-told-us',
@@ -209,10 +209,10 @@ Every one of these scams relies on urgency and trust. The scammer wants you to a
     author: 'The NYC Classifieds Team',
     category: 'Safety',
     tags: ['safety', 'security', 'verification', 'moderation', 'privacy', 'trust'],
-    excerpt: 'A comprehensive look at every safety measure built into NYC Classifieds, from verification to moderation to privacy protections.',
+    excerpt: 'Every safety measure we\'ve built into The NYC Classifieds — verification, moderation, privacy, and the stuff you don\'t see.',
     content: `Safety isn\'t a feature we bolted on after launch. It\'s the reason we built this platform in the first place. Every other classifieds site treats safety as an afterthought. We treat it as the foundation.
 
-Here is everything we do to protect you on NYC Classifieds.
+Here is everything we do to protect you on The NYC Classifieds.
 
 ## Identity Verification
 
@@ -220,7 +220,7 @@ Here is everything we do to protect you on NYC Classifieds.
 
 **Selfie verification.** Every user takes a real-time selfie during signup. This confirms a real human being is creating the account, not a bot or a fake profile using stolen photos.
 
-Together, GPS and selfie verification mean every person on NYC Classifieds has proven they\'re a real New Yorker. That alone eliminates the majority of scam vectors.
+Together, GPS and selfie verification mean every person on The NYC Classifieds has proven they\'re a real New Yorker. That alone eliminates the majority of scam vectors.
 
 ## Automated Moderation
 
@@ -240,7 +240,7 @@ Every post and listing has a flag button. When a user flags something, it goes i
 
 ## On-Platform Messaging
 
-**No exposed emails or phone numbers.** When you respond to a listing or message someone on The Porch, the conversation happens entirely within NYC Classifieds. Your personal contact information is never visible to other users unless you choose to share it.
+**No exposed emails or phone numbers.** When you respond to a listing or message someone on The Porch, the conversation happens entirely within The NYC Classifieds. Your personal contact information is never visible to other users unless you choose to share it.
 
 This protects you from spam, phishing, and unwanted contact outside the platform.
 
@@ -384,7 +384,7 @@ Free means everyone participates. And participation is the only thing that makes
 
 ## The Actual Business Model
 
-Here\'s how we plan to sustain NYC Classifieds without charging users:
+Here\'s how we plan to sustain The NYC Classifieds without charging users:
 
 **Local business advertising.** Small, clearly-labeled ads from NYC businesses that are relevant to the neighborhood you\'re browsing. Not pop-ups. Not tracking-based retargeting that follows you across the internet. Just a local coffee shop letting you know they exist. The kind of ad you might actually appreciate.
 
@@ -405,7 +405,7 @@ This is the part we care about most:
 
 We think the platforms that came before us lost their way because they forgot who they were for. They started optimizing for advertisers and shareholders instead of users. Revenue became the product, and people became the resource.
 
-We\'re building NYC Classifieds for New Yorkers. Full stop. If we can\'t figure out how to sustain that without compromising the experience, then we\'re not trying hard enough. But we can, and we will.
+We\'re building The NYC Classifieds for New Yorkers. Full stop. If we can\'t figure out how to sustain that without compromising the experience, then we\'re not trying hard enough. But we can, and we will.
 
 Free. Forever. No asterisk.`,
   },
@@ -463,7 +463,7 @@ We built a tool. Neighborhoods made it theirs. That\'s the best outcome we could
     category: 'Features',
     tags: ['security', 'verification', 'trust', 'architecture', 'design'],
     excerpt: 'Most platforms add safety features after something goes wrong. We built verification and trust systems before we built anything else. Here\'s why.',
-    content: `When we started building NYC Classifieds, the first thing we wrote wasn\'t the listing page. It wasn\'t the search bar. It wasn\'t The Porch. It was the verification system.
+    content: `When we started building The NYC Classifieds, the first thing we wrote wasn\'t the listing page. It wasn\'t the search bar. It wasn\'t The Porch. It was the verification system.
 
 That might sound backwards. Most startups build the product first and bolt on security later, usually after something bad happens and users start leaving. We did it the other way around, and it shaped everything that came after.
 
@@ -659,7 +659,7 @@ The result? The best businesses in your neighborhood are often invisible online.
 
 ## What We Built
 
-Business profiles on NYC Classifieds are free. Completely free. A local business can create a verified profile that includes:
+Business profiles on The NYC Classifieds are free. Completely free. A local business can create a verified profile that includes:
 
 - **Business name and description.** Tell people what you do and why you\'re great.
 - **Location and neighborhood.** Tied to our 126-neighborhood system, so you show up where your customers are.
@@ -747,7 +747,7 @@ We wanted to fix this from the ground up.
 
 ## Neighborhood-First Search
 
-When you search on NYC Classifieds, your results are localized by default. If you\'re verified in Astoria, your search starts in Astoria. You can expand to all of Queens, all of NYC, or narrow down to a specific neighborhood. But the default is your neighborhood, because that\'s usually what you care about.
+When you search on The NYC Classifieds, your results are localized by default. If you\'re verified in Astoria, your search starts in Astoria. You can expand to all of Queens, all of NYC, or narrow down to a specific neighborhood. But the default is your neighborhood, because that\'s usually what you care about.
 
 This seems obvious. It apparently wasn\'t to anyone who came before us.
 
@@ -837,7 +837,7 @@ The goal isn\'t perfection. The goal is a platform where you feel safe posting a
     author: 'The NYC Classifieds Team',
     category: 'Safety',
     tags: ['messaging', 'safety', 'privacy', 'design', 'security'],
-    excerpt: 'We made a deliberate decision: no exposed phone numbers, no visible email addresses. Every conversation happens on NYC Classifieds. Here\'s why that matters more than convenience.',
+    excerpt: 'We made a deliberate decision: no exposed phone numbers, no visible email addresses. Every conversation happens on The NYC Classifieds. Here\'s why that matters more than convenience.',
     content: `On The List, you respond to a listing by emailing a anonymized address that forwards to the poster. In theory, this protects privacy. In practice, one reply reveals your real email, and from there it\'s open season for spam, phishing, and harassment.
 
 On The Feed\'s Garage Sale, you message through Messenger, which means you\'re handing someone your full Facebook profile, your photo, your friends list, and years of personal information. All because you wanted to ask about a used desk.
@@ -846,7 +846,7 @@ We looked at both of these approaches and decided neither was acceptable.
 
 ## The Decision
 
-All messaging on NYC Classifieds happens on-platform. No phone numbers are exchanged. No email addresses are exposed. No external messaging apps are required. You tap "Message" on a listing, type your question, and it goes to the seller within our system.
+All messaging on The NYC Classifieds happens on-platform. No phone numbers are exchanged. No email addresses are exposed. No external messaging apps are required. You tap "Message" on a listing, type your question, and it goes to the seller within our system.
 
 This wasn\'t the easy choice. Building a messaging system is significant engineering work. It would have been much simpler to slap an email link on each listing and call it done. But easy and right aren\'t the same thing.
 
@@ -884,7 +884,7 @@ Privacy and safety aren\'t in conflict here. On-platform messaging delivers both
     excerpt: 'We named ourselves a classifieds platform, but The Porch is what we actually set out to build. Here\'s the origin of our community feature and why classifieds alone aren\'t enough.',
     content: `People assume we started with classifieds and added community features as an afterthought. It was actually the other way around.
 
-The original idea for NYC Classifieds wasn\'t a better version of The List. It was a neighborhood platform where New Yorkers could actually connect with the people around them. Classifieds were a feature of that vision. The Porch was the vision itself.
+The original idea for The NYC Classifieds wasn\'t a better version of The List. It was a neighborhood platform where New Yorkers could actually connect with the people around them. Classifieds were a feature of that vision. The Porch was the vision itself.
 
 ## Why Classifieds Alone Don\'t Work
 
@@ -924,7 +924,7 @@ The community creates demand for the marketplace, and the marketplace gives the 
 
 ## The Name
 
-We considered calling the whole platform "The Porch." We landed on NYC Classifieds because it\'s clearer what we do. But in our hearts, The Porch is still the whole point. The classifieds get people in the door. The Porch is why they stay.`,
+We considered calling the whole platform "The Porch." We landed on The NYC Classifieds because it\'s clearer what we do. But in our hearts, The Porch is still the whole point. The classifieds get people in the door. The Porch is why they stay.`,
   },
   {
     slug: '12-categories-zero-fees',
@@ -933,7 +933,7 @@ We considered calling the whole platform "The Porch." We landed on NYC Classifie
     author: 'The NYC Classifieds Team',
     category: 'Features',
     tags: ['categories', 'classifieds', 'features', 'listings', 'free'],
-    excerpt: 'We organized NYC Classifieds into 12 categories that cover everything New Yorkers actually buy, sell, and trade. Every one of them is free to post in.',
+    excerpt: 'We organized The NYC Classifieds into 12 categories that cover everything New Yorkers actually buy, sell, and trade. Every one of them is free to post in.',
     content: `When we sat down to build the classifieds engine, the first question was: what categories do New Yorkers actually need?
 
 The List has hundreds of categories and subcategories, many of them obsolete or so niche they\'re empty. The Feed\'s Garage Sale barely has categories at all since everything gets dumped into one algorithmic stream. Neither approach works.
@@ -996,7 +996,7 @@ Twelve categories. Everything a New Yorker needs. Nothing they don\'t. And every
     excerpt: 'NYC isn\'t one city. It\'s 126 neighborhoods, each with its own identity. We built the entire platform around that geography because hyperlocal is the only way classifieds work.',
     content: `Ask someone in Astoria where they live and they\'ll say Astoria, not Queens. Ask someone in Bed-Stuy and they\'ll say Bed-Stuy, not Brooklyn. New Yorkers identify with their neighborhoods more than their boroughs, and infinitely more than their city.
 
-Every decision we made about NYC Classifieds starts from this fact.
+Every decision we made about The NYC Classifieds starts from this fact.
 
 ## The Geography System
 
@@ -1040,7 +1040,7 @@ Classifieds are local by definition. We just took "local" seriously and defined 
     category: 'Updates',
     tags: ['verification', 'launch', 'security', 'trust', 'GPS', 'selfie'],
     excerpt: 'Before we built listings, search, or community features, we built verification. Here\'s why the first line of code we wrote was about proving you\'re real.',
-    content: `Day one of building NYC Classifieds. The codebase is empty. The design doc is a mess of notes and sketches. We have a hundred things to build and limited time to build them.
+    content: `Day one of building The NYC Classifieds. The codebase is empty. The design doc is a mess of notes and sketches. We have a hundred things to build and limited time to build them.
 
 So what do we build first?
 
@@ -1102,7 +1102,7 @@ That\'s what we\'re building.
 
 ## What It Is
 
-**NYC Classifieds** is a free platform for New Yorkers to post listings, find what they need, and connect with their neighborhoods. It has two core components:
+**The NYC Classifieds** is a free platform for New Yorkers to post listings, find what they need, and connect with their neighborhoods. It has two core components:
 
 **Classifieds.** Apartments, jobs, stuff for sale, services, free things, gigs. Organized by category, borough, and neighborhood. Every poster is geo-verified, which means every listing comes from a real person who\'s actually in NYC.
 
@@ -1220,7 +1220,7 @@ But the demand is there. People want a classifieds platform that\'s free, safe, 
 
 That\'s what we\'re building. Not a replacement for any one platform, but the thing all of them should have been.
 
-Welcome to NYC Classifieds. We have work to do.`,
+Welcome to The NYC Classifieds. We have work to do.`,
   },
   // ── NYC category ──────────────────────────────────────────────
   {
@@ -1297,7 +1297,7 @@ Before apps and algorithms, New Yorkers sold things on their stoops. That tradit
 
 Stoop sales pop up across Brooklyn brownstone neighborhoods all spring and summer. The best way to find them is word of mouth, neighborhood flyers, and our [Community section](/porch) on The Porch, where neighbors post local events and stoop sale announcements.
 
-## Buy and Sell on NYC Classifieds
+## Buy and Sell on The NYC Classifieds
 
 We built our [For Sale section](/listings/for-sale) for exactly this kind of buying and selling. List vintage finds, furniture, clothing, records, and more. Every seller is geo-verified, so you know you\'re dealing with an actual New Yorker, not a dropshipper in another state.
 
@@ -1437,7 +1437,7 @@ Browse The Porch by your borough, find your neighborhood, and see what\'s happen
   // ── Guides category ───────────────────────────────────────────
   {
     slug: 'how-to-write-a-listing-that-sells-fast',
-    title: 'How to Write a Listing That Sells Fast on NYC Classifieds',
+    title: 'How to Write a Listing That Sells Fast on The NYC Classifieds',
     date: '2026-02-02',
     author: 'The NYC Classifieds Team',
     category: 'Guides',
@@ -1483,11 +1483,11 @@ Skip the sales pitch. Buyers want facts:
 
 ## Choose the Right Category
 
-On NYC Classifieds, listings are organized by [category and subcategory](/listings/for-sale). A mid-century modern chair should go in **For Sale > Furniture**, not dumped in a general section. The right category puts your listing in front of the right buyers.
+On The NYC Classifieds, listings are organized by [category and subcategory](/listings/for-sale). A mid-century modern chair should go in **For Sale > Furniture**, not dumped in a general section. The right category puts your listing in front of the right buyers.
 
 ## The Verification Advantage
 
-On platforms like The List and The Feed\'s Garage Sale, buyers have no idea who they\'re dealing with. On NYC Classifieds, every seller is [geo-verified](/blog/how-geo-verification-works). That blue checkmark tells buyers you\'re a real person in New York City, which means more responses and faster sales.
+On platforms like The List and The Feed\'s Garage Sale, buyers have no idea who they\'re dealing with. On The NYC Classifieds, every seller is [geo-verified](/blog/how-geo-verification-works). That blue checkmark tells buyers you\'re a real person in New York City, which means more responses and faster sales.
 
 Write clear titles. Take good photos. Price honestly. And post on a platform where buyers trust the sellers. That\'s the formula.`,
   },
@@ -1567,7 +1567,7 @@ This is the part most buyer\'s guides skip, but it\'s the most important: **the 
 
 Unverified platforms attract scammers because there\'s no cost to creating fake listings. No identity check, no location proof, no accountability.
 
-On NYC Classifieds, every user goes through [geo-verification](/blog/how-geo-verification-works) — a selfie plus GPS confirmation that proves they\'re a real person in New York City. We built our entire [trust and safety system](/blog/safety-and-trust-how-were-building-a-platform-you-can-actually-trust) around this principle. It doesn\'t eliminate all risk, but it eliminates the easiest scam vectors.
+On The NYC Classifieds, every user goes through [geo-verification](/blog/how-geo-verification-works) — a selfie plus GPS confirmation that proves they\'re a real person in New York City. We built our entire [trust and safety system](/blog/safety-and-trust-how-were-building-a-platform-you-can-actually-trust) around this principle. It doesn\'t eliminate all risk, but it eliminates the easiest scam vectors.
 
 ## Safe Buying Checklist
 

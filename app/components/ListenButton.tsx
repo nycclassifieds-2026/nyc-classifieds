@@ -1,64 +1,143 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
-export default function ListenButton({ text }: { text: string }) {
+interface ListenButtonProps {
+  paragraphs: string[]
+  onParagraphChange?: (index: number | null) => void
+}
+
+export default function ListenButton({ paragraphs, onParagraphChange }: ListenButtonProps) {
   const [playing, setPlaying] = useState(false)
   const [supported, setSupported] = useState(false)
+  const voiceRef = useRef<SpeechSynthesisVoice | null>(null)
+  const stoppedRef = useRef(false)
 
+  // Pick the most natural-sounding free voice available
   useEffect(() => {
-    setSupported('speechSynthesis' in window)
+    if (!('speechSynthesis' in window)) return
+    setSupported(true)
+
+    const pickVoice = () => {
+      const voices = speechSynthesis.getVoices()
+      if (!voices.length) return
+
+      // Ranked by natural sound quality (best first)
+      const preferred = [
+        'Microsoft Aria Online',    // Windows — very natural
+        'Microsoft Jenny Online',   // Windows — natural female
+        'Microsoft Guy Online',     // Windows — natural male
+        'Google US English',        // Chrome — solid quality
+        'Samantha',                 // macOS — Siri-quality
+        'Karen',                    // macOS — Australian, clear
+        'Daniel',                   // macOS — British, clear
+        'Alex',                     // macOS — male
+      ]
+
+      for (const name of preferred) {
+        const match = voices.find(v => v.name.includes(name) && v.lang.startsWith('en'))
+        if (match) {
+          voiceRef.current = match
+          return
+        }
+      }
+
+      // Fallback: best English voice
+      const english = voices.find(v => v.lang.startsWith('en-US'))
+        || voices.find(v => v.lang.startsWith('en'))
+      if (english) voiceRef.current = english
+    }
+
+    pickVoice()
+    speechSynthesis.onvoiceschanged = pickVoice
   }, [])
 
-  const toggle = useCallback(() => {
+  const stop = useCallback(() => {
+    stoppedRef.current = true
+    speechSynthesis.cancel()
+    setPlaying(false)
+    onParagraphChange?.(null)
+  }, [onParagraphChange])
+
+  const play = useCallback(() => {
     if (!supported) return
 
-    if (playing) {
-      speechSynthesis.cancel()
-      setPlaying(false)
-      return
-    }
+    // Strip markdown formatting for clean speech
+    const clean = (s: string) =>
+      s
+        .replace(/##\s?/g, '')
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/^- /gm, '')
+        .replace(/^\d+\.\s/gm, '')
+        .replace(/\n+/g, '. ')
+        .replace(/\s+/g, ' ')
+        .trim()
 
-    // Strip markdown-ish formatting
-    const clean = text
-      .replace(/##\s/g, '')
-      .replace(/\*\*(.+?)\*\*/g, '$1')
-      .replace(/\n+/g, '. ')
-      .replace(/\s+/g, ' ')
-      .trim()
-
-    // Split into chunks (speechSynthesis has length limits)
-    const chunks: string[] = []
-    const sentences = clean.split(/(?<=[.!?])\s+/)
-    let current = ''
-    for (const s of sentences) {
-      if ((current + ' ' + s).length > 200) {
-        if (current) chunks.push(current.trim())
-        current = s
-      } else {
-        current += ' ' + s
-      }
-    }
-    if (current.trim()) chunks.push(current.trim())
-
+    stoppedRef.current = false
     setPlaying(true)
 
-    const speakChunk = (i: number) => {
-      if (i >= chunks.length) {
+    const speakParagraph = (i: number) => {
+      if (stoppedRef.current || i >= paragraphs.length) {
         setPlaying(false)
+        onParagraphChange?.(null)
         return
       }
-      const utterance = new SpeechSynthesisUtterance(chunks[i])
-      utterance.rate = 1.0
-      utterance.pitch = 1.0
-      utterance.onend = () => speakChunk(i + 1)
-      utterance.onerror = () => setPlaying(false)
-      speechSynthesis.speak(utterance)
+
+      const text = clean(paragraphs[i])
+      if (!text) {
+        speakParagraph(i + 1)
+        return
+      }
+
+      onParagraphChange?.(i)
+
+      // Split long paragraphs into chunks (speechSynthesis has length limits)
+      const chunks: string[] = []
+      const sentences = text.split(/(?<=[.!?])\s+/)
+      let current = ''
+      for (const s of sentences) {
+        if ((current + ' ' + s).length > 200) {
+          if (current) chunks.push(current.trim())
+          current = s
+        } else {
+          current += ' ' + s
+        }
+      }
+      if (current.trim()) chunks.push(current.trim())
+
+      const speakChunk = (j: number) => {
+        if (stoppedRef.current) return
+        if (j >= chunks.length) {
+          // Brief pause between paragraphs for natural pacing
+          setTimeout(() => speakParagraph(i + 1), 300)
+          return
+        }
+
+        const utterance = new SpeechSynthesisUtterance(chunks[j])
+        utterance.rate = 0.95
+        utterance.pitch = 1.0
+        if (voiceRef.current) utterance.voice = voiceRef.current
+        utterance.onend = () => speakChunk(j + 1)
+        utterance.onerror = () => {
+          setPlaying(false)
+          onParagraphChange?.(null)
+        }
+        speechSynthesis.speak(utterance)
+      }
+
+      speakChunk(0)
     }
 
-    speakChunk(0)
-  }, [playing, supported, text])
+    speakParagraph(0)
+  }, [supported, paragraphs, onParagraphChange])
 
+  const toggle = useCallback(() => {
+    if (playing) stop()
+    else play()
+  }, [playing, stop, play])
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if ('speechSynthesis' in window) speechSynthesis.cancel()

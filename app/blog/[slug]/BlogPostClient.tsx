@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import type { BlogPost } from '@/lib/blog-posts'
 import ListenButton from '@/app/components/ListenButton'
@@ -20,6 +20,7 @@ export default function BlogPostClient({
 }) {
   const [copied, setCopied] = useState(false)
   const [activeCategory, setActiveCategory] = useState(post.category)
+  const [activeParagraph, setActiveParagraph] = useState<number | null>(null)
 
   const filteredSidebar = activeCategory === 'All Posts'
     ? allPosts.filter(p => p.slug !== post.slug)
@@ -54,6 +55,31 @@ export default function BlogPostClient({
 
   // Parse content into paragraphs
   const paragraphs = post.content.split('\n\n')
+
+  // Auto-scroll to the active paragraph during listen
+  const onParagraphChange = useCallback((index: number | null) => {
+    setActiveParagraph(index)
+    if (index !== null) {
+      const el = document.querySelector(`[data-para="${index}"]`)
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [])
+
+  // Highlight style for the active paragraph
+  const highlightStyle = (i: number): React.CSSProperties =>
+    activeParagraph === i
+      ? {
+          backgroundColor: '#eff6ff',
+          borderLeft: '3px solid #2563eb',
+          paddingLeft: '12px',
+          borderRadius: '4px',
+          transition: 'background-color 0.3s ease, border-left 0.3s ease, padding-left 0.3s ease',
+        }
+      : {
+          borderLeft: '3px solid transparent',
+          paddingLeft: '12px',
+          transition: 'background-color 0.3s ease, border-left 0.3s ease, padding-left 0.3s ease',
+        }
 
   return (
     <main style={{ maxWidth: '1050px', margin: '0 auto', padding: '40px 20px 64px', fontFamily: "'DM Sans', sans-serif" }}>
@@ -127,8 +153,8 @@ export default function BlogPostClient({
           </span>
         </div>
 
-        {/* Listen */}
-        <ListenButton text={post.content} />
+        {/* Listen — now with paragraph tracking */}
+        <ListenButton paragraphs={paragraphs} onParagraphChange={onParagraphChange} />
 
         {/* Copy Link */}
         <button onClick={copyLink} style={{
@@ -227,14 +253,23 @@ export default function BlogPostClient({
             {paragraphs.map((para, i) => {
               if (para.startsWith('## ')) {
                 return (
-                  <h2 key={i} style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', marginTop: '28px', marginBottom: '12px' }} dangerouslySetInnerHTML={{ __html: md(para.slice(3)) }} />
+                  <h2
+                    key={i}
+                    data-para={i}
+                    style={{
+                      fontSize: '1.25rem', fontWeight: 600, color: '#111827',
+                      marginTop: '28px', marginBottom: '12px',
+                      ...highlightStyle(i),
+                    }}
+                    dangerouslySetInnerHTML={{ __html: md(para.slice(3)) }}
+                  />
                 )
               }
 
               if (/^\d+\.\s/.test(para.split('\n')[0])) {
                 const items = para.split('\n').filter(l => l.trim())
                 return (
-                  <ol key={i} style={{ paddingLeft: '20px', marginBottom: '16px' }}>
+                  <ol key={i} data-para={i} style={{ paddingLeft: '20px', marginBottom: '16px', ...highlightStyle(i) }}>
                     {items.map((item, j) => (
                       <li key={j} style={{ marginBottom: '6px' }} dangerouslySetInnerHTML={{
                         __html: md(item.replace(/^\d+\.\s/, ''))
@@ -247,7 +282,7 @@ export default function BlogPostClient({
               if (para.startsWith('- ')) {
                 const items = para.split('\n').filter(l => l.trim())
                 return (
-                  <ul key={i} style={{ paddingLeft: '20px', marginBottom: '16px' }}>
+                  <ul key={i} data-para={i} style={{ paddingLeft: '20px', marginBottom: '16px', ...highlightStyle(i) }}>
                     {items.map((item, j) => (
                       <li key={j} style={{ marginBottom: '6px' }} dangerouslySetInnerHTML={{
                         __html: md(item.replace(/^- /, ''))
@@ -258,7 +293,7 @@ export default function BlogPostClient({
               }
 
               return (
-                <p key={i} style={{ marginBottom: '16px' }} dangerouslySetInnerHTML={{
+                <p key={i} data-para={i} style={{ marginBottom: '16px', ...highlightStyle(i) }} dangerouslySetInnerHTML={{
                   __html: md(para)
                 }} />
               )
