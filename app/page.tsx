@@ -46,7 +46,7 @@ export default function Home() {
           Classifieds + community, the way it should be.
         </h1>
         <p style={{ fontSize: '0.9rem', color: '#4b5563', margin: '0 0 12px', lineHeight: 1.5 }}>
-          The simplicity of Craigslist. The neighborhood feel of Nextdoor. Every user geo-verified at their NYC address.
+          The simplicity of old-school classifieds. The neighborhood feel of a real community board. Every user geo-verified at their NYC address.
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', fontSize: '0.8125rem', color: '#374151' }}>
           <span><strong style={{ color: '#2563eb' }}>Geo-verified</strong> — Selfie + GPS at your address</span>
