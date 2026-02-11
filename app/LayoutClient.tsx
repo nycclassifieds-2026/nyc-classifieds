@@ -351,9 +351,11 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                 <div className="footer-heading">Company</div>
                 {[
                   { label: 'About', href: '/about' },
-                  { label: 'Guidelines', href: '/guidelines' },
                   { label: 'Blog', href: '/blog' },
-                  { label: 'Listings', href: '/listings/for-sale' },
+                  { label: 'Guidelines', href: '/guidelines' },
+                  { label: 'Legal', href: '/legal' },
+                  { label: 'Privacy', href: '/privacy' },
+                  { label: 'Terms', href: '/terms' },
                 ].map(l => (
                   <Link key={l.label} href={l.href} className="footer-link">{l.label}</Link>
                 ))}
