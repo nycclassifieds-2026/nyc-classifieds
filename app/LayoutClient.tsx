@@ -132,17 +132,6 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
               }}>
                 Porch
               </Link>
-              <Link href="/business" style={{
-                padding: mobile ? '6px 8px' : '6px 14px',
-                fontSize: mobile ? '0.75rem' : '0.8125rem',
-                fontWeight: isDirectory ? 600 : 500,
-                color: isDirectory ? '#111827' : '#6b7280',
-                borderBottom: isDirectory ? '2px solid #7c3aed' : '2px solid transparent',
-                fontFamily: "'DM Sans', sans-serif",
-                whiteSpace: 'nowrap',
-              }}>
-                Directory
-              </Link>
             </nav>
 
             <div style={{ flex: 1 }} />
