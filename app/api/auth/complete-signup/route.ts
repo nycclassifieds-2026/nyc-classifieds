@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
   ]).catch(err => console.error('Signup email error:', err))
 
   // Notify admins
-  db.from('users').select('email').in('role', ['admin']).eq('banned', false).then(({ data: admins }) => {
+  Promise.resolve(db.from('users').select('email').in('role', ['admin']).eq('banned', false)).then(({ data: admins }) => {
     if (admins) {
       for (const admin of admins) {
         if (admin.email && !admin.email.endsWith('@example.com')) {
