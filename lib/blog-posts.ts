@@ -1689,6 +1689,252 @@ The Porch is built on a simple idea: neighborhoods are stronger when neighbors t
 
 This is what community looks like when you build it right. Come to [The Porch](/porch) and say hello.`,
   },
+  {
+    slug: 'nyc-classifieds-faq-everything-you-need-to-know',
+    title: 'NYC Classifieds FAQ — Everything You Need to Know About Buying, Selling & Living in NYC',
+    date: '2026-02-11',
+    author: 'The NYC Classifieds Team',
+    category: 'Guides',
+    tags: [
+      'faq',
+      'nyc classifieds',
+      'how to post free classifieds nyc',
+      'is nyc classifieds free',
+      'craigslist alternative new york',
+      'free classifieds new york city',
+      'sell stuff nyc',
+      'buy used furniture nyc',
+      'nyc apartment scams',
+      'geo verified classifieds',
+      'safe classifieds nyc',
+      'post free ad new york',
+      'nyc community board online',
+      'find jobs nyc classifieds',
+      'nyc free stuff',
+      'local classifieds new york',
+      'verified classifieds platform',
+      'how to sell online nyc',
+      'neighborhood community nyc',
+      'the porch nyc',
+      'nyc housing classifieds',
+      'avoid scams nyc',
+      'best classifieds app nyc 2026',
+    ],
+    excerpt: 'Every question you\'ve ever had about The NYC Classifieds — how it works, whether it\'s free, how verification works, how to stay safe, and everything about buying, selling, and finding housing in New York City.',
+    content: `You\'ve got questions. We\'ve got answers. This is the complete guide to everything about The NYC Classifieds — from how to post your first listing to how we keep scammers off the platform. Bookmark this one.
+
+---
+
+## Getting Started
+
+### What is The NYC Classifieds?
+
+The NYC Classifieds is a free, geo-verified classifieds platform built exclusively for New York City. Think of it as Craigslist, except every user is verified as a real person who\'s actually in NYC. We cover all five boroughs and 126 neighborhoods with 12 categories: housing, jobs, for sale, services, vehicles, community, pets, free stuff, wanted, gigs, real estate, and other.
+
+### Is it really free to post?
+
+Yes. Completely free. No listing fees, no premium tiers, no per-listing charges, no hidden costs. Whether you\'re listing a studio apartment in Bushwick or giving away a couch in Astoria, it costs nothing. We make money through small, clearly-labeled business advertising — not by charging individuals.
+
+### How do I create an account?
+
+Head to [thenycclassifieds.com](/signup) and sign up with your email. You\'ll go through our verification process (GPS location check + selfie), and once confirmed, you can post immediately.
+
+### What categories can I post in?
+
+All 12: Housing, Jobs, For Sale, Services, Vehicles, Community, Pets, Free Stuff, Wanted, Gigs, Real Estate, and Other. Every category is organized by borough and neighborhood so people in your area see your posts first.
+
+### Do I need a smartphone to use it?
+
+No. The site is fully responsive and works on desktop, tablet, and phone. But verification does require GPS and a camera, so you\'ll need a device with those capabilities for the signup step.
+
+---
+
+## Verification & Trust
+
+### Why do I have to verify my identity?
+
+Because verification is how we keep scammers, bots, and out-of-state bad actors off the platform. Every other classifieds site lets anyone post anonymously — that\'s why they\'re full of scams. We require verification so you know the person you\'re messaging is a real New Yorker.
+
+### How does geo-verification work?
+
+During signup, we check your device\'s GPS to confirm you\'re physically within one of NYC\'s five boroughs. You also take a real-time selfie. This two-step check ensures you\'re a real person in New York, not a bot in Belarus.
+
+### Can I use The NYC Classifieds if I live outside NYC?
+
+No. The platform is exclusively for people in Manhattan, Brooklyn, Queens, The Bronx, and Staten Island. You must be physically in NYC during the verification step. If you\'re moving to NYC and aren\'t here yet, you\'ll need to verify once you arrive.
+
+### Is my personal information safe?
+
+Yes. Your email, phone number, and personal details are never shown to other users. All communication happens through our on-platform messaging system. We don\'t sell data to third parties, and we don\'t build advertising profiles.
+
+### What happens if someone fakes their verification?
+
+GPS spoofing and fake selfies are detected by our system. Accounts flagged for verification fraud are permanently banned. We\'d rather have fewer users than fake ones.
+
+---
+
+## Posting & Selling
+
+### How do I post a listing?
+
+After verifying your account, click "Post" from any page. Choose your category, add a title and description, set your price (or mark it as free), select your neighborhood, and publish. It goes live within seconds.
+
+### How do I write a listing that actually sells?
+
+Start with a specific title that includes the item, condition, and neighborhood. Price competitively — check what similar items go for. Write an honest description with dimensions, age, and any flaws. Add details about pickup logistics like what floor you\'re on and whether there\'s an elevator.
+
+### Can I edit my listing after posting?
+
+Yes. You can edit the title, description, price, and category at any time from your dashboard. Changes go live immediately.
+
+### How should I price my stuff?
+
+Used furniture in good condition typically sells for 30–50% of retail. Electronics depreciate faster — expect 40–60% off. Check what similar items are listed for in your borough and price 10–15% below average if you want to sell fast.
+
+### What\'s not allowed on The NYC Classifieds?
+
+No illegal items, no weapons, no drugs, no counterfeit goods, no multi-level marketing, no adult services, and no listings designed to deceive. Our automated moderation catches most prohibited content, and our team handles the rest. See our full [Community Guidelines](/guidelines).
+
+---
+
+## Buying & Safety
+
+### How do I contact a seller?
+
+Click the "Message" button on any listing. All conversations happen on-platform — you\'ll get notified when they reply.
+
+### How do I avoid scams on NYC Classifieds?
+
+Start by using a verified platform (you\'re already here). Beyond that: never pay before seeing an item, meet in public for high-value transactions, use cash or traceable payment methods, and trust your gut. If a deal seems too good to be true, it is.
+
+### Is it safe to meet strangers from classifieds?
+
+Meet in well-lit public places for portable items. For furniture or large items where you need to go to someone\'s home, bring a friend and let someone know where you\'re going. The fact that every user here is verified means there\'s accountability — but common sense still applies.
+
+### What payment methods should I use?
+
+Cash is king for in-person transactions. For higher-value items, Venmo or PayPal (goods & services, not friends & family) provide some buyer protection. Never wire money, send gift cards, or use cryptocurrency with a stranger.
+
+### How do I report a suspicious listing?
+
+Every listing and Porch post has a flag button. Click it, select the reason, and we\'ll review it. You can also block and report users directly from their profile or any conversation.
+
+---
+
+## Housing & Apartments
+
+### Can I find apartments on The NYC Classifieds?
+
+Yes. Our Housing category covers apartment rentals, room shares, sublets, and short-term stays across all five boroughs and 126 neighborhoods.
+
+### Are there broker fees on listings here?
+
+No. The NYC Classifieds doesn\'t charge broker fees, finder\'s fees, or any fees. Plus, with the FARE Act now in effect, tenants are no longer responsible for broker fees citywide — so you\'re saving money whether you find your apartment here or elsewhere.
+
+### How do I spot a fake apartment listing?
+
+Watch for rent that\'s dramatically below market rate, landlords who won\'t meet in person, requests for deposits before viewings, and listings with stock-looking photos. Look up the building on [NYC\'s HPD portal](https://www.nyc.gov/site/hpd/index.page) and reverse-image search the photos. Never send money before stepping inside the unit.
+
+### What documents do I need to rent an apartment in NYC?
+
+Most landlords require photo ID, proof of income (three months of pay stubs), bank statements, tax returns, and an employment letter. You\'ll typically need to earn 40x the monthly rent annually. If you\'re short, you\'ll need a guarantor.
+
+---
+
+## Jobs & Gigs
+
+### Can I find jobs on The NYC Classifieds?
+
+Yes. Our Jobs category covers full-time, part-time, and contract positions. Our Gigs category covers one-time and short-term work — freelance, event staffing, moving help, creative projects, and more.
+
+### How do I spot a job scam?
+
+Red flags: vague job descriptions, no company name, "interviews" only over text, being "hired" within minutes, and any request for you to pay money upfront (for training, equipment, or background checks). A real employer never asks you to pay them.
+
+### Are the job listings verified?
+
+All users who post job listings must go through the same GPS + selfie verification as everyone else. This eliminates anonymous scam postings, but you should still research any company before sharing personal information like your Social Security number.
+
+---
+
+## The Porch & Community
+
+### What is The Porch?
+
+[The Porch](/porch) is our community feed — think of it as a neighborhood bulletin board that\'s organized by borough and neighborhood. It\'s where New Yorkers ask questions, share recommendations, post local alerts, coordinate events, and just talk to their neighbors.
+
+### What can I post on The Porch?
+
+Neighborhood questions, local recommendations, community alerts, events (stoop sales, block parties, meetups), lost & found, pet sightings, and welcome posts for new neighbors.
+
+### Is The Porch moderated?
+
+Yes. The same moderation rules that apply to listings apply to The Porch. Spam, hate speech, scams, and rule violations are flagged and removed. But we\'re not heavy-handed — genuine disagreement and honest conversation are welcome.
+
+---
+
+## Business Profiles
+
+### Can my local business be listed on The NYC Classifieds?
+
+Yes. We offer free business profiles for local NYC shops, restaurants, and service providers. Your profile shows up in search results and on the borough/neighborhood pages where you\'re located.
+
+### Do business profiles cost money?
+
+Basic profiles are free. We\'re building optional paid tools (analytics dashboards, promoted listings, verified badges) for businesses that want more visibility, but the core profile is and will remain free.
+
+### How is this different from Yelp or Google Business?
+
+We\'re neighborhood-first. Your business appears alongside the community it serves — next to Porch conversations, local classifieds, and neighbors who are already looking for exactly what you offer. No review extortion, no pay-to-play ranking manipulation.
+
+---
+
+## Technical & Account
+
+### How do notifications work?
+
+You get notified when someone messages you about a listing, when someone replies to your Porch post, and for activity in your saved neighborhoods. You can customize notification preferences from your account settings.
+
+### Can I save searches?
+
+Saved searches are coming soon. You\'ll be able to set criteria (category, neighborhood, price range) and get notified when matching listings appear.
+
+### Does The NYC Classifieds have a mobile app?
+
+Not yet — but the website is fully mobile-optimized and works like a native app on your phone. An app is on our roadmap.
+
+### How do I delete my account?
+
+Contact us through the feedback widget or email, and we\'ll delete your account and all associated data. We don\'t make you jump through hoops.
+
+---
+
+## NYC-Specific Questions
+
+### What are the five boroughs?
+
+Manhattan, Brooklyn, Queens, The Bronx, and Staten Island. Each borough on The NYC Classifieds is broken down into neighborhoods — 126 in total — so you can browse classifieds specific to where you live.
+
+### What\'s the best time to apartment hunt in NYC?
+
+Winter. November through February typically sees 3–5% lower rents compared to the summer rush. Competition is lighter, landlords are more flexible, and you won\'t be in a bidding war with every new transplant arriving after graduation.
+
+### How much does it cost to live in NYC in 2026?
+
+The median one-bedroom rent in Manhattan is around $4,000/month. Brooklyn and Queens average $2,500–$3,200. The Bronx and Staten Island are more affordable at $1,500–$2,200. Beyond rent, budget about $200–$400/month for groceries, $127 for an unlimited MetroCard, and whatever your soul needs to survive.
+
+### What are the most affordable neighborhoods in NYC right now?
+
+In 2026, areas like Inwood and Washington Heights in Manhattan, East New York and Brownsville in Brooklyn, the South Bronx, Jamaica and Far Rockaway in Queens, and most of Staten Island offer the most affordable rents. Use our neighborhood pages to browse listings by area.
+
+### Is NYC still worth moving to in 2026?
+
+If you want access to the most diverse job market in the country, some of the best food on Earth, world-class culture, and the energy of 8 million people who somehow make it work — yes. It\'s expensive, loud, and chaotic. It\'s also unlike anywhere else. And platforms like The NYC Classifieds make the practical parts (finding an apartment, buying furniture, connecting with neighbors) a lot easier than they used to be.
+
+---
+
+Still have a question? Hit the Feedback button or drop by [The Porch](/porch) and ask your neighbors. Someone\'s probably already figured it out.`,
+  },
 ]
 
 // Sort newest-first so display order is always correct

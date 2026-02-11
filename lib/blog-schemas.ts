@@ -136,6 +136,54 @@ const schemas: Record<string, SchemaEntry> = {
     ],
   },
 
+  // ── Mega FAQ ──────────────────────────────────────────────
+
+  'nyc-classifieds-faq-everything-you-need-to-know': {
+    type: 'faq',
+    items: [
+      // Getting Started
+      { question: 'What is The NYC Classifieds?', answer: 'The NYC Classifieds is a free, geo-verified classifieds platform built exclusively for New York City. Every user is verified as a real person actually in NYC. It covers all five boroughs and 126 neighborhoods with 12 categories: housing, jobs, for sale, services, vehicles, community, pets, free stuff, wanted, gigs, real estate, and other.' },
+      { question: 'Is The NYC Classifieds really free to post on?', answer: 'Yes. Completely free. No listing fees, no premium tiers, no per-listing charges. We make money through small, clearly-labeled business advertising — not by charging individuals.' },
+      { question: 'How do I create an account on The NYC Classifieds?', answer: 'Sign up at thenycclassifieds.com with your email, complete GPS location verification and a real-time selfie, and you can post immediately after confirmation.' },
+      { question: 'What categories can I post in on NYC Classifieds?', answer: 'All 12: Housing, Jobs, For Sale, Services, Vehicles, Community, Pets, Free Stuff, Wanted, Gigs, Real Estate, and Other. Every category is organized by borough and neighborhood.' },
+      // Verification
+      { question: 'Why does NYC Classifieds require identity verification?', answer: 'Verification keeps scammers, bots, and out-of-state bad actors off the platform. Every other classifieds site lets anyone post anonymously — that\'s why they\'re full of scams. We require verification so you know the person you\'re messaging is a real New Yorker.' },
+      { question: 'How does geo-verification work on NYC Classifieds?', answer: 'During signup, your device\'s GPS confirms you\'re physically within one of NYC\'s five boroughs. You also take a real-time selfie. This two-step check ensures you\'re a real person in New York, not a bot or scammer.' },
+      { question: 'Can I use The NYC Classifieds if I live outside NYC?', answer: 'No. The platform is exclusively for people in Manhattan, Brooklyn, Queens, The Bronx, and Staten Island. You must be physically in NYC during the verification step.' },
+      { question: 'Is my personal information safe on NYC Classifieds?', answer: 'Yes. Your email, phone number, and personal details are never shown to other users. All communication happens through on-platform messaging. We don\'t sell data to third parties.' },
+      // Posting & Selling
+      { question: 'How do I post a listing on NYC Classifieds?', answer: 'After verifying your account, click "Post" from any page. Choose your category, add a title and description, set your price (or mark as free), select your neighborhood, and publish. It goes live within seconds.' },
+      { question: 'How do I write a classified listing that sells fast?', answer: 'Start with a specific title (item + condition + neighborhood). Price competitively at 30–50% of retail for used goods. Write an honest description with dimensions, age, and flaws. Include pickup details like floor number and elevator access.' },
+      { question: 'How should I price used items on NYC Classifieds?', answer: 'Used furniture in good condition sells for 30–50% of retail. Electronics depreciate faster at 40–60% off. Check similar items in your borough and price 10–15% below average to sell fast.' },
+      { question: 'What\'s not allowed on The NYC Classifieds?', answer: 'No illegal items, weapons, drugs, counterfeit goods, multi-level marketing, adult services, or deceptive listings. Automated moderation catches most prohibited content.' },
+      // Buying & Safety
+      { question: 'How do I avoid scams on NYC Classifieds?', answer: 'Use a verified platform (you\'re already here). Never pay before seeing an item, meet in public for high-value transactions, use cash or traceable payment methods, and trust your gut. If a deal seems too good to be true, it is.' },
+      { question: 'Is it safe to meet strangers from online classifieds?', answer: 'Meet in well-lit public places for portable items. For furniture, bring a friend and tell someone where you\'re going. Verified users provide accountability, but common sense still applies.' },
+      { question: 'What payment methods should I use for classifieds?', answer: 'Cash for in-person transactions. Venmo or PayPal Goods & Services for higher-value items. Never wire money, send gift cards, or use cryptocurrency with strangers.' },
+      { question: 'How do I report a suspicious listing on NYC Classifieds?', answer: 'Every listing and Porch post has a flag button. Click it, select the reason, and we\'ll review it. You can also block and report users from their profile or conversations.' },
+      // Housing
+      { question: 'Can I find apartments on The NYC Classifieds?', answer: 'Yes. The Housing category covers apartment rentals, room shares, sublets, and short-term stays across all five boroughs and 126 neighborhoods.' },
+      { question: 'Are there broker fees on NYC Classifieds listings?', answer: 'No. The NYC Classifieds doesn\'t charge any fees. Plus the FARE Act eliminated tenant-paid broker fees citywide, so you save money regardless of where you find your apartment.' },
+      { question: 'How do I spot a fake apartment listing in NYC?', answer: 'Watch for rent dramatically below market rate, landlords who won\'t meet in person, deposit requests before viewings, and stock-looking photos. Look up buildings on NYC\'s HPD portal and reverse-image search photos. Never send money before visiting.' },
+      { question: 'What documents do I need to rent an apartment in NYC?', answer: 'Photo ID, proof of income (three months of pay stubs), bank statements, tax returns, and an employment letter. You typically need to earn 40x the monthly rent annually, or have a guarantor.' },
+      { question: 'What\'s the best time to apartment hunt in NYC?', answer: 'Winter — November through February typically sees 3–5% lower rents compared to summer. Competition is lighter, landlords are more flexible, and you won\'t face bidding wars.' },
+      // Jobs
+      { question: 'Can I find jobs on The NYC Classifieds?', answer: 'Yes. The Jobs category covers full-time, part-time, and contract positions. The Gigs category covers one-time and short-term work including freelance, event staffing, moving help, and creative projects.' },
+      { question: 'How do I spot a job scam in NYC?', answer: 'Red flags: vague job descriptions, no company name, text-only interviews, being hired within minutes, and any request to pay money upfront. A real employer never asks you to pay them.' },
+      // The Porch
+      { question: 'What is The Porch on NYC Classifieds?', answer: 'The Porch is a community feed organized by borough and neighborhood. It\'s where New Yorkers ask questions, share recommendations, post local alerts, coordinate events, and connect with neighbors.' },
+      { question: 'What can I post on The Porch?', answer: 'Neighborhood questions, local recommendations, community alerts, events like stoop sales and block parties, lost & found, pet sightings, and welcome posts for new neighbors.' },
+      // Business
+      { question: 'Can my local business be listed on NYC Classifieds?', answer: 'Yes. Free business profiles are available for local NYC shops, restaurants, and service providers. Your profile appears in search results and on the borough/neighborhood pages where you\'re located.' },
+      { question: 'How is NYC Classifieds different from Yelp?', answer: 'NYC Classifieds is neighborhood-first. Your business appears alongside the community it serves — next to Porch conversations, local classifieds, and neighbors looking for what you offer. No review extortion or pay-to-play ranking.' },
+      // NYC Specific
+      { question: 'What are the five boroughs of New York City?', answer: 'Manhattan, Brooklyn, Queens, The Bronx, and Staten Island. Each borough on The NYC Classifieds is broken down into 126 neighborhoods for hyperlocal classifieds browsing.' },
+      { question: 'How much does it cost to live in NYC in 2026?', answer: 'Median one-bedroom rent: Manhattan ~$4,000/month, Brooklyn/Queens $2,500–$3,200, Bronx/Staten Island $1,500–$2,200. Budget $200–$400 for groceries, $127 for an unlimited MetroCard.' },
+      { question: 'What are the most affordable neighborhoods in NYC in 2026?', answer: 'Inwood and Washington Heights in Manhattan, East New York and Brownsville in Brooklyn, the South Bronx, Jamaica and Far Rockaway in Queens, and most of Staten Island offer the most affordable rents.' },
+      { question: 'Is NYC still worth moving to in 2026?', answer: 'If you want the most diverse job market in the country, world-class food and culture, and the energy of 8 million people — yes. Platforms like The NYC Classifieds make the practical parts (apartment hunting, buying furniture, connecting with neighbors) much easier.' },
+    ],
+  },
+
   // ── ItemList ────────────────────────────────────────────────
 
   'best-thrift-stores-stoop-sales-vintage-finds-nyc': {
