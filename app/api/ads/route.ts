@@ -75,8 +75,19 @@ export async function GET(request: NextRequest) {
       .limit(1)
       .single()
 
-    return NextResponse.json({ ad: data || null })
+    if (data) return NextResponse.json({ ad: data })
   }
 
-  return NextResponse.json({ ad: null })
+  // Final fallback — homepage ad
+  const { data: fallback } = await db
+    .from('ads')
+    .select('id, type, advertiser, image_url, link_url')
+    .eq('type', 'homepage')
+    .eq('active', true)
+    .gte('expires_at', now)
+    .lte('starts_at', now)
+    .limit(1)
+    .single()
+
+  return NextResponse.json({ ad: fallback || null })
 }

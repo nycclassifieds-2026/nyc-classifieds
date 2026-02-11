@@ -72,6 +72,25 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   const isPorch = pathname?.startsWith('/porch')
   const isDirectory = pathname === '/business'
 
+  // Parse URL context for ads
+  const boroughSlugs = new Set(boroughs.map(b => b.slug))
+  const categorySlugs = new Set(categories.map(c => c.slug))
+  const segments = (pathname || '').split('/').filter(Boolean)
+  let adCategory = ''
+  let adBorough = ''
+  let adNeighborhood = ''
+  if (segments[0] === 'listings' && segments[1] && categorySlugs.has(segments[1])) {
+    adCategory = segments[1]
+  } else if (segments[0] && boroughSlugs.has(segments[0])) {
+    adBorough = segments[0]
+    if (segments[1] && !categorySlugs.has(segments[1])) {
+      adNeighborhood = segments[1]
+      if (segments[2] && categorySlugs.has(segments[2])) adCategory = segments[2]
+    } else if (segments[1] && categorySlugs.has(segments[1])) {
+      adCategory = segments[1]
+    }
+  }
+
   return (
     <>
       {!hideNav && (
@@ -258,7 +277,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
           {/* Mobile ad — classifieds pages only */}
           {isClassifieds && (
             <div className="mobile-only-ad">
-              <HomepageAd />
+              <HomepageAd categorySlug={adCategory || undefined} borough={adBorough || undefined} neighborhood={adNeighborhood || undefined} />
             </div>
           )}
           <div className="homepage-top" style={{ margin: 0 }}>
@@ -293,7 +312,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
             {/* Desktop ad — classifieds pages only */}
             {isClassifieds && (
               <div className="desktop-only-ad homepage-top-right">
-                <HomepageAd />
+                <HomepageAd categorySlug={adCategory || undefined} borough={adBorough || undefined} neighborhood={adNeighborhood || undefined} />
               </div>
             )}
           </div>

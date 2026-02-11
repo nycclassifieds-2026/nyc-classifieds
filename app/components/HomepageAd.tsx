@@ -9,17 +9,32 @@ interface Ad {
   link_url: string
 }
 
-export default function HomepageAd() {
+interface Props {
+  categorySlug?: string
+  borough?: string
+  neighborhood?: string
+}
+
+export default function HomepageAd({ categorySlug, borough, neighborhood }: Props = {}) {
   const [ad, setAd] = useState<Ad | null>(null)
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    fetch('/api/ads?type=homepage')
+    const params = new URLSearchParams()
+    if (categorySlug) {
+      params.set('type', 'category')
+      params.set('category', categorySlug)
+      if (borough) params.set('borough', borough)
+      if (neighborhood) params.set('neighborhood', neighborhood)
+    } else {
+      params.set('type', 'homepage')
+    }
+    fetch(`/api/ads?${params}`)
       .then(r => r.json())
       .then(d => { if (d.ad) setAd(d.ad) })
       .catch(() => {})
       .finally(() => setLoaded(true))
-  }, [])
+  }, [categorySlug, borough, neighborhood])
 
   // Show placeholder while loading or when no ad
   if (!loaded || !ad) {
