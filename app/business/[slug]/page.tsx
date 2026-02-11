@@ -11,11 +11,32 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
+function localBusinessSchema(slug: string) {
+  const name = slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name,
+    description: `${name} — verified NYC business on NYC Classifieds. View services, hours, photos, and contact info.`,
+    url: `https://thenycclassifieds.com/business/${slug}`,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'New York',
+      addressRegion: 'NY',
+      addressCountry: 'US',
+    },
+  }
+}
+
 export default async function BusinessProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
+  const schema = localBusinessSchema(slug)
   return (
-    <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
-      <BusinessProfileClient slug={slug} />
-    </Suspense>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
+        <BusinessProfileClient slug={slug} />
+      </Suspense>
+    </>
   )
 }

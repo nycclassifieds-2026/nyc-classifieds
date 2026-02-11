@@ -323,6 +323,18 @@ export const PORCH: Record<string, PorchTemplate[]> = {
     { t: 'Moved back to NYC — {nh} this time', b: 'Grew up in NYC, moved to {city} for 10 years, finally came back. Now in {nh} near {street}. Feels good to be home but everything is different lol. What do I need to know?' },
     { t: 'Single mom, new to {nh}', b: 'Just moved here with my daughter (shes 6). New school, new neighborhood, new everything. Near {street}. Would love to connect with other parents, find good after-school programs, and just feel less alone in this.' },
   ],
+  seasonal: [
+    { t: 'Snow day vibes in {nh}', b: 'Streets are covered and the park looks magical. Whos building a snowman on {street}? Kids welcome. Bring hot cocoa.' },
+    { t: 'NYC Marathon — road closures near {nh}', b: 'Marathon is Sunday. {street} will be closed most of the day. Plan accordingly. Go cheer for the runners if you can!' },
+    { t: 'Heat wave survival guide — {nh}', b: 'Its gonna be 100+ this week. Cooling centers open at the {nh} community center on {street}. Stay hydrated, check on elderly neighbors, and dont forget your pets.' },
+    { t: 'Cherry blossoms are blooming in {nh}!', b: 'The trees near {street} park are in full bloom. Gorgeous right now. Go take a walk before the petals drop.' },
+    { t: 'Halloween on {street} was AMAZING', b: 'The houses on {street} went all out this year. Full-size candy bars, decorations, the works. This block is legendary. Already planning for next year.' },
+    { t: 'Thanksgiving food drive — {nh}', b: 'Collecting turkeys, sides, and canned goods for families in need. Drop off at {street} church through Wednesday. Every bit helps.' },
+    { t: 'NYE plans in {nh}?', b: 'Not trying to deal with Times Square. Anyone know of local spots doing something fun for New Years in {nh}? Bars, restaurants, house parties, anything.' },
+    { t: 'Summer Fridays at the park — {nh}', b: 'Every Friday this summer theres live music at the park on {street} from 5-8pm. Bring a blanket and something to drink. Best free event in the neighborhood.' },
+    { t: 'Back to school tips for {nh} parents', b: 'School starts next week. Reminder that the free uniform drive is at {street} community center Saturday. Also the after-school program at {place} still has spots.' },
+    { t: 'Fourth of July — best fireworks views in {nh}', b: 'You can see the East River fireworks perfectly from the rooftops on {street}. If your building has roof access, bring chairs and get up there early.' },
+  ],
   group: [
     { t: '{nh} running group — all levels', b: 'We run 3x/week. Tues/Thurs 6:30am, Saturday 8am. All paces welcome. Meet at {street} park.' },
     { t: 'Book club starting in {nh}', b: 'Monthly. Meeting at {place}. First book: {book}. All welcome. DM to join the group chat.' },
@@ -381,13 +393,21 @@ export const LISTINGS: Record<string, ListingSubgroup[]> = {
     { sub: 'delivery-runs', t: ['Deliver 5 packages — Manhattan','Pick up furniture — {nh}','Grocery run for elderly neighbor'], p: [75,60,30], d: ['All midtown. Small packages. Today.','Pickup here, deliver 10 blocks.','Weekly grocery run. Easy.'] },
   ],
   tickets: [
-    { sub: 'concerts', t: ['2 tix — MSG, Feb 22','Floor seats — Barclays','Brooklyn Steel — sold out show'], p: [150,200,80], d: ['Section 112. Cant make it.','Row 5. Selling at face value.','GA standing. Work conflict.'] },
-    { sub: 'sports', t: ['Knicks tix — MSG lower level','Yankees opening day — 2 tix','Nets — section 100'], p: [175,250,120], d: ['Section 105. Real seats.','First game of the season.','Center court. Weeknight.'] },
-    { sub: 'broadway', t: ['Hamilton — orchestra, 2 seats','Wicked — Saturday matinee','Off-Broadway — 4 tickets'], p: [300,180,100], d: ['Row M center. Cant make date.','Mezzanine, great view.','Intimate Village theater.'] },
+    { sub: 'concerts', t: ['2 tix — MSG, Feb 22','Floor seats — Barclays','Brooklyn Steel — sold out show','Radio City — 4 tickets','Terminal 5 — GA, 2 tix','Bowery Ballroom — sold out'], p: [150,200,80,175,65,50], d: ['Section 112. Cant make it.','Row 5. Selling at face value.','GA standing. Work conflict.','Orchestra seats. Family emergency.','Cant go, selling at cost.','Best small venue in NYC. Face value.'] },
+    { sub: 'sports', t: ['Knicks tix — MSG lower level','Yankees opening day — 2 tix','Nets — section 100','Mets tix — Citi Field, 4 seats','NYCFC — supporters section','Rangers — MSG, 2 seats'], p: [175,250,120,100,45,200], d: ['Section 105. Real seats.','First game of the season.','Center court. Weeknight.','Section 110. Sat afternoon game.','Standing. Bring your voice.','Center ice. Great view.'] },
+    { sub: 'broadway', t: ['Hamilton — orchestra, 2 seats','Wicked — Saturday matinee','Off-Broadway — 4 tickets','The Lion King — front mezzanine','Chicago — 2 tix, weeknight'], p: [300,180,100,225,140], d: ['Row M center. Cant make date.','Mezzanine, great view.','Intimate Village theater.','Amazing seats. Date fell through.','Wednesday 7pm show. Great seats.'] },
   ],
   pets: [
     { sub: 'adoption', t: ['Sweet tabby needs home','2 kittens, sisters','Rescue lab mix, great w/ kids','Senior cat, calm and loving'], p: [0,0,0,0], d: ['3yo, spayed, all shots. Indoor.','8wks, litter trained. Playful.','2yo, neutered, vaccinated.','10yo. Lap cat. Quiet home.'] },
     { sub: 'pet-sitting', t: ['Cat sitter 1 week — {nh}','Dog boarding — my home, {nh}'], p: [25,45], d: ['Feed + litter once daily. Easy.','Fenced yard. Lots of love.'] },
+  ],
+  community: [
+    { sub: 'mutual-aid', t: ['Free winter coats — {nh}','Mutual aid fridge stocked — {street}','Free groceries for families — {nh}','Donated school supplies — {nh}'], p: [0,0,0,0], d: ['Giving away gently used coats, all sizes. Meet at {street}.','Community fridge fully stocked. Take what you need.','Rice, beans, canned goods. Saturdays at the church on {street}.','Notebooks, pens, backpacks. First come first served.'] },
+    { sub: 'local-business', t: ['New bakery on {street} — grand opening!','{biz} now open in {nh}','Support local: {place} on {street}','Small business Saturday — {nh}'], p: [0,0,0,0], d: ['Doors open Saturday. Free samples all weekend.','Excited to serve the neighborhood. Stop by!','Family owned, been here 15 years. Show some love.','20+ local vendors, food, and live music.'] },
+  ],
+  'rentals-lending': [
+    { sub: 'party-event', t: ['Folding tables + chairs — rent for event','Tent rental for backyard party','PA system + speakers — weekend rental'], p: [50,100,75], d: ['10 tables, 40 chairs. Delivery available in {nh}.','10x20 white canopy. Setup included.','Perfect for block parties, events. Pickup in {nh}.'] },
+    { sub: 'sports-outdoor', t: ['Kayak rental — weekend','Camping gear set — rent','Ski equipment rental — full set'], p: [40,35,50], d: ['Tandem kayak + paddles + life jackets.','Tent, sleeping bags, stove. Everything you need.','Skis, boots (size 10), poles. One weekend.'] },
   ],
   barter: [
     { sub: 'goods-for-goods', t: ['Trade: KitchenAid for bike','Swap: PS5 for Switch + cash','Trade: records for concert tix'], p: [0,0,0], d: ['Red stand mixer for commuter bike.','PS5 disc for Switch OLED + $100.','50+ jazz/soul for live music tix.'] },

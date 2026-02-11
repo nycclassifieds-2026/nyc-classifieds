@@ -40,8 +40,10 @@ interface RunResult {
   posts_created: number
   replies_created: number
   listings_created: number
+  dm_threads_created: number
   skipped_moderation: number
   kill_switch_level: string
+  growth_multiplier: number
   daily_total: number
   enabled: boolean
 }
@@ -127,16 +129,25 @@ function staggeredTimestamp(): string {
   return new Date(today.getTime() + hour * 3600000 + min * 60000 + sec * 1000).toISOString()
 }
 
+// ─── Growth multiplier — scales up over time ───
+
+function getGrowthMultiplier(startDate: string): number {
+  const start = new Date(startDate)
+  const now = new Date()
+  const daysSinceLaunch = Math.max(0, Math.floor((now.getTime() - start.getTime()) / 86400000))
+  return Math.min(1.0 + (daysSinceLaunch * 0.015), 3.0)
+}
+
 // ─── Daily target — varies each day ───
 
-function getDailyTarget(): number {
+function getDailyTarget(growthMultiplier: number): number {
   const day = new Date().getDay()
   const isWeekend = day === 0 || day === 6
 
   // Base: 80-200 weekday, 120-250 weekend
   const min = isWeekend ? 120 : 80
   const max = isWeekend ? 250 : 200
-  return rb(min, max)
+  return Math.round(rb(min, max) * growthMultiplier)
 }
 
 // ─── ET Time Helpers ───
@@ -305,8 +316,8 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
 
   if (!state.enabled) {
     return {
-      posts_created: 0, replies_created: 0, listings_created: 0,
-      skipped_moderation: 0, kill_switch_level: 'disabled',
+      posts_created: 0, replies_created: 0, listings_created: 0, dm_threads_created: 0,
+      skipped_moderation: 0, kill_switch_level: 'disabled', growth_multiplier: 1,
       daily_total: state.posts_today, enabled: false,
     }
   }
@@ -315,8 +326,8 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
   const today = getETDate()
   if (state.date === today && state.posts_today > 0) {
     return {
-      posts_created: 0, replies_created: 0, listings_created: 0,
-      skipped_moderation: 0, kill_switch_level: 'already ran today',
+      posts_created: 0, replies_created: 0, listings_created: 0, dm_threads_created: 0,
+      skipped_moderation: 0, kill_switch_level: 'already ran today', growth_multiplier: 1,
       daily_total: state.posts_today, enabled: true,
     }
   }
@@ -333,8 +344,8 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
   if (killSwitch.multiplier === 0) {
     await saveState(db, state)
     return {
-      posts_created: 0, replies_created: 0, listings_created: 0,
-      skipped_moderation: 0, kill_switch_level: killSwitch.level,
+      posts_created: 0, replies_created: 0, listings_created: 0, dm_threads_created: 0,
+      skipped_moderation: 0, kill_switch_level: killSwitch.level, growth_multiplier: 1,
       daily_total: 0, enabled: true,
     }
   }
@@ -343,24 +354,27 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
   const seedUsers = await getSeedUsers(db)
   if (seedUsers.length === 0) {
     return {
-      posts_created: 0, replies_created: 0, listings_created: 0,
-      skipped_moderation: 0, kill_switch_level: 'no seed users',
+      posts_created: 0, replies_created: 0, listings_created: 0, dm_threads_created: 0,
+      skipped_moderation: 0, kill_switch_level: 'no seed users', growth_multiplier: 1,
       daily_total: 0, enabled: true,
     }
   }
 
-  // Daily target varies: 80-250 actions, scaled by kill switch
-  const rawTarget = getDailyTarget()
+  // Daily target varies with growth multiplier, scaled by kill switch
+  const growthMult = getGrowthMultiplier(state.start_date)
+  const rawTarget = getDailyTarget(growthMult)
   const totalTarget = Math.round(rawTarget * killSwitch.multiplier)
 
-  // Split: 55% porch, 30% listings, 15% replies
-  const porchTarget = Math.round(totalTarget * 0.55)
-  const listingTarget = Math.round(totalTarget * 0.30)
-  const replyTarget = totalTarget - porchTarget - listingTarget
+  // Split: 50% porch, 25% listings, 25% replies (boosted reply ratio for engagement)
+  const porchTarget = Math.round(totalTarget * 0.50)
+  const listingTarget = Math.round(totalTarget * 0.25)
+  const replyTarget = Math.round(totalTarget * 0.15)
+  const dmTarget = totalTarget - porchTarget - listingTarget - replyTarget // ~10% for DMs
 
   let postsCreated = 0
   let listingsCreated = 0
   let repliesCreated = 0
+  let dmThreadsCreated = 0
   let skippedModeration = 0
 
   // Select users (max 5 per user per day to spread across 500 users)
@@ -457,6 +471,63 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
     }
   }
 
+  // Create DM threads between seed users
+  if (dmTarget > 0) {
+    const DM_OPENERS = [
+      'Hey, saw your post — is this still available?',
+      'Hi! Interested in this. Can we meet up?',
+      'How much would you take for this?',
+      'Hey is this still up for grabs?',
+      'Interested! When works for pickup?',
+      'Hi, I live nearby. Is this still available?',
+      'Love this — can I come see it this weekend?',
+      'Would you do a lower price if I pick up today?',
+      'Hey! Do you deliver or is it pickup only?',
+      'This is exactly what Ive been looking for. DM me your availability!',
+    ]
+    const DM_REPLIES = [
+      'Yes still available! When works for you?',
+      'Sure thing. Im free this weekend.',
+      'Hey! Yes its available. Im near {nh}.',
+      'Yep! Can meet anytime after 5pm.',
+      'Still got it. Cash or Venmo works.',
+      'Hey yes! Pickup only, Im near {street}.',
+      'For sure. Saturday morning work?',
+      'Its yours if you want it. DM me when youre ready.',
+    ]
+
+    for (let i = 0; i < dmTarget; i++) {
+      const sender = selectUser()
+      if (!sender) break
+      const receiver = seedUsers.find(u => u.id !== sender.id) || pick(seedUsers)
+      const ts = staggeredTimestamp()
+
+      const openerBody = pick(DM_OPENERS)
+      const vars = generateTemplateVars(receiver)
+      const replyBody = pick(DM_REPLIES).replace('{nh}', vars.nh).replace('{street}', vars.street)
+
+      // Create conversation thread
+      const { data: thread, error: threadErr } = await db.from('messages').insert({
+        sender_id: sender.id,
+        receiver_id: receiver.id,
+        body: applyTone(openerBody, getToneProfile(sender.id)),
+        created_at: ts,
+      }).select('id').single()
+
+      if (!threadErr && thread) {
+        // Add a reply ~1-4 hours later
+        const replyTs = new Date(new Date(ts).getTime() + rb(1, 4) * 3600000).toISOString()
+        await db.from('messages').insert({
+          sender_id: receiver.id,
+          receiver_id: sender.id,
+          body: applyTone(replyBody, getToneProfile(receiver.id)),
+          created_at: replyTs,
+        })
+        dmThreadsCreated++
+      }
+    }
+  }
+
   // Save state
   await saveState(db, state)
 
@@ -464,8 +535,10 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
     posts_created: postsCreated,
     replies_created: repliesCreated,
     listings_created: listingsCreated,
+    dm_threads_created: dmThreadsCreated,
     skipped_moderation: skippedModeration,
     kill_switch_level: killSwitch.level,
+    growth_multiplier: growthMult,
     daily_total: state.posts_today,
     enabled: true,
   }

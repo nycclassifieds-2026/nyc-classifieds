@@ -183,6 +183,26 @@ export function discussionForumSchema(opts: {
   }
 }
 
+export function articleSchema(opts: {
+  title: string
+  description: string
+  url: string
+  datePublished: string
+  author: string
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: opts.title,
+    description: opts.description,
+    url: `${SITE_URL}${opts.url}`,
+    datePublished: opts.datePublished,
+    author: { '@type': 'Organization', name: opts.author },
+    publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}${opts.url}` },
+  }
+}
+
 // ─── Helpers ───
 
 export function jsonLdScript(schema: Record<string, unknown> | Record<string, unknown>[]) {
