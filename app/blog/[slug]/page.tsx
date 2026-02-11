@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { buildMetadata, breadcrumbSchema, articleSchema, SITE_NAME } from '@/lib/seo'
 import { blogPosts, getPostBySlug, getAllSlugs, BLOG_CATEGORIES } from '@/lib/blog-posts'
+import { getSecondarySchemas } from '@/lib/blog-schemas'
 import BlogPostClient from './BlogPostClient'
 
 export function generateStaticParams() {
@@ -41,11 +42,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     .replace(/\n{2,}/g, '\n')
     .trim()
 
+  const postUrl = `/blog/${post.slug}`
   const schemas = [
     articleSchema({
       title: post.title,
       description: post.excerpt,
-      url: `/blog/${post.slug}`,
+      url: postUrl,
       datePublished: post.date,
       author: post.author,
       category: post.category,
@@ -56,8 +58,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     breadcrumbSchema([
       { name: 'Blog', url: '/blog' },
       { name: post.category, url: '/blog' },
-      { name: post.title, url: `/blog/${post.slug}` },
+      { name: post.title, url: postUrl },
     ]),
+    ...getSecondarySchemas(post.slug, postUrl),
   ]
 
   // Related posts (same category first, then others)

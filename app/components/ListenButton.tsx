@@ -77,10 +77,32 @@ export default function ListenButton({ paragraphs, onParagraphChange }: ListenBu
     stoppedRef.current = false
     setPlaying(true)
 
+    const outro = 'Thank you for listening to this article by The NYC Classifieds. We appreciate your time.'
+
+    const speakOutro = () => {
+      if (stoppedRef.current) return
+      onParagraphChange?.(null)
+      const utterance = new SpeechSynthesisUtterance(outro)
+      utterance.rate = 0.9
+      utterance.pitch = 1.0
+      if (voiceRef.current) utterance.voice = voiceRef.current
+      utterance.onend = () => {
+        setPlaying(false)
+      }
+      utterance.onerror = () => {
+        setPlaying(false)
+      }
+      speechSynthesis.speak(utterance)
+    }
+
     const speakParagraph = (i: number) => {
-      if (stoppedRef.current || i >= paragraphs.length) {
+      if (stoppedRef.current) {
         setPlaying(false)
         onParagraphChange?.(null)
+        return
+      }
+      if (i >= paragraphs.length) {
+        setTimeout(speakOutro, 500)
         return
       }
 

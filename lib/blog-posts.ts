@@ -28,7 +28,7 @@ export const blogPosts: BlogPost[] = [
     date: '2026-02-11',
     author: 'The NYC Classifieds Team',
     category: 'Updates',
-    tags: ['roadmap', 'features', 'future', 'product'],
+    tags: ['roadmap', 'features', 'future', 'product', 'nyc classifieds', 'photo uploads', 'saved searches'],
     excerpt: 'We\'ve been heads-down building for six weeks. A look at what\'s coming to The NYC Classifieds in the weeks ahead.',
     content: `Six weeks in. The foundation is laid, the walls are up, and people are actually walking through the door. Now comes the part where we make this thing genuinely great.
 
@@ -64,11 +64,11 @@ This is still early. The best version of The NYC Classifieds hasn\'t been built 
   },
   {
     slug: 'first-10-days-what-google-told-us',
-    title: 'First 10 Days: What Google Told Us',
+    title: 'What Google Search Console Told Us 10 Days After Launch',
     date: '2026-02-09',
     author: 'The NYC Classifieds Team',
     category: 'Updates',
-    tags: ['SEO', 'analytics', 'launch', 'search'],
+    tags: ['SEO', 'analytics', 'launch', 'search', 'google search console', 'website launch', 'indexing'],
     excerpt: 'We opened Google Search Console and actually learned something. What the first 10 days of search data revealed — and what we\'re doing about it.',
     content: `We wrote a few weeks ago about our SEO strategy for a brand-new site. Now we actually have data. Ten days of it. And it\'s both humbling and encouraging.
 
@@ -120,7 +120,7 @@ Ten days is nothing. But ten days of data is better than guessing. And what Goog
     date: '2026-02-07',
     author: 'The NYC Classifieds Team',
     category: 'Updates',
-    tags: ['launch', 'reflection', 'community', 'growth'],
+    tags: ['launch', 'reflection', 'community', 'growth', 'free classifieds nyc', 'startup launch', 'marketplace'],
     excerpt: 'The launch happened. People showed up. Now comes the part nobody tells you about: what happens after day one.',
     content: `We launched. People signed up. Listings went live. Porch posts started appearing. It worked.
 
@@ -160,11 +160,11 @@ More soon. We\'ve got work to do.`,
   },
   {
     slug: '5-scams-hitting-nyc-right-now',
-    title: '5 Scams Hitting NYC Right Now',
+    title: '5 Scams Hitting NYC Right Now in 2026 — How to Protect Yourself',
     date: '2026-02-06',
     author: 'The NYC Classifieds Team',
     category: 'Safety',
-    tags: ['scams', 'safety', 'NYC', 'fraud', 'awareness'],
+    tags: ['scams', 'safety', 'NYC', 'fraud', 'awareness', 'nyc scams 2026', 'consumer protection', 'scam alert'],
     excerpt: 'Scammers never sleep, especially in a city of 8 million targets. Here are five scams actively hitting New Yorkers in 2026 and how to avoid them.',
     content: `New York has always attracted hustlers. Most of them are honest. Some of them are not. Here are five scams that are actively targeting New Yorkers right now, across every platform and medium.
 
@@ -208,7 +208,7 @@ Every one of these scams relies on urgency and trust. The scammer wants you to a
     date: '2026-02-05',
     author: 'The NYC Classifieds Team',
     category: 'Safety',
-    tags: ['safety', 'security', 'verification', 'moderation', 'privacy', 'trust'],
+    tags: ['safety', 'security', 'verification', 'moderation', 'privacy', 'trust', 'buy sell safely', 'marketplace safety'],
     excerpt: 'Every safety measure we\'ve built into The NYC Classifieds — verification, moderation, privacy, and the stuff you don\'t see.',
     content: `Last week, a user in Bushwick flagged a listing that looked off. The photos were too polished, the price too low, the description too perfect. Our moderation team pulled it in under four minutes. Turned out to be a Zelle scam using AI-generated images.\n\nThat\'s what safety looks like when it\'s built into the foundation, not bolted on after something goes wrong.
 
@@ -272,11 +272,11 @@ Verification, automated moderation, community flagging, private messaging, block
   },
   {
     slug: 'fake-apartment-scams-how-to-spot-them-2026',
-    title: 'Fake Apartment Scams: How to Spot Them in 2026',
+    title: 'How to Spot Fake Apartment Listings in NYC (2026 Scam Guide)',
     date: '2026-02-04',
     author: 'The NYC Classifieds Team',
     category: 'Safety',
-    tags: ['scams', 'apartments', 'housing', 'safety', 'NYC'],
+    tags: ['scams', 'apartments', 'housing', 'safety', 'NYC', 'rental scams', 'fake listings', 'apartment hunting nyc'],
     excerpt: 'NYC apartment scams have gotten smarter in 2026. AI-generated photos, cloned listings, and fake landlords are everywhere. Here\'s how to protect yourself.',
     content: `Finding an apartment in New York City is already brutal. The last thing you need is to lose a deposit to someone who doesn\'t own the place they\'re renting. But apartment scams in NYC are more sophisticated than ever, and they\'re catching smart people off guard.
 
@@ -311,11 +311,11 @@ Take your time, verify everything, and trust your gut. If it feels wrong, it is 
   },
   {
     slug: 'job-scams-targeting-new-yorkers-2026',
-    title: 'Job Scams Targeting New Yorkers in 2026',
+    title: 'Job Scams in NYC 2026: How to Spot Fake Postings and Protect Yourself',
     date: '2026-02-03',
     author: 'The NYC Classifieds Team',
     category: 'Safety',
-    tags: ['scams', 'jobs', 'employment', 'safety', 'NYC'],
+    tags: ['scams', 'jobs', 'employment', 'safety', 'NYC', 'fake job postings', 'employment scams', 'remote work scams'],
     excerpt: 'Fake remote work offers, advance-fee schemes, and identity theft through phony job applications. Here\'s what to watch for in the NYC job market.',
     content: `The job market in New York is competitive, and scammers know it. They prey on people who are eager or just need a paycheck. Job scams in 2026 are more convincing than ever, hitting New Yorkers across every industry.
 
@@ -364,11 +364,11 @@ Job hunting is stressful enough without predators in the mix. Verify every oppor
   },
   {
     slug: 'free-forever-and-we-mean-it',
-    title: 'Why The NYC Classifieds Will Always Be Free to Post',
+    title: 'Free Classifieds NYC: Why We\'ll Never Charge You to Post',
     date: '2026-02-01',
     author: 'The NYC Classifieds Team',
     category: 'Updates',
-    tags: ['free', 'business model', 'commitment', 'values'],
+    tags: ['free', 'business model', 'commitment', 'values', 'no fees', 'free listings', 'post free ads'],
     excerpt: 'We get asked how we make money if everything is free. Fair question. The real answer, the business model, and why charging users was never on the table.',
     content: `People ask us this all the time: "If it\'s free, what\'s the catch?"
 
@@ -415,7 +415,7 @@ Free. Forever. No asterisk.`,
     date: '2026-01-30',
     author: 'The NYC Classifieds Team',
     category: 'Community',
-    tags: ['the porch', 'community', 'neighborhoods', 'insights', 'learnings'],
+    tags: ['the porch', 'community', 'neighborhoods', 'insights', 'learnings', 'neighborhood insights', 'community engagement'],
     excerpt: 'We built The Porch expecting one thing. Neighborhoods showed us something else entirely. What actually happened surprised us.',
     content: `When we launched The Porch, we had theories about how people would use it. Recommendations would dominate. Lost and found would spike. Questions would trickle in.
 
@@ -461,7 +461,7 @@ We built a tool. Neighborhoods made it theirs. That\'s the best outcome we could
     date: '2026-01-28',
     author: 'The NYC Classifieds Team',
     category: 'Features',
-    tags: ['security', 'verification', 'trust', 'architecture', 'design'],
+    tags: ['security', 'verification', 'trust', 'architecture', 'design', 'gps verification', 'scam prevention', 'platform trust'],
     excerpt: 'Most platforms add safety features after something goes wrong. We built verification and trust systems before we built anything else. This is the story of why.',
     content: `When we started building The NYC Classifieds, the first thing we wrote wasn\'t the listing page. It wasn\'t the search bar. It wasn\'t The Porch. It was the verification system.
 
@@ -505,7 +505,7 @@ We\'d rather be the platform you trust than the platform that looks cool. If we 
     date: '2026-01-26',
     author: 'The NYC Classifieds Team',
     category: 'Updates',
-    tags: ['SEO', 'search', 'growth', 'technical', 'strategy'],
+    tags: ['SEO', 'search', 'growth', 'technical', 'strategy', 'new website seo', 'google ranking', 'organic traffic'],
     excerpt: 'How do you get Google to notice you when your domain is days old and you have zero backlinks? Our honest approach to SEO when nobody knows you exist.',
     content: `Try this: launch a brand-new website and convince Google to show it to anyone. Your domain authority is zero. Your backlink profile is empty. You\'re competing against sites that have been around for 20 years.
 
@@ -549,7 +549,7 @@ As we noted in our launch post, we\'re building for the long game. SEO is no dif
     date: '2026-01-24',
     author: 'The NYC Classifieds Team',
     category: 'Features',
-    tags: ['notifications', 'design', 'UX', 'product'],
+    tags: ['notifications', 'design', 'UX', 'product', 'push notifications', 'mobile app design', 'alert fatigue'],
     excerpt: 'Push notifications are a double-edged sword. Send too many and people disable them. Send too few and they forget you exist. We think we found the balance.',
     content: `Every app wants to send you notifications. Your phone is a battlefield of red badges, buzzes, and banners, all competing for a sliver of your attention. Most of them are noise.
 
@@ -603,7 +603,7 @@ We\'d rather send one notification that matters than ten that get swiped away. T
     date: '2026-01-22',
     author: 'The NYC Classifieds Team',
     category: 'Updates',
-    tags: ['launch', 'community', 'bootstrapping', 'strategy'],
+    tags: ['launch', 'community', 'bootstrapping', 'strategy', 'cold start problem', 'first users', 'two-sided marketplace'],
     excerpt: 'The hardest part of launching a community platform isn\'t building it. It\'s making sure it doesn\'t feel like a ghost town when the first users show up.',
     content: `The brutal truth about launching a platform that depends on user-generated content: if someone signs up and sees an empty page, they leave. And they don\'t come back.
 
@@ -641,11 +641,11 @@ We\'re not there yet. But the engine is running. And that\'s the hardest part.`,
   },
   {
     slug: 'business-profiles-free-for-local-shops',
-    title: 'Free Business Profiles for Every Local Shop in NYC',
+    title: 'Free Business Listings for Every Local Shop in NYC — No Fees, No Catch',
     date: '2026-01-20',
     author: 'The NYC Classifieds Team',
     category: 'Features',
-    tags: ['business', 'local', 'features', 'shops', 'free'],
+    tags: ['business', 'local', 'features', 'shops', 'free', 'small business nyc', 'free business listing', 'local business directory'],
     excerpt: 'NYC runs on small businesses. We built free business profiles so your local bodega, barber shop, and pizza place can have a real presence on the platform.',
     content: `New York City has over 200,000 small businesses. The bodega on your corner. The tailor who\'s been there for 40 years. The Dominican restaurant that doesn\'t need a Michelin star because the neighborhood already knows. These businesses are the fabric of every block in every borough.
 
@@ -691,7 +691,7 @@ The goal is simple. If you run a business in NYC, your neighbors should be able 
     date: '2026-01-18',
     author: 'The NYC Classifieds Team',
     category: 'Updates',
-    tags: ['mobile', 'design', 'UX', 'responsive', 'NYC'],
+    tags: ['mobile', 'design', 'UX', 'responsive', 'NYC', 'mobile first', 'nyc commuters'],
     excerpt: 'New Yorkers use their phones while walking, riding the subway, and waiting in line at the bodega. We designed every screen for that reality.',
     content: `New York is a mobile-first city whether anyone planned it that way or not. People browse apartments on the A train. They check listings while waiting for a dollar slice. They post on The Porch from a park bench in Prospect Park.
 
@@ -737,7 +737,7 @@ We built a focused mobile experience for one purpose: connecting New Yorkers wit
     date: '2026-01-16',
     author: 'The NYC Classifieds Team',
     category: 'Features',
-    tags: ['search', 'features', 'neighborhoods', 'UX', 'product'],
+    tags: ['search', 'features', 'neighborhoods', 'UX', 'product', 'local search', 'find by neighborhood', 'hyperlocal classifieds'],
     excerpt: 'We built search that filters by neighborhood, category, and recency because finding a couch in your borough shouldn\'t require scrolling through listings in Staten Island.',
     content: `Search on most classifieds platforms is broken. Not in the "it doesn\'t return results" way, but in the "it returns 500 results and none of them are relevant" way.
 
@@ -786,7 +786,7 @@ Search should be simple. Type what you want, see what\'s near you. That\'s it. E
     date: '2026-01-14',
     author: 'The NYC Classifieds Team',
     category: 'Features',
-    tags: ['moderation', 'community', 'safety', 'content', 'policy'],
+    tags: ['moderation', 'community', 'safety', 'content', 'policy', 'free speech', 'community guidelines', 'fair moderation'],
     excerpt: 'We block spam, scams, and harassment before they go live. But we don\'t police opinions. Here\'s how we built moderation that keeps the platform clean without silencing anyone.',
     content: `Moderation is a tightrope. Too little and the platform drowns in spam and abuse. Too much and people feel like they can\'t speak freely. Most platforms fall off one side or the other.
 
@@ -832,11 +832,11 @@ The goal isn\'t perfection. The goal is a platform where you feel safe posting a
   },
   {
     slug: 'why-messaging-had-to-stay-on-platform',
-    title: 'Why All Messages Stay On-Platform — And What That Protects',
+    title: 'Why On-Platform Messaging Protects Buyers and Sellers from Scams',
     date: '2026-01-12',
     author: 'The NYC Classifieds Team',
     category: 'Safety',
-    tags: ['messaging', 'safety', 'privacy', 'design', 'security'],
+    tags: ['messaging', 'safety', 'privacy', 'design', 'security', 'secure messaging', 'buyer protection', 'anti-scam'],
     excerpt: 'We made a deliberate decision: no exposed phone numbers, no visible email addresses. Every conversation happens on The NYC Classifieds. Here\'s why that matters more than convenience.',
     content: `On The List, you respond to a listing by emailing a anonymized address that forwards to the poster. In theory, this protects privacy. In practice, one reply reveals your real email, and from there it\'s open season for spam, phishing, and harassment.
 
@@ -876,11 +876,11 @@ Privacy and safety aren\'t in conflict here. On-platform messaging delivers both
   },
   {
     slug: 'the-porch-was-the-whole-point',
-    title: 'Why We Built a Neighborhood Feed, Not Just a Classifieds Site',
+    title: 'Why We Built a Neighborhood Community Feed for NYC — Not Just Classifieds',
     date: '2026-01-10',
     author: 'The NYC Classifieds Team',
     category: 'Features',
-    tags: ['the porch', 'community', 'features', 'origin', 'vision'],
+    tags: ['the porch', 'community', 'features', 'origin', 'vision', 'neighborhood app', 'local community feed', 'nextdoor alternative'],
     excerpt: 'We named ourselves a classifieds platform, but The Porch is what we actually set out to build. The origin of our community feature — and why classifieds alone were never the plan.',
     content: `People assume we started with classifieds and added community features as an afterthought. It was actually the other way around.
 
@@ -932,7 +932,7 @@ We considered calling the whole platform "The Porch." We landed on The NYC Class
     date: '2026-01-08',
     author: 'The NYC Classifieds Team',
     category: 'Features',
-    tags: ['categories', 'classifieds', 'features', 'listings', 'free'],
+    tags: ['categories', 'classifieds', 'features', 'listings', 'free', 'post free ads', 'nyc classifieds categories'],
     excerpt: 'We organized The NYC Classifieds into 12 categories that cover everything New Yorkers actually buy, sell, and trade. Every one of them is free to post in.',
     content: `When we sat down to build the classifieds engine, the first question was: what categories do New Yorkers actually need?
 
@@ -988,11 +988,11 @@ Twelve categories. If it matters to a New Yorker, it has a home here. And every 
   },
   {
     slug: 'five-boroughs-126-neighborhoods',
-    title: 'How We Mapped NYC Into 126 Neighborhoods for Hyperlocal Classifieds',
+    title: 'All Five Boroughs, 126 Neighborhoods: How NYC\'s Hyperlocal Classifieds Work',
     date: '2026-01-06',
     author: 'The NYC Classifieds Team',
     category: 'Features',
-    tags: ['neighborhoods', 'boroughs', 'geography', 'hyperlocal', 'NYC'],
+    tags: ['neighborhoods', 'boroughs', 'geography', 'hyperlocal', 'NYC', 'five boroughs', 'neighborhood map', 'all nyc neighborhoods'],
     excerpt: 'NYC isn\'t one city. It\'s 126 neighborhoods, each with its own identity. We built the entire platform around that geography because hyperlocal is the only way classifieds work.',
     content: `Ask someone in Astoria where they live and they\'ll say Astoria, not Queens. Ask someone in Bed-Stuy and they\'ll say Bed-Stuy, not Brooklyn. New Yorkers identify with their neighborhoods more than their boroughs, and infinitely more than their city.
 
@@ -1038,7 +1038,7 @@ Classifieds are local by definition. We just took "local" seriously and defined 
     date: '2026-01-04',
     author: 'The NYC Classifieds Team',
     category: 'Updates',
-    tags: ['verification', 'launch', 'security', 'trust', 'GPS', 'selfie'],
+    tags: ['verification', 'launch', 'security', 'trust', 'GPS', 'selfie', 'identity verification', 'user safety'],
     excerpt: 'Before we built listings, search, or community features, we built verification. Here\'s why the first line of code we wrote was about proving you\'re real.',
     content: `Day one of building The NYC Classifieds. The codebase is empty. The design doc is a mess of notes and sketches. We have a hundred things to build and limited time to build them.
 
@@ -1080,11 +1080,11 @@ Day one. Line one. Trust first. Everything else follows.`,
   },
   {
     slug: 'were-building-something',
-    title: 'We\'re Building Free, Verified Classifieds for New York City',
+    title: 'We\'re Building the Craigslist Alternative NYC Deserves — Free & Verified',
     date: '2026-01-03',
     author: 'The NYC Classifieds Team',
     category: 'Updates',
-    tags: ['announcement', 'launch', 'vision', 'NYC', 'platform'],
+    tags: ['announcement', 'launch', 'vision', 'NYC', 'platform', 'craigslist alternative', 'verified listings', 'free classifieds'],
     excerpt: 'There\'s a gap in how New Yorkers connect locally. We\'re filling it with a free, geo-verified classifieds and community platform built specifically for the five boroughs.',
     content: `We\'re building a classifieds and community platform for New York City. That\'s the one-sentence version.
 
@@ -1132,11 +1132,11 @@ Stay tuned.`,
   },
   {
     slug: 'how-the-list-changed-everything-then-lost-its-way',
-    title: 'How Craigslist-Style Classifieds Changed NYC — Then Stopped Evolving',
+    title: 'What Happened to Craigslist? How It Changed NYC — Then Stopped Evolving',
     date: '2026-01-02',
     author: 'The NYC Classifieds Team',
     category: 'Community',
-    tags: ['The List', 'history', 'classifieds', 'competition', 'decline'],
+    tags: ['The List', 'history', 'classifieds', 'competition', 'decline', 'craigslist decline', 'craigslist alternative', 'online classifieds history'],
     excerpt: 'The List didn\'t just create online classifieds. It gave an entire generation a new way to find apartments, jobs, furniture, and each other. Then it stopped evolving.',
     content: `Before The List, finding an apartment in New York meant buying a newspaper, circling listings with a pen, and calling a number that might or might not be disconnected. Finding used furniture meant yard sales or knowing someone who was moving. Finding a job meant pounding pavement with a stack of resumes.
 
@@ -1180,7 +1180,7 @@ We learned that lesson. We\'re building on it.`,
     date: '2026-01-01',
     author: 'The NYC Classifieds Team',
     category: 'Community',
-    tags: ['origin story', 'platforms', 'history', 'NYC', 'competition'],
+    tags: ['origin story', 'platforms', 'history', 'NYC', 'competition', 'community platforms', 'local apps', 'platform failures'],
     excerpt: 'There was a time when The List, The Green App, and The Feed\'s Garage Sale actually worked. Here\'s what happened, and why we think there\'s room for something new.',
     content: `Every New Yorker has a story about finding something great on The List. A rent-stabilized apartment on the Upper West Side. A vintage leather jacket for $40. A gig playing bass at a Village bar that turned into a regular thing.
 
@@ -1225,11 +1225,11 @@ Welcome to The NYC Classifieds. We have work to do.`,
   // ── NYC category ──────────────────────────────────────────────
   {
     slug: 'nyc-apartment-hunting-survival-guide-2026',
-    title: 'The NYC Apartment Hunting Survival Guide (2026 Edition)',
+    title: 'How to Find an Apartment in NYC: The 2026 Survival Guide',
     date: '2026-02-10',
     author: 'The NYC Classifieds Team',
     category: 'NYC',
-    tags: ['housing', 'apartments', 'rentals', 'FARE Act', 'NYC', 'guide'],
+    tags: ['housing', 'apartments', 'rentals', 'FARE Act', 'NYC', 'guide', 'no broker fee', 'apartment search', 'renters guide 2026'],
     excerpt: 'Broker fees are dead, scams are smarter, and the market moves faster than ever. Here\'s how to actually find an apartment in New York City in 2026.',
     content: `Finding an apartment in New York has always been a contact sport. But 2026 changed the rules in ways that actually favor renters for the first time in years.
 
@@ -1265,11 +1265,11 @@ Your dream apartment exists. You just need the right strategy to find it.`,
   },
   {
     slug: 'best-thrift-stores-stoop-sales-vintage-finds-nyc',
-    title: 'Best Thrift Stores, Stoop Sales & Vintage Finds in NYC',
+    title: 'Best Thrift Stores in NYC 2026: Vintage Finds, Stoop Sales & Hidden Gems',
     date: '2026-02-08',
     author: 'The NYC Classifieds Team',
     category: 'NYC',
-    tags: ['thrift', 'vintage', 'stoop sales', 'shopping', 'for-sale', 'NYC'],
+    tags: ['thrift', 'vintage', 'stoop sales', 'shopping', 'for-sale', 'NYC', 'secondhand shopping', 'vintage clothing nyc', 'cheap finds nyc'],
     excerpt: 'From East Village gems to Williamsburg deep cuts to the legendary West 104th Street yard sale — here\'s where New Yorkers find the best secondhand deals.',
     content: `New York has always been a treasure hunter\'s paradise. The sheer volume of stuff cycling through this city means incredible finds are always around the corner, if you know where to look.
 
@@ -1305,11 +1305,11 @@ Thrifting in NYC isn\'t just shopping. It\'s a culture, a sustainability practic
   },
   {
     slug: 'nyc-hottest-job-market-sectors-2026',
-    title: 'NYC\'s Hottest Job Market Sectors in 2026 — And How to Break In',
+    title: 'NYC\'s Hottest Job Sectors in 2026: Who\'s Hiring and How to Get In',
     date: '2026-01-29',
     author: 'The NYC Classifieds Team',
     category: 'NYC',
-    tags: ['jobs', 'career', 'tech', 'healthcare', 'NYC', 'hiring'],
+    tags: ['jobs', 'career', 'tech', 'healthcare', 'NYC', 'hiring', 'nyc hiring 2026', 'job market trends', 'best careers nyc'],
     excerpt: 'Tech, healthcare, and finance are booming. Here\'s what\'s actually hiring in New York, what they\'re paying, and how to get your foot in the door.',
     content: `The New York job market in 2026 is fast-moving, specialized, and surprisingly accessible if you know where to look. Whether you\'re switching careers, picking up gigs, or hunting for your first role, here\'s what the data says.
 
@@ -1345,11 +1345,11 @@ We built our [Jobs listings](/listings/jobs) so local employers and candidates c
   },
   {
     slug: 'nyc-events-cheat-sheet-2026',
-    title: 'Your NYC Events Cheat Sheet: Concerts, Broadway & What\'s Coming in 2026',
+    title: 'NYC Events 2026: Concerts, Broadway, Free Events & Your Complete Guide',
     date: '2026-01-25',
     author: 'The NYC Classifieds Team',
     category: 'NYC',
-    tags: ['events', 'concerts', 'Broadway', 'tickets', 'NYC', 'FIFA'],
+    tags: ['events', 'concerts', 'Broadway', 'tickets', 'NYC', 'FIFA', 'things to do nyc', 'free events nyc', 'nyc concerts 2026'],
     excerpt: 'Lady Gaga at MSG, the FIFA World Cup at MetLife, Broadway\'s hottest runs, and how to buy tickets without getting scammed.',
     content: `2026 might be the biggest year for live events New York has ever seen. Between a World Cup, blockbuster concert tours, and a Broadway season that refuses to slow down, there\'s something happening every single night. Here\'s what you need to know.
 
@@ -1390,11 +1390,11 @@ Our [Tickets & Events section](/listings/tickets-events) lets verified New Yorke
   },
   {
     slug: 'most-walkable-nyc-neighborhoods-where-community-thrives',
-    title: '10 Most Walkable NYC Neighborhoods — Where Community Still Thrives',
+    title: 'Most Walkable Neighborhoods in NYC: 10 Areas Where Community Thrives',
     date: '2026-01-19',
     author: 'The NYC Classifieds Team',
     category: 'NYC',
-    tags: ['neighborhoods', 'walkability', 'community', 'housing', 'NYC'],
+    tags: ['neighborhoods', 'walkability', 'community', 'housing', 'NYC', 'walk score', 'car-free nyc', 'best neighborhoods to live'],
     excerpt: 'The best neighborhoods in NYC aren\'t just walkable — they\'re the ones where you still know your neighbors. Here\'s where to find both.',
     content: `There\'s a version of New York where you walk everywhere, bump into people you know, and feel like your neighborhood is actually yours. It still exists. You just need to know where to look.
 
@@ -1437,11 +1437,11 @@ Browse The Porch by your borough, find your neighborhood, and see what\'s happen
   // ── Guides category ───────────────────────────────────────────
   {
     slug: 'how-to-write-a-listing-that-sells-fast',
-    title: 'How to Write a Listing That Sells Fast on The NYC Classifieds',
+    title: 'How to Write a Classified Ad That Sells Fast: Listing Tips for NYC',
     date: '2026-02-02',
     author: 'The NYC Classifieds Team',
     category: 'Guides',
-    tags: ['selling', 'tips', 'listings', 'photos', 'guide'],
+    tags: ['selling', 'tips', 'listings', 'photos', 'guide', 'classified ad writing', 'sell fast online', 'listing tips'],
     excerpt: 'Great listings sell in hours. Bad ones sit for weeks. The difference between selling in hours and sitting for weeks comes down to a few simple things.',
     content: `Every day, thousands of items get posted on classifieds platforms across New York. Some sell in hours. Most sit for weeks. The difference isn\'t luck — it\'s how you write the listing.
 
@@ -1493,11 +1493,11 @@ Write clear titles. Take good photos. Price honestly. Post where buyers already 
   },
   {
     slug: 'nyc-side-hustle-playbook-gigs-services-barter',
-    title: 'The NYC Side Hustle Playbook: Gigs, Services & Barter',
+    title: 'Best Side Hustles in NYC 2026: The Playbook for Gigs, Services & Barter',
     date: '2026-01-27',
     author: 'The NYC Classifieds Team',
     category: 'Guides',
-    tags: ['side hustle', 'gigs', 'freelance', 'barter', 'services', 'guide'],
+    tags: ['side hustle', 'gigs', 'freelance', 'barter', 'services', 'guide', 'side hustle ideas', 'extra income nyc', 'gig economy nyc'],
     excerpt: 'Over a third of Americans have a side gig. In NYC, it\'s practically mandatory. Finding gigs, offering services, and trading skills in NYC — no algorithm required.',
     content: `The cost of living in New York City makes one income feel like a suggestion rather than a plan. Over [36% of Americans now have a side gig](https://www.hostinger.com/tutorials/side-hustle-statistics), and in a city where a studio apartment costs $2,800, that number is probably higher.
 
@@ -1539,11 +1539,11 @@ Start with our [Gigs](/listings/gigs), [Services](/listings/services), and [Bart
   },
   {
     slug: 'first-time-buyers-guide-spotting-legit-listings',
-    title: 'First-Time Buyer\'s Guide: Spotting Legit Listings (And Avoiding Scams)',
+    title: 'How to Spot Fake Listings Online: A Buyer\'s Guide to Avoiding Scams',
     date: '2026-01-21',
     author: 'The NYC Classifieds Team',
     category: 'Guides',
-    tags: ['scams', 'safety', 'buying', 'verification', 'trust', 'guide'],
+    tags: ['scams', 'safety', 'buying', 'verification', 'trust', 'guide', 'fake listings', 'online scam red flags', 'buyer safety tips'],
     excerpt: 'The internet is full of fake listings. How to tell the real ones from the scams — and why your choice of platform matters more than you think.',
     content: `Every year, millions of dollars are lost to fake listings on platforms that don\'t verify their users. The [NYPD rental scam prevention guide](https://www.nyc.gov/assets/nypd/downloads/pdf/crime_prevention/NYPDcptips_RentalScam.pdf) warns that scammers routinely copy real listings, pose as landlords, and collect deposits for apartments they don\'t own.
 
@@ -1586,11 +1586,11 @@ The internet isn\'t inherently dangerous. But unverified platforms are. Choose w
   },
   {
     slug: 'moving-to-nyc-classifieds-survival-guide',
-    title: 'Moving to NYC? The Classifieds Survival Guide',
+    title: 'Moving to NYC in 2026? The Complete First-Timer\'s Survival Guide',
     date: '2026-01-15',
     author: 'The NYC Classifieds Team',
     category: 'Guides',
-    tags: ['moving', 'NYC', 'apartments', 'furniture', 'services', 'guide'],
+    tags: ['moving', 'NYC', 'apartments', 'furniture', 'services', 'guide', 'moving to nyc', 'first time in nyc', 'relocation guide'],
     excerpt: 'Everything you need to set up life in New York City — from finding movers to furnishing your apartment to meeting your neighbors — using classifieds the smart way.',
     content: `Moving to New York City is one of those life decisions that\'s simultaneously thrilling and terrifying. The logistics alone can overwhelm you before you even unpack your first box. Here\'s your playbook for using classifieds to make the transition smoother and cheaper.
 
@@ -1637,11 +1637,11 @@ Moving to NYC is hard. Doing it with the right tools makes it significantly less
   },
   {
     slug: 'guide-to-the-porch-nycs-local-feed',
-    title: 'Your Guide to The Porch — Getting the Most Out of NYC\'s Local Feed',
+    title: 'How to Use The Porch: NYC\'s Free Neighborhood Community Feed',
     date: '2026-01-13',
     author: 'The NYC Classifieds Team',
     category: 'Guides',
-    tags: ['porch', 'community', 'neighbors', 'guide', 'local'],
+    tags: ['porch', 'community', 'neighbors', 'guide', 'local', 'community board', 'neighborhood feed', 'local app nyc'],
     excerpt: 'The Porch is where neighbors actually talk. How to use every feature — from neighborhood questions to lost & found to stoop sale announcements.',
     content: `The Porch is our community feed, and it\'s fundamentally different from anything you\'ve used before. No algorithm deciding what you see. No promoted posts masquerading as organic content. No engagement-bait drama. Just your neighbors, talking about your neighborhood.
 

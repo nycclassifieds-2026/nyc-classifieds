@@ -244,6 +244,49 @@ export function articleSchema(opts: {
   }
 }
 
+export function howToSchema(opts: {
+  name: string
+  description: string
+  url: string
+  steps: { name: string; text: string }[]
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: opts.name,
+    description: opts.description,
+    url: `${SITE_URL}${opts.url}`,
+    step: opts.steps.map((s, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: s.name,
+      text: s.text,
+    })),
+  }
+}
+
+export function itemListSchema(opts: {
+  name: string
+  description: string
+  url: string
+  items: { name: string; url?: string }[]
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: opts.name,
+    description: opts.description,
+    url: `${SITE_URL}${opts.url}`,
+    numberOfItems: opts.items.length,
+    itemListElement: opts.items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      ...(item.url && { url: item.url }),
+    })),
+  }
+}
+
 // ─── Helpers ───
 
 export function jsonLdScript(schema: Record<string, unknown> | Record<string, unknown>[]) {
