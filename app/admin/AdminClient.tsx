@@ -14,7 +14,7 @@ interface TodoItem {
   category: string
 }
 
-type Tab = 'home' | 'users' | 'listings' | 'porch' | 'moderation' | 'analytics' | 'ads' | 'notifications' | 'docs'
+type Tab = 'home' | 'users' | 'listings' | 'porch' | 'moderation' | 'feedback' | 'analytics' | 'ads' | 'notifications' | 'docs'
 
 // ─── Styles ───────────────────────────────────────────────────
 const colors = {
@@ -421,6 +421,7 @@ export default function AdminClient() {
     { key: 'listings', label: 'Listings', icon: '\u2616' },
     { key: 'porch', label: 'Porch Posts', icon: '\u2601' },
     { key: 'moderation', label: 'Moderation', icon: '\u2691' },
+    { key: 'feedback', label: 'Feedback', icon: '\u270D' },
     { key: 'analytics', label: 'Analytics', icon: '\u2605' },
     { key: 'ads', label: 'Ads', icon: '\u2606' },
     { key: 'notifications', label: 'Notifications', icon: '\u2709' },
@@ -451,6 +452,7 @@ export default function AdminClient() {
         {tab === 'listings' && <ListingsTab />}
         {tab === 'porch' && <PorchTab />}
         {tab === 'moderation' && <ModerationTab />}
+        {tab === 'feedback' && <FeedbackTab />}
         {tab === 'analytics' && <AnalyticsTab />}
         {tab === 'ads' && <AdsTab />}
         {tab === 'notifications' && <NotificationsTab />}
@@ -1177,6 +1179,9 @@ function PorchTab() {
 }
 
 // ─── Analytics Tab ────────────────────────────────────────────
+interface FunnelStep { started: number; completed: number; failed: number; errors: Record<string, number> }
+type FunnelData = Record<string, FunnelStep>
+
 interface AnalyticsData {
   totals: { users: number; listings: number; porch_posts: number; porch_replies: number; messages: number; posts_today: number }
   daily: {
@@ -1192,6 +1197,10 @@ interface AnalyticsData {
     by_category: Record<string, number>
   }
   cron: { enabled: boolean; posts_today: number; date: string; start_date: string } | null
+  signup_funnel: {
+    last_7_days: FunnelData
+    last_30_days: FunnelData
+  }
 }
 
 function BarChart({ data, label, color = colors.primary }: { data: Record<string, number>; label: string; color?: string }) {
@@ -1225,6 +1234,79 @@ function StatCard({ label, value, highlight }: { label: string; value: string | 
     <div style={{ ...cardStyle, padding: '0.75rem 1rem', flex: 1, textAlign: 'center', minWidth: '120px' }}>
       <div style={{ fontSize: '1.25rem', fontWeight: 700, color: highlight ? colors.primary : colors.text }}>{value}</div>
       <div style={{ fontSize: '0.6875rem', color: colors.textLight, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+    </div>
+  )
+}
+
+const FUNNEL_STEPS = ['email', 'otp', 'type', 'name', 'business', 'pin', 'address', 'selfie', 'done']
+
+function SignupFunnel({ data, label }: { data: FunnelData; label: string }) {
+  const steps = FUNNEL_STEPS.filter(s => data[s])
+  if (steps.length === 0) return <p style={{ color: colors.textLight, fontSize: '0.75rem' }}>No signup data yet</p>
+
+  const maxStarted = Math.max(...steps.map(s => data[s].started), 1)
+
+  return (
+    <div>
+      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+        {steps.map((step, i) => {
+          const d = data[step]
+          const rate = d.started > 0 ? Math.round((d.completed / d.started) * 100) : 0
+          const barColor = rate >= 80 ? '#16a34a' : rate >= 50 ? '#ea580c' : '#dc2626'
+          const prevCompleted = i > 0 ? data[steps[i - 1]]?.completed || 0 : 0
+          const dropOff = i > 0 && prevCompleted > 0 ? Math.round(((prevCompleted - d.started) / prevCompleted) * 100) : 0
+
+          return (
+            <div key={step}>
+              {i > 0 && dropOff > 0 && (
+                <div style={{ fontSize: '0.625rem', color: '#dc2626', textAlign: 'right', paddingRight: '2rem', marginBottom: '1px' }}>
+                  -{dropOff}% drop-off
+                </div>
+              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.6875rem', color: colors.textMuted, width: '52px', textAlign: 'right', flexShrink: 0, fontWeight: 500 }}>{step}</span>
+                <div style={{ flex: 1, height: '18px', backgroundColor: '#f1f5f9', borderRadius: '3px', overflow: 'hidden', position: 'relative' }}>
+                  <div style={{ height: '100%', width: `${(d.started / maxStarted) * 100}%`, backgroundColor: barColor, borderRadius: '3px', minWidth: d.started > 0 ? '2px' : '0', opacity: 0.2 }} />
+                  <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${(d.completed / maxStarted) * 100}%`, backgroundColor: barColor, borderRadius: '3px', minWidth: d.completed > 0 ? '2px' : '0' }} />
+                </div>
+                <span style={{ fontSize: '0.625rem', color: colors.textMuted, width: '80px', flexShrink: 0 }}>
+                  {d.completed}/{d.started} <span style={{ color: barColor, fontWeight: 600 }}>{rate}%</span>
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function SignupErrors({ data }: { data: FunnelData }) {
+  const allErrors: { step: string; error: string; count: number }[] = []
+  for (const step of FUNNEL_STEPS) {
+    const d = data[step]
+    if (!d) continue
+    for (const [error, count] of Object.entries(d.errors)) {
+      allErrors.push({ step, error, count })
+    }
+  }
+  allErrors.sort((a, b) => b.count - a.count)
+
+  if (allErrors.length === 0) return <p style={{ color: colors.textLight, fontSize: '0.75rem' }}>No errors recorded</p>
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+      {allErrors.slice(0, 10).map((e, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
+          <span style={{
+            display: 'inline-block', padding: '0.125rem 0.5rem', borderRadius: '9999px',
+            fontSize: '0.6875rem', fontWeight: 600, backgroundColor: '#fee2e2', color: '#dc2626',
+          }}>{e.step}</span>
+          <span style={{ color: colors.textMuted, flex: 1 }}>{e.error}</span>
+          <span style={{ fontWeight: 600, color: colors.text }}>{e.count}</span>
+        </div>
+      ))}
     </div>
   )
 }
@@ -1273,6 +1355,24 @@ function AnalyticsTab() {
         <StatCard label="Posts Today" value={data.totals.posts_today} highlight />
         <StatCard label="Cron" value={cronStatus} />
       </div>
+
+      {/* Signup Funnel */}
+      {data.signup_funnel && (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={cardStyle}>
+              <SignupFunnel data={data.signup_funnel.last_7_days} label="Signup Funnel (7 days)" />
+            </div>
+            <div style={cardStyle}>
+              <SignupFunnel data={data.signup_funnel.last_30_days} label="Signup Funnel (30 days)" />
+            </div>
+          </div>
+          <div style={{ ...cardStyle, marginBottom: '1rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top Signup Errors (30 days)</div>
+            <SignupErrors data={data.signup_funnel.last_30_days} />
+          </div>
+        </>
+      )}
 
       {/* Daily volume chart */}
       <div style={{ ...cardStyle, marginBottom: '1rem' }}>
@@ -2436,6 +2536,238 @@ function AdsTab() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'center', marginTop: '1rem' }}>
+          <button style={btnOutline} disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Prev</button>
+          <span style={{ fontSize: '0.75rem', color: colors.textMuted }}>Page {page} of {totalPages}</span>
+          <button style={btnOutline} disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Feedback Tab ────────────────────────────────────────────
+interface FeedbackItem {
+  id: number
+  user_id: number | null
+  email: string | null
+  category: string
+  message: string
+  page_url: string | null
+  status: string
+  admin_reply: string | null
+  replied_at: string | null
+  created_at: string
+  user: { id: number; email: string; name: string | null } | null
+  replier: { id: number; email: string; name: string | null } | null
+}
+
+const feedbackStatusColors: Record<string, { color: string; bg: string }> = {
+  new: { color: '#2563eb', bg: '#eff6ff' },
+  read: { color: '#475569', bg: '#f1f5f9' },
+  in_progress: { color: '#ea580c', bg: '#fff7ed' },
+  resolved: { color: '#16a34a', bg: '#f0fdf4' },
+  dismissed: { color: '#94a3b8', bg: '#f8fafc' },
+}
+
+const categoryColors: Record<string, { color: string; bg: string }> = {
+  bug: { color: '#dc2626', bg: '#fef2f2' },
+  feature: { color: '#7c3aed', bg: '#f5f3ff' },
+  general: { color: '#2563eb', bg: '#eff6ff' },
+  other: { color: '#475569', bg: '#f1f5f9' },
+}
+
+function FeedbackTab() {
+  const [items, setItems] = useState<FeedbackItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState('new')
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [replyingId, setReplyingId] = useState<number | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [sendingReply, setSendingReply] = useState(false)
+
+  const limit = 50
+  const totalPages = Math.ceil(total / limit)
+
+  const fetchFeedback = useCallback(async () => {
+    setLoading(true)
+    try {
+      const data = await api(`/api/admin/feedback?status=${statusFilter}&page=${page}`)
+      setItems(data.items || [])
+      setTotal(data.total || 0)
+    } catch {}
+    setLoading(false)
+  }, [statusFilter, page])
+
+  useEffect(() => { fetchFeedback() }, [fetchFeedback])
+
+  const updateStatus = async (id: number, status: string) => {
+    await api('/api/admin/feedback', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    })
+    fetchFeedback()
+  }
+
+  const sendReply = async (id: number) => {
+    if (!replyText.trim()) return
+    setSendingReply(true)
+    await api('/api/admin/feedback', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, reply: replyText.trim() }),
+    })
+    setReplyingId(null)
+    setReplyText('')
+    setSendingReply(false)
+    fetchFeedback()
+  }
+
+  const statusFilters: { key: string; label: string }[] = [
+    { key: 'new', label: 'New' },
+    { key: 'read', label: 'Read' },
+    { key: 'in_progress', label: 'In Progress' },
+    { key: 'resolved', label: 'Resolved' },
+    { key: 'dismissed', label: 'Dismissed' },
+  ]
+
+  return (
+    <div>
+      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Feedback</h2>
+
+      {/* Status filter */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        {statusFilters.map(s => (
+          <button
+            key={s.key}
+            onClick={() => { setStatusFilter(s.key); setPage(1) }}
+            style={{
+              padding: '0.375rem 0.75rem',
+              borderRadius: '9999px',
+              border: statusFilter === s.key ? '2px solid #2563eb' : '1px solid #e2e8f0',
+              backgroundColor: statusFilter === s.key ? '#eff6ff' : '#fff',
+              color: statusFilter === s.key ? '#2563eb' : '#475569',
+              fontSize: '0.75rem',
+              fontWeight: statusFilter === s.key ? 600 : 400,
+              cursor: 'pointer',
+            }}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <p style={{ color: colors.textLight }}>Loading...</p>
+      ) : items.length === 0 ? (
+        <div style={{ ...cardStyle, textAlign: 'center', padding: '2rem', color: colors.textMuted }}>
+          No {statusFilter} feedback.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {items.map(item => {
+            const sc = feedbackStatusColors[item.status] || feedbackStatusColors.new
+            const cc = categoryColors[item.category] || categoryColors.other
+            const submitter = item.user?.name || item.user?.email || item.email || 'Anonymous'
+            const hasEmail = !!(item.user?.email || item.email)
+
+            return (
+              <div key={item.id} style={cardStyle}>
+                {/* Top row: category + status + date */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                  <span style={badge(cc.color, cc.bg)}>{item.category}</span>
+                  <span style={badge(sc.color, sc.bg)}>{item.status.replace('_', ' ')}</span>
+                  <span style={{ fontSize: '0.75rem', color: colors.textLight, marginLeft: 'auto' }}>
+                    {formatDate(item.created_at)}
+                  </span>
+                </div>
+
+                {/* Submitter + page */}
+                <div style={{ fontSize: '0.8125rem', color: colors.textMuted, marginBottom: '0.5rem' }}>
+                  From: <strong>{submitter}</strong>
+                  {item.page_url && (
+                    <span> &middot; <a href={item.page_url} target="_blank" rel="noopener noreferrer" style={{ color: colors.primary, fontSize: '0.75rem' }}>{item.page_url}</a></span>
+                  )}
+                </div>
+
+                {/* Message */}
+                <p style={{ fontSize: '0.875rem', color: colors.text, lineHeight: 1.5, margin: '0 0 0.75rem', whiteSpace: 'pre-wrap' }}>
+                  {item.message}
+                </p>
+
+                {/* Existing reply */}
+                {item.admin_reply && (
+                  <div style={{ background: '#f0fdf4', borderRadius: '0.5rem', padding: '0.75rem', marginBottom: '0.75rem', borderLeft: '3px solid #16a34a' }}>
+                    <div style={{ fontSize: '0.6875rem', color: '#16a34a', fontWeight: 600, marginBottom: '4px' }}>
+                      Reply by {item.replier?.name || item.replier?.email || 'Admin'} &middot; {item.replied_at ? formatDate(item.replied_at) : ''}
+                    </div>
+                    <p style={{ fontSize: '0.8125rem', color: colors.text, margin: 0, whiteSpace: 'pre-wrap' }}>{item.admin_reply}</p>
+                  </div>
+                )}
+
+                {/* Reply form */}
+                {replyingId === item.id && (
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    {!hasEmail && (
+                      <p style={{ fontSize: '0.75rem', color: colors.warning, margin: '0 0 0.5rem' }}>
+                        No email on file &mdash; user won&apos;t be notified.
+                      </p>
+                    )}
+                    <textarea
+                      value={replyText}
+                      onChange={e => setReplyText(e.target.value)}
+                      placeholder="Type your reply..."
+                      rows={3}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '0.5rem',
+                        border: `1px solid ${colors.border}`,
+                        fontSize: '0.8125rem',
+                        resize: 'vertical',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        boxSizing: 'border-box',
+                        marginBottom: '0.5rem',
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button style={btnPrimary} disabled={sendingReply || !replyText.trim()} onClick={() => sendReply(item.id)}>
+                        {sendingReply ? 'Sending...' : 'Send Reply'}
+                      </button>
+                      <button style={btnOutline} onClick={() => { setReplyingId(null); setReplyText('') }}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
+                  {item.status === 'new' && (
+                    <button style={btnOutline} onClick={() => updateStatus(item.id, 'read')}>Mark Read</button>
+                  )}
+                  {(item.status === 'new' || item.status === 'read') && (
+                    <button style={{ ...btnOutline, color: colors.warning }} onClick={() => updateStatus(item.id, 'in_progress')}>In Progress</button>
+                  )}
+                  {!item.admin_reply && replyingId !== item.id && (
+                    <button style={btnPrimary} onClick={() => { setReplyingId(item.id); setReplyText('') }}>Reply</button>
+                  )}
+                  {item.status !== 'resolved' && (
+                    <button style={{ ...btnOutline, color: colors.success }} onClick={() => updateStatus(item.id, 'resolved')}>Resolve</button>
+                  )}
+                  {item.status !== 'dismissed' && (
+                    <button style={{ ...btnOutline, color: colors.textLight }} onClick={() => updateStatus(item.id, 'dismissed')}>Dismiss</button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
 

@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
 
   const db = getSupabaseAdmin()
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString()
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
 
   // Run all queries in parallel
   const [
@@ -25,6 +26,8 @@ export async function GET(request: NextRequest) {
     porchByType,
     listingsByCategory,
     cronState,
+    signupEvents30d,
+    signupEvents7d,
   ] = await Promise.all([
     db.from('users').select('id', { count: 'exact', head: true }),
     db.from('listings').select('id', { count: 'exact', head: true }),
@@ -49,6 +52,10 @@ export async function GET(request: NextRequest) {
     db.from('listings').select('category_slug'),
     // Cron state
     db.from('cron_seed_state').select('*').eq('id', 1).single(),
+    // Signup funnel events last 30 days
+    db.from('signup_events').select('step, status, error').gte('created_at', thirtyDaysAgo),
+    // Signup funnel events last 7 days
+    db.from('signup_events').select('step, status, error').gte('created_at', sevenDaysAgo),
   ])
 
   // Helper: group items by date
@@ -117,6 +124,28 @@ export async function GET(request: NextRequest) {
   const postVolume = splitPostsRealSeed((recentPorchPosts.data || []) as { created_at: string; user_id: number }[])
   const listingVolume = splitPostsRealSeed((recentListings.data || []) as { created_at: string; user_id: number }[])
 
+  // Build signup funnel data
+  type SignupEvent = { step: string; status: string; error: string | null }
+  function buildFunnelData(events: SignupEvent[]) {
+    const funnel: Record<string, { started: number; completed: number; failed: number; errors: Record<string, number> }> = {}
+    for (const e of events || []) {
+      if (!funnel[e.step]) funnel[e.step] = { started: 0, completed: 0, failed: 0, errors: {} }
+      const s = funnel[e.step]
+      if (e.status === 'started') s.started++
+      else if (e.status === 'completed') s.completed++
+      else if (e.status === 'failed') {
+        s.failed++
+        if (e.error) s.errors[e.error] = (s.errors[e.error] || 0) + 1
+      }
+    }
+    return funnel
+  }
+
+  const signupFunnel = {
+    last_7_days: buildFunnelData((signupEvents7d.data || []) as SignupEvent[]),
+    last_30_days: buildFunnelData((signupEvents30d.data || []) as SignupEvent[]),
+  }
+
   // Today's stats
   const todayStr = new Date().toISOString().slice(0, 10)
   const postsToday = (postVolume.real[todayStr] || 0) + (postVolume.seed[todayStr] || 0) +
@@ -144,5 +173,6 @@ export async function GET(request: NextRequest) {
       by_category: countByField((listingsByCategory.data || []) as Record<string, string>[], 'category_slug'),
     },
     cron: cronState.data || null,
+    signup_funnel: signupFunnel,
   })
 }

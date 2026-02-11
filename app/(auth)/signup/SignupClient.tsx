@@ -51,10 +51,26 @@ export default function SignupClient() {
   const addressRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [noResults, setNoResults] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // Signup funnel tracking
+  const [sessionId] = useState(() => crypto.randomUUID())
+  const trackEvent = useCallback((trackStep: string, trackStatus: string, trackError?: string, metadata?: Record<string, unknown>) => {
+    fetch('/api/signup-events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, step: trackStep, status: trackStatus, error: trackError, metadata }),
+    }).catch(() => {})
+  }, [sessionId])
+
   const isBusiness = accountType === 'business'
+
+  // Track step changes
+  useEffect(() => {
+    trackEvent(step, 'started')
+  }, [step, trackEvent])
 
   // Close suggestions on outside click
   useEffect(() => {
@@ -81,6 +97,7 @@ export default function SignupClient() {
           const data = await res.json()
           setAddressSuggestions(data)
           setShowSuggestions(data.length > 0)
+          setNoResults(data.length === 0 && query.length >= 5)
         }
       } catch {}
     }, 350)
@@ -110,12 +127,18 @@ export default function SignupClient() {
 
   const handleSendOtp = async () => {
     const data = await api({ action: 'send-otp', email })
-    if (data?.sent) setStep('otp')
+    if (data?.sent) {
+      trackEvent('email', 'completed')
+      setStep('otp')
+    } else {
+      trackEvent('email', 'failed', error || 'send failed')
+    }
   }
 
   const handleVerifyOtp = async () => {
     const data = await api({ action: 'verify-otp', email, code: otp })
     if (data?.verified) {
+      trackEvent('otp', 'completed')
       if (data.hasPin) {
         // Existing user — already logged in via cookie
         router.push('/')
@@ -124,12 +147,15 @@ export default function SignupClient() {
         setEmailToken(data.emailToken)
         setStep('type')
       }
+    } else {
+      trackEvent('otp', 'failed', error || 'verification failed')
     }
   }
 
   // ── Steps 3-7: all client-side only, no API calls ──
 
   const handleSetType = (type: 'personal' | 'business') => {
+    trackEvent('type', 'completed', undefined, { account_type: type })
     setAccountType(type)
     setStep('name')
   }
@@ -137,51 +163,39 @@ export default function SignupClient() {
   const handleSetName = () => {
     if (!firstName.trim() || !lastName.trim()) {
       setError('First and last name required')
+      trackEvent('name', 'failed', 'validation')
       return
     }
+    trackEvent('name', 'completed')
     setError('')
     setStep(isBusiness ? 'business' : 'pin')
   }
 
   const handleSetBusiness = () => {
-    if (!businessName.trim()) { setError('Business name required'); return }
-    if (!businessCategory) { setError('Pick a category'); return }
+    if (!businessName.trim()) { setError('Business name required'); trackEvent('business', 'failed', 'Business name required'); return }
+    if (!businessCategory) { setError('Pick a category'); trackEvent('business', 'failed', 'Pick a category'); return }
+    trackEvent('business', 'completed')
     setError('')
     setStep('pin')
   }
 
   const handleSetPin = () => {
-    if (pin !== pinConfirm) { setError('PINs do not match'); return }
-    if (!/^\d{4,10}$/.test(pin)) { setError('PIN must be 4\u201310 digits'); return }
+    if (pin !== pinConfirm) { setError('PINs do not match'); trackEvent('pin', 'failed', 'PINs do not match'); return }
+    if (!/^\d{4,10}$/.test(pin)) { setError('PIN must be 4\u201310 digits'); trackEvent('pin', 'failed', 'Invalid PIN format'); return }
+    trackEvent('pin', 'completed')
     setError('')
     setStep('address')
   }
 
-  const handleSetAddress = async () => {
-    if (!address.trim()) { setError('Enter your address'); return }
-    setLoading(true)
-    setError('')
-    try {
-      if (addressSelected && coords) {
-        // Already have coords from autocomplete
-        setStep('selfie')
-      } else {
-        // Geocode manually typed address
-        const geoRes = await fetch('/api/geocode', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address }),
-        })
-        const geoData = await geoRes.json()
-        if (!geoRes.ok) throw new Error(geoData.error || 'Could not find address. Try selecting from the suggestions.')
-        setCoords({ lat: geoData.lat, lng: geoData.lng })
-        setStep('selfie')
-      }
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Address lookup failed')
-    } finally {
-      setLoading(false)
+  const handleSetAddress = () => {
+    if (!address.trim()) { setError('Enter your address'); trackEvent('address', 'failed', 'Empty address'); return }
+    if (!addressSelected || !coords) {
+      setError('Please select an address from the suggestions')
+      trackEvent('address', 'failed', 'No autocomplete selection')
+      return
     }
+    trackEvent('address', 'completed')
+    setStep('selfie')
   }
 
   // ── Final step: selfie captured → send EVERYTHING to server at once ──
@@ -219,10 +233,15 @@ export default function SignupClient() {
       body: formData,
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Signup failed')
+    if (!res.ok) {
+      trackEvent('selfie', 'failed', data.error || 'Signup failed')
+      throw new Error(data.error || 'Signup failed')
+    }
+    trackEvent('selfie', 'completed')
   }
 
   const handleVerified = () => {
+    trackEvent('done', 'completed')
     setStep('done')
     setTimeout(() => router.push('/'), 2000)
   }
@@ -501,9 +520,13 @@ export default function SignupClient() {
               ? 'We verify your business is at this location. Your neighborhood is shown publicly.'
               : 'We verify you live in NYC. Only your neighborhood is shown — your exact address stays private.'}
           </p>
-          <p style={{ fontSize: '0.8125rem', color: '#475569', marginBottom: '0.75rem', marginTop: '-0.75rem' }}>
-            Start typing your street address and select from the suggestions.
-          </p>
+          <div style={{
+            backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.5rem',
+            padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.8125rem', color: '#1e40af', lineHeight: 1.5,
+          }}>
+            <strong>Tip:</strong> Type your NYC address and select from the dropdown. You&apos;ll need to take a selfie at this location next.
+            <br />e.g., 150 W 47th St, Manhattan
+          </div>
           <div ref={addressRef} style={{ position: 'relative' }}>
             <input type="text" placeholder="e.g. 150 W 47th St, New York"
               autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false}
@@ -512,6 +535,8 @@ export default function SignupClient() {
                 setAddress(e.target.value)
                 setAddressSelected(false)
                 setCoords(null)
+                setError('')
+                setNoResults(false)
                 fetchSuggestions(e.target.value)
               }}
               onFocus={() => { if (addressSuggestions.length > 0) setShowSuggestions(true) }}
@@ -548,9 +573,14 @@ export default function SignupClient() {
               &#10003; Address selected
             </p>
           )}
+          {noResults && !addressSelected && (
+            <p style={{ fontSize: '0.8125rem', color: '#ea580c', marginTop: '-0.5rem', marginBottom: '0.75rem' }}>
+              No results found. Try including your street number and borough.
+            </p>
+          )}
           {error && <p style={errorStyle}>{error}</p>}
-          <button onClick={handleSetAddress} disabled={loading || !address.trim()} style={btnStyle}>
-            {loading ? 'Verifying...' : 'Continue'}
+          <button onClick={handleSetAddress} disabled={!addressSelected || !coords} style={btnStyle}>
+            Continue
           </button>
           <button onClick={goBack} style={backBtnStyle}>Back</button>
         </div>
