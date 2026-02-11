@@ -383,6 +383,30 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
               </div>
             )}
 
+            {/* Mobile mini footer nav */}
+            {mobile && (
+              <nav style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '6px',
+                paddingBottom: '12px',
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: '0.8125rem',
+              }}>
+                {[
+                  { label: 'Home', href: '/' },
+                  { label: 'About', href: '/about' },
+                  { label: 'Blog', href: '/blog' },
+                  { label: 'Legal', href: '/legal' },
+                ].map((l, i) => (
+                  <span key={l.label}>
+                    {i > 0 && <span style={{ color: '#4b5563', margin: '0 2px' }}>|</span>}
+                    <Link href={l.href} style={{ color: '#9ca3af' }}>{l.label}</Link>
+                  </span>
+                ))}
+              </nav>
+            )}
+
             {/* Copyright bar */}
             <div style={{
               borderTop: mobile ? 'none' : '1px solid #1f2937',
