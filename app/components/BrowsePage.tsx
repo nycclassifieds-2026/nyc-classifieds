@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import ListingGrid, { getDisplayMode } from './ListingGrid'
-import HomepageAd from './HomepageAd'
 import { type Category, slugify } from '@/lib/data'
 
 interface Listing {
@@ -184,11 +183,6 @@ export default function BrowsePage({
             {showPriceSort && <option value="price-high">Price: High → Low</option>}
           </select>
         </div>
-      </div>
-
-      {/* Ad */}
-      <div style={{ marginBottom: '16px' }}>
-        <HomepageAd />
       </div>
 
       {/* Listings */}

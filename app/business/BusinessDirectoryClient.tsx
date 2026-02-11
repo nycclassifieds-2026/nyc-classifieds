@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import SearchAutocomplete from '@/app/components/SearchAutocomplete'
-import HomepageAd from '@/app/components/HomepageAd'
 import { businessCategories, boroughs } from '@/lib/data'
 
 interface Business {
@@ -96,9 +95,6 @@ export default function BusinessDirectoryClient() {
             onSearch={handleSearch}
             placeholder="Search businesses..."
           />
-        </div>
-        <div className="desktop-only-ad homepage-top-right">
-          <HomepageAd />
         </div>
       </div>
 
