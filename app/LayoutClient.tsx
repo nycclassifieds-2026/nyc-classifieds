@@ -286,27 +286,29 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
               <SearchAutocomplete
                 onSearch={(q) => router.push(`/search?q=${encodeURIComponent(q)}`)}
               />
-              <button
-                onClick={() => {
-                  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-                  setTimeout(() => {
-                    const widget = document.querySelector('[data-feedback-widget]') as HTMLElement
-                    if (widget) widget.click()
-                  }, 600)
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#dc2626',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  fontFamily: "'DM Sans', sans-serif",
-                  cursor: 'pointer',
-                  padding: '6px 0 0',
-                }}
-              >
-                Feedback?
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '4px 0 0' }}>
+                <button
+                  onClick={() => {
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+                    setTimeout(() => {
+                      const widget = document.querySelector('[data-feedback-widget]') as HTMLElement
+                      if (widget) widget.click()
+                    }, 600)
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#dc2626',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    fontFamily: "'DM Sans', sans-serif",
+                    cursor: 'pointer',
+                    padding: 0,
+                  }}
+                >
+                  Feedback?
+                </button>
+              </div>
             </div>
             {/* Desktop ad — classifieds pages only */}
             {isClassifieds && (
