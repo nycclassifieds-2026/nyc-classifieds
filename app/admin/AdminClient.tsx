@@ -15,6 +15,7 @@ interface TodoItem {
 }
 
 type Tab = 'home' | 'users' | 'listings' | 'porch' | 'moderation' | 'feedback' | 'analytics' | 'ads' | 'notifications' | 'docs'
+interface ActivityItem { type: string; message: string; detail?: string; time: string }
 
 // ─── Styles ───────────────────────────────────────────────────
 const colors = {
@@ -136,6 +137,16 @@ function api(path: string, opts?: RequestInit) {
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function formatTimeAgo(d: string): string {
+  const diff = Date.now() - new Date(d).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'now'
+  if (mins < 60) return `${mins}m`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h`
+  return `${Math.floor(hrs / 24)}d`
 }
 
 // ─── Local Storage for Todos ──────────────────────────────────
@@ -360,6 +371,12 @@ export default function AdminClient() {
   const [tab, setTab] = useState<Tab>('home')
   const [pinUnlocked, setPinUnlocked] = useState(false)
   const [pinError, setPinError] = useState(false)
+  const [activityOpen, setActivityOpen] = useState(false)
+  const [activity, setActivity] = useState<{ items: ActivityItem[]; counts: Record<string, number> } | null>(null)
+  const [lastSeen, setLastSeen] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('admin_activity_seen') || ''
+    return ''
+  })
 
   // Auto-lock after 60 minutes of inactivity
   useEffect(() => {
@@ -388,6 +405,15 @@ export default function AdminClient() {
       }
     }).catch(() => setPinError(true))
   }, [])
+
+  // Poll activity feed every 60s
+  useEffect(() => {
+    if (!pinUnlocked) return
+    const load = () => api('/api/admin/activity').then(d => setActivity(d)).catch(() => {})
+    load()
+    const interval = setInterval(load, 60_000)
+    return () => clearInterval(interval)
+  }, [pinUnlocked])
 
   if (!pinUnlocked) {
     return (
@@ -434,6 +460,77 @@ export default function AdminClient() {
       </nav>
 
       <main style={{ flex: 1, padding: '1.5rem 2rem', maxWidth: '1100px', overflow: 'auto' }}>
+        {/* Activity bell */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem', position: 'relative' }}>
+          <button
+            onClick={() => {
+              setActivityOpen(!activityOpen)
+              if (!activityOpen && activity?.items?.[0]) {
+                setLastSeen(activity.items[0].time)
+                localStorage.setItem('admin_activity_seen', activity.items[0].time)
+              }
+            }}
+            style={{
+              background: 'none', border: `1px solid ${colors.border}`, borderRadius: '0.5rem',
+              padding: '0.375rem 0.625rem', cursor: 'pointer', fontSize: '1.125rem', position: 'relative',
+              backgroundColor: colors.bgWhite,
+            }}
+          >
+            &#128276;
+            {activity && activity.items.filter(i => !lastSeen || i.time > lastSeen).length > 0 && (
+              <span style={{
+                position: 'absolute', top: '-4px', right: '-4px', width: '18px', height: '18px',
+                borderRadius: '50%', backgroundColor: colors.danger, color: '#fff',
+                fontSize: '0.625rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {Math.min(activity.items.filter(i => !lastSeen || i.time > lastSeen).length, 99)}
+              </span>
+            )}
+          </button>
+
+          {activityOpen && (
+            <div style={{
+              position: 'absolute', top: '100%', right: 0, marginTop: '0.375rem', width: '380px',
+              backgroundColor: colors.bgWhite, border: `1px solid ${colors.border}`, borderRadius: '0.75rem',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.12)', zIndex: 50, maxHeight: '480px', overflowY: 'auto',
+            }}>
+              <div style={{ padding: '0.75rem 1rem', borderBottom: `1px solid ${colors.border}`, fontWeight: 600, fontSize: '0.875rem', color: colors.text }}>
+                Activity (24h)
+                {activity && (
+                  <span style={{ fontWeight: 400, color: colors.textLight, fontSize: '0.75rem', marginLeft: '0.5rem' }}>
+                    {activity.counts.signups} signups, {activity.counts.listings} listings, {activity.counts.posts} posts
+                    {activity.counts.signup_fails > 0 && <>, <span style={{ color: colors.danger }}>{activity.counts.signup_fails} failures</span></>}
+                    {activity.counts.flags > 0 && <>, <span style={{ color: colors.warning }}>{activity.counts.flags} flags</span></>}
+                  </span>
+                )}
+              </div>
+              {!activity || activity.items.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: colors.textLight, fontSize: '0.8125rem' }}>No activity in the last 24 hours</div>
+              ) : (
+                activity.items.map((item, i) => {
+                  const isNew = !lastSeen || item.time > lastSeen
+                  const icon = item.type === 'signup' ? '\u2713' : item.type === 'listing' ? '\u2616' : item.type === 'post' ? '\u270D' : item.type === 'signup_fail' ? '\u2717' : '\u2691'
+                  const iconColor = item.type === 'signup' ? colors.success : item.type === 'signup_fail' ? colors.danger : item.type === 'flag' ? colors.warning : colors.primary
+                  const ago = formatTimeAgo(item.time)
+                  return (
+                    <div key={i} style={{
+                      padding: '0.5rem 1rem', borderBottom: `1px solid ${colors.border}`,
+                      backgroundColor: isNew ? '#eff6ff' : 'transparent', display: 'flex', gap: '0.625rem', alignItems: 'flex-start',
+                    }}>
+                      <span style={{ color: iconColor, fontSize: '0.875rem', marginTop: '1px', flexShrink: 0 }}>{icon}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '0.8125rem', color: colors.text, lineHeight: 1.4 }}>{item.message}</div>
+                        {item.detail && <div style={{ fontSize: '0.6875rem', color: colors.textLight, marginTop: '1px' }}>{item.detail}</div>}
+                      </div>
+                      <span style={{ fontSize: '0.625rem', color: colors.textLight, flexShrink: 0, marginTop: '2px' }}>{ago}</span>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          )}
+        </div>
+
         {tab === 'home' && <HomeTab />}
         {tab === 'users' && <UsersTab isAdmin={true} currentUserId={0} />}
         {tab === 'listings' && <ListingsTab />}
