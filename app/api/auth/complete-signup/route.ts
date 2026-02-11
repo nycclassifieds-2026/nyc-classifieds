@@ -9,6 +9,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit'
 const COOKIE_NAME = 'nyc_classifieds_user'
 const isProd = process.env.NODE_ENV === 'production'
 const MAX_DISTANCE_MILES = 0.1
+const ADMIN_EMAILS = ['jefftuckernyc@gmail.com']
 
 /**
  * Complete signup — creates user, uploads selfie, verifies location.
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
     selfie_geolat: geoLat,
     selfie_geolon: geoLon,
     verified: true,
+    role: ADMIN_EMAILS.includes(email) ? 'admin' : 'user',
     updated_at: new Date().toISOString(),
   }
 
