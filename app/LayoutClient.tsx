@@ -260,7 +260,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
         </header>
       )}
 
-      {!hideNav && !isHomepage && !isSearchPage && !isAppPage && (
+      {!hideNav && !isHomepage && !isSearchPage && !isAppPage && !isDirectory && (
         <div style={{
           maxWidth: '1050px',
           margin: '0 auto',

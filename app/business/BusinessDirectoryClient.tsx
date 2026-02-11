@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import SearchAutocomplete from '@/app/components/SearchAutocomplete'
+import HomepageAd from '@/app/components/HomepageAd'
 import { businessCategories, boroughs } from '@/lib/data'
 
 interface Business {
@@ -71,9 +72,13 @@ export default function BusinessDirectoryClient() {
   return (
     <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' }}>NYC Business Directory</h1>
-      <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+      <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem' }}>
         Find local businesses in New York City
       </p>
+
+      <div style={{ maxWidth: '480px', marginBottom: '1.5rem' }}>
+        <HomepageAd />
+      </div>
 
       <div style={{ marginBottom: '1rem' }}>
         <SearchAutocomplete
@@ -113,7 +118,14 @@ export default function BusinessDirectoryClient() {
       {loading ? (
         <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Loading...</div>
       ) : businesses.length === 0 ? (
-        <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No businesses found. Try adjusting your filters.</div>
+        <div style={{ padding: '3rem', textAlign: 'center' }}>
+          <p style={{ color: '#64748b', fontSize: '1rem', marginBottom: '0.5rem' }}>No businesses listed yet.</p>
+          <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+            Are you a local business?{' '}
+            <Link href="/signup" style={{ color: '#1a56db', fontWeight: 600 }}>Sign up as a business</Link>
+            {' '}to get listed for free.
+          </p>
+        </div>
       ) : (
         <div style={{
           display: 'grid',
