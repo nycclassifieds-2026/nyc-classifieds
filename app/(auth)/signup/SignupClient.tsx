@@ -491,7 +491,7 @@ export default function SignupClient() {
           </p>
           <div ref={addressRef} style={{ position: 'relative' }}>
             <input type="text" placeholder="e.g. 150 W 47th St, New York"
-              autoComplete="off"
+              autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false}
               value={address}
               onChange={e => {
                 setAddress(e.target.value)

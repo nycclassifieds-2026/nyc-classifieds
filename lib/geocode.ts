@@ -24,10 +24,58 @@ function toRad(deg: number): number {
 const NYC_VIEWBOX = '-74.26,40.49,-73.70,40.92'
 
 /**
+ * Expand common NYC address abbreviations so Nominatim can parse them.
+ * e.g. "150 w47" → "150 West 47th Street"
+ *      "200 e 3" → "200 East 3rd Street"
+ *      "50 broadway" → "50 broadway" (no change needed)
+ */
+function normalizeNYCAddress(input: string): string {
+  let q = input.trim()
+
+  // Expand directional + number patterns: "w47", "W 47", "e 3rd", "E. 125" etc.
+  q = q.replace(
+    /\b([wesn])\.?\s*(\d+)\s*(st|nd|rd|th|street|ave|avenue)?\b/gi,
+    (_match, dir: string, num: string, suffix?: string) => {
+      const dirs: Record<string, string> = { w: 'West', e: 'East', n: 'North', s: 'South' }
+      const expanded = dirs[dir.toLowerCase()] || dir
+      // If suffix already indicates avenue, keep it
+      if (suffix && /^ave/i.test(suffix)) {
+        return `${expanded} ${num} Avenue`
+      }
+      // Default to Street with ordinal
+      return `${expanded} ${num}${ordinalSuffix(parseInt(num))} Street`
+    }
+  )
+
+  // Expand standalone abbreviations
+  q = q.replace(/\bave\b/gi, 'Avenue')
+  q = q.replace(/\bblvd\b/gi, 'Boulevard')
+  q = q.replace(/\bpkwy\b/gi, 'Parkway')
+  q = q.replace(/\bpl\b/gi, 'Place')
+  q = q.replace(/\bdr\b/gi, 'Drive')
+  q = q.replace(/\bln\b/gi, 'Lane')
+  q = q.replace(/\bct\b/gi, 'Court')
+
+  return q
+}
+
+function ordinalSuffix(n: number): string {
+  const mod100 = n % 100
+  if (mod100 >= 11 && mod100 <= 13) return 'th'
+  switch (n % 10) {
+    case 1: return 'st'
+    case 2: return 'nd'
+    case 3: return 'rd'
+    default: return 'th'
+  }
+}
+
+/**
  * Geocode an address using Nominatim (OpenStreetMap). Free, no API key.
  */
 export async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
-  const biased = address.toLowerCase().includes('new york') ? address : `${address}, New York City`
+  const normalized = normalizeNYCAddress(address)
+  const biased = normalized.toLowerCase().includes('new york') ? normalized : `${normalized}, New York City`
   const res = await fetch(
     `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(biased)}&format=json&limit=1&countrycodes=us&viewbox=${NYC_VIEWBOX}&bounded=1`,
     { headers: { 'User-Agent': 'NYCClassifieds/1.0' } }
@@ -55,7 +103,8 @@ export interface AddressSuggestion {
  * Uses free-form query with NYC bias for best partial-input results.
  */
 export async function searchAddresses(query: string): Promise<AddressSuggestion[]> {
-  const biased = `${query}, New York City`
+  const normalized = normalizeNYCAddress(query)
+  const biased = `${normalized}, New York City`
   const res = await fetch(
     `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(biased)}&format=json&limit=5&countrycodes=us&viewbox=${NYC_VIEWBOX}&bounded=1&addressdetails=1`,
     { headers: { 'User-Agent': 'NYCClassifieds/1.0' } }
@@ -68,7 +117,10 @@ export async function searchAddresses(query: string): Promise<AddressSuggestion[
   return data
     .filter((item: Record<string, unknown>) => {
       const addr = item.address as Record<string, string> | undefined
-      return addr?.state === 'New York'
+      if (addr?.state !== 'New York') return false
+      // Filter out vague city/state-level matches that have no street info
+      if (!addr.road && !addr.house_number) return false
+      return true
     })
     .map((item: Record<string, unknown>) => {
       const a = (item.address || {}) as Record<string, string>
