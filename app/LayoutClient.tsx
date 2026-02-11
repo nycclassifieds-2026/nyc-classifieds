@@ -7,6 +7,7 @@ import { boroughs, categories, neighborhoodSlug, findNeighborhood } from '@/lib/
 import SearchAutocomplete from './components/SearchAutocomplete'
 import HomepageAd from './components/HomepageAd'
 import FeedbackWidget from './components/FeedbackWidget'
+import PushPrompt from './components/PushPrompt'
 
 function useIsMobile(breakpoint = 640) {
   const [mobile, setMobile] = useState(false)
@@ -283,6 +284,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
       {children}
 
       {!hideNav && <FeedbackWidget />}
+      {!hideNav && user && <PushPrompt />}
 
       {!hideNav && !isAppPage && (
         <footer style={{

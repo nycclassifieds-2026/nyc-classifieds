@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { sendPush } from '@/lib/push'
 
 export type NotificationType =
   | 'new_message'
@@ -12,6 +13,7 @@ export type NotificationType =
   | 'account_banned'
   | 'account_restored'
   | 'admin_notice'
+  | 'feedback_reply'
 
 export async function createNotification(
   userId: number,
@@ -28,4 +30,7 @@ export async function createNotification(
     body,
     link: link || null,
   })
+
+  // Fire push notification (async, don't block)
+  sendPush(userId, { title, body, url: link || '/' }).catch(() => {})
 }

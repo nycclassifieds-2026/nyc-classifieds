@@ -4,6 +4,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { moderateFields } from '@/lib/porch-moderation'
 import { sendEmail } from '@/lib/email'
 import { urgentPostLiveEmail } from '@/lib/email-templates'
+import { sendPushToAdmins } from '@/lib/push'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const PAGE_SIZE = 20
@@ -207,6 +208,9 @@ export async function POST(request: NextRequest) {
     entity_id: post.id,
     ip,
   })
+
+  // Push notification to admins
+  sendPushToAdmins({ title: 'New porch post', body: title.trim(), url: `/porch/${post.id}` }).catch(() => {})
 
   // Send confirmation email for urgent post types (async)
   const URGENT_TYPES = new Set(['lost-and-found', 'pet-sighting', 'alert'])

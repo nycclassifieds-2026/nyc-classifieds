@@ -377,6 +377,20 @@ export default function AdminClient() {
     if (typeof window !== 'undefined') return localStorage.getItem('admin_activity_seen') || ''
     return ''
   })
+  const [pushState, setPushState] = useState<'loading' | 'off' | 'on'>('loading')
+
+  // Check push subscription status
+  useEffect(() => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      setPushState('off')
+      return
+    }
+    navigator.serviceWorker.ready.then((reg) => {
+      reg.pushManager.getSubscription().then((sub) => {
+        setPushState(sub ? 'on' : 'off')
+      })
+    }).catch(() => setPushState('off'))
+  }, [])
 
   // Auto-lock after 60 minutes of inactivity
   useEffect(() => {
@@ -460,8 +474,62 @@ export default function AdminClient() {
       </nav>
 
       <main style={{ flex: 1, padding: '1.5rem 2rem', maxWidth: '1100px', overflow: 'auto' }}>
-        {/* Activity bell */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem', position: 'relative' }}>
+        {/* Activity bell + push toggle */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem', position: 'relative', gap: '0.5rem' }}>
+          <button
+            onClick={async () => {
+              if (pushState === 'loading') return
+              if (pushState === 'on') {
+                // Unsubscribe
+                try {
+                  const reg = await navigator.serviceWorker.ready
+                  const sub = await reg.pushManager.getSubscription()
+                  if (sub) {
+                    const json = sub.toJSON()
+                    await fetch('/api/push/subscribe', {
+                      method: 'DELETE',
+                      headers: { 'Content-Type': 'application/json' },
+                      credentials: 'same-origin',
+                      body: JSON.stringify({ endpoint: json.endpoint }),
+                    })
+                    await sub.unsubscribe()
+                  }
+                  setPushState('off')
+                } catch {}
+              } else {
+                // Subscribe
+                try {
+                  const reg = await navigator.serviceWorker.register('/sw.js')
+                  await navigator.serviceWorker.ready
+                  const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+                  if (!vapidKey) return
+                  const padding = '='.repeat((4 - (vapidKey.length % 4)) % 4)
+                  const base64 = (vapidKey + padding).replace(/-/g, '+').replace(/_/g, '/')
+                  const rawData = atob(base64)
+                  const arr = new Uint8Array(rawData.length)
+                  for (let i = 0; i < rawData.length; i++) arr[i] = rawData.charCodeAt(i)
+                  const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: arr })
+                  const json = sub.toJSON()
+                  await fetch('/api/push/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
+                  })
+                  setPushState('on')
+                } catch {}
+              }
+            }}
+            style={{
+              background: 'none', border: `1px solid ${colors.border}`, borderRadius: '0.5rem',
+              padding: '0.375rem 0.625rem', cursor: 'pointer', fontSize: '0.75rem',
+              backgroundColor: pushState === 'on' ? '#dcfce7' : colors.bgWhite,
+              color: pushState === 'on' ? '#166534' : colors.textMuted,
+              fontWeight: 500,
+            }}
+          >
+            {pushState === 'loading' ? '...' : pushState === 'on' ? 'Push On' : 'Enable Push'}
+          </button>
           <button
             onClick={() => {
               setActivityOpen(!activityOpen)

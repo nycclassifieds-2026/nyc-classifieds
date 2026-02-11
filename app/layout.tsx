@@ -4,6 +4,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
+  themeColor: '#2563eb',
   title: {
     default: 'The NYC Classifieds — Free Classifieds in New York City',
     template: '%s | The NYC Classifieds',

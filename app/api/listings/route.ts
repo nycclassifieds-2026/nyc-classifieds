@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { sendEmail } from '@/lib/email'
 import { listingLiveEmail } from '@/lib/email-templates'
+import { sendPushToAdmins } from '@/lib/push'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const PAGE_SIZE = 24
@@ -146,6 +147,9 @@ export async function POST(request: NextRequest) {
     entity_id: listing.id,
     ip,
   })
+
+  // Push notification to admins
+  sendPushToAdmins({ title: 'New listing', body: title.trim(), url: `/listings/${listing.id}` }).catch(() => {})
 
   // Send listing live email (async)
   ;(async () => {

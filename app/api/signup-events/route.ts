@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { sendPushToAdmins } from '@/lib/push'
 
 const VALID_STEPS = ['email', 'otp', 'type', 'name', 'business', 'pin', 'address', 'selfie', 'done']
 const VALID_STATUSES = ['started', 'completed', 'failed']
@@ -40,6 +41,11 @@ export async function POST(request: NextRequest) {
     metadata: metadata || null,
     ip,
   })
+
+  // Push notification to admins on signup failure
+  if (status === 'failed') {
+    sendPushToAdmins({ title: 'Signup failed', body: `Failed at ${step}${error ? ': ' + error : ''}`, url: '/admin' }).catch(() => {})
+  }
 
   return NextResponse.json({ ok: true })
 }

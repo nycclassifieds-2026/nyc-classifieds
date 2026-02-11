@@ -5,6 +5,7 @@ import { haversineDistance } from '@/lib/geocode'
 import { sendEmail } from '@/lib/email'
 import { verificationSuccessEmail, welcomeEmail, adminNewSignupEmail } from '@/lib/email-templates'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { sendPushToAdmins } from '@/lib/push'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const isProd = process.env.NODE_ENV === 'production'
@@ -191,7 +192,10 @@ export async function POST(request: NextRequest) {
     sendEmail(email, welcomeEmail(name, nh)),
   ]).catch(err => console.error('Signup email error:', err))
 
-  // Notify admins
+  // Push notification to admins
+  sendPushToAdmins({ title: 'New signup', body: `${name} just signed up`, url: '/admin' }).catch(() => {})
+
+  // Notify admins via email
   Promise.resolve(db.from('users').select('email').in('role', ['admin']).eq('banned', false)).then(({ data: admins }) => {
     if (admins) {
       for (const admin of admins) {
