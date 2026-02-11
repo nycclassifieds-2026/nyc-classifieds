@@ -287,7 +287,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
               <SearchAutocomplete
                 onSearch={(q) => router.push(`/search?q=${encodeURIComponent(q)}`)}
               />
-              <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '4px 0 0' }}>
+              <div style={{ textAlign: 'center', padding: '4px 0 0' }}>
                 <button
                   onClick={() => {
                     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
