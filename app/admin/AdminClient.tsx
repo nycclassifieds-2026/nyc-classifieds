@@ -1339,20 +1339,23 @@ function DocsTab() {
       content: `NYC Classifieds is a Next.js 16 app (App Router) with Supabase (Postgres) backend, Resend for transactional email, and Vercel for hosting + cron jobs.
 
 **Stack:** Next.js 16 + React 19 + Supabase + Resend + Vercel
-**Auth:** Email OTP + 4-digit PIN, cookie-based sessions (nyc_classifieds_user)
+**Auth:** Email OTP + 4–10 digit PIN, cookie-based sessions (nyc_classifieds_user)
 **Styling:** Inline styles (React.CSSProperties), color system based on Tailwind palette
 **Cron:** Vercel cron jobs for automated seeding (every 15 min) and notification emails (daily)
-**Email:** Resend for OTP, welcome, message notifications, listing expiry, porch reply notifications
-**Content:** Porch system (community posts) + Listings (classifieds) + Messages (DMs)`,
+**Email:** Resend — 24 transactional email templates (see Email System section)
+**Notifications:** In-app notification center + bell icon in nav (see Notifications section)
+**Content:** Porch (community) + Classifieds (listings) + Messages (DMs) + Notifications`,
     },
     {
       title: '2. Database Tables',
       content: `**Core tables:**
 - **users** — id, email, name, pin (hashed), verified, role, banned, address, lat/lng, selfie_url, account_type, business_name, business_slug, business_category, website, phone, business_description, hours, service_area, photo_gallery
-- **user_verification_codes** — OTP codes with 15-min expiry
+- **user_verification_codes** — OTP codes with 30-min expiry
 - **listings** — title, description, price, category_slug, subcategory_slug, images[], status (active/sold/expired/removed), location, lat/lng, expires_at
 - **messages** — listing_id, sender_id, recipient_id, content, read flag
-- **flagged_content** — reporter_id, content_type (listing/user/message), content_id, reason, status
+- **blocked_users** — blocker_id, blocked_id (unique pair). Blocks messaging in both directions.
+- **notifications** — user_id, type, title, body, link, read flag. Types: new_message, porch_reply, helpful_vote, listing_expiring, listing_expired, listing_removed, porch_post_removed, flag_resolved, account_banned, account_restored
+- **flagged_content** — reporter_id, content_type (listing/user/message/porch_post/porch_reply), content_id, reason, status
 - **audit_log** — actor, action, entity, entity_id, details (JSON), ip
 - **categories** — name, slug, icon, subcategories (JSON), sort_order
 - **neighborhoods** — name, slug, lat/lng, boundary
@@ -1363,7 +1366,9 @@ function DocsTab() {
 - **porch_helpful_votes** — reply_id, user_id (tracks who voted)
 
 **Cron:**
-- **cron_seed_state** — id (always 1), date, posts_today, replies_today, last_post_at, posts_by_user (JSONB), start_date, enabled`,
+- **cron_seed_state** — id (always 1), date, posts_today, replies_today, last_post_at, posts_by_user (JSONB), start_date, enabled
+
+**Migrations:** supabase/migrations/ (001_schema, 002_admin_roles, 003_business_accounts, 004_porch, 005_ads, 006_blocked_users, 007_notifications)`,
     },
     {
       title: '3. Admin Roles & Auth',
@@ -1376,43 +1381,50 @@ function DocsTab() {
 **Auth flow:**
 1. Client-side PIN gate (2179) in AdminClient.tsx
 2. Server-side requireAdmin() checks cookie + role level
-3. All mutations logged via logAdminAction() to audit_log table`,
+3. All mutations logged via logAdminAction() to audit_log table
+
+**Forgot PIN:** /forgot-pin page — email OTP verification, then set new PIN. Uses existing verify-otp (auto-login via cookie) + set-pin auth actions.`,
     },
     {
       title: '4. API Routes',
       content: `**Auth:**
 | /api/auth | GET, POST | Auth status, login, OTP, PIN, set-name, set-account-type, set-business, set-address, logout |
+| /api/auth/complete-signup | POST | Final account creation (upsert user, upload selfie, set cookie) |
 
 **Content:**
-| /api/listings | GET, POST | Browse/create listings |
-| /api/listings/[id] | GET, PATCH, DELETE | View/edit/delete listing |
+| /api/listings | GET, POST | Browse/create listings (POST enforces posting gates) |
+| /api/listings/[id] | GET, PATCH, DELETE | View/edit/delete listing (owner only for PATCH/DELETE) |
 | /api/porch | GET, POST | Browse/create porch posts |
 | /api/porch/[id] | GET, PATCH, DELETE | View/edit/delete porch post |
 | /api/porch/[id]/replies | POST | Create reply on porch post |
 | /api/porch/[id]/replies/[replyId]/helpful | POST | Vote reply as helpful |
-| /api/messages | GET, POST | Inbox threads, send message |
-| /api/messages/[threadId] | GET | View message thread |
 | /api/search | GET | Global search |
-| /api/flag | POST | Report content |
+| /api/flag | POST | Report content (listing/user/message/porch_post/porch_reply) |
 | /api/upload | POST | Image upload |
 | /api/geocode | GET | Geocode address |
 | /api/business/[slug] | GET | Business profile page |
 | /api/business/photos | POST | Business photo upload |
 
+**Messaging:**
+| /api/messages | GET, POST | Inbox threads (filters blocked users), send message (checks blocks) |
+| /api/messages/[threadId] | GET, DELETE | View thread + mark read, delete entire conversation |
+| /api/block | POST, DELETE | Block/unblock a user |
+| /api/notifications | GET, PATCH | List notifications, mark as read (by IDs or "all") |
+
 **Admin:**
 | /api/admin/stats | GET | Dashboard stat counts (users, listings, messages, flags, porch) |
-| /api/admin/users | GET, PATCH | List/search users, toggle verified, ban, change role |
+| /api/admin/users | GET, PATCH | List/search users, toggle verified, ban/unban, change role |
 | /api/admin/listings | GET, PATCH, DELETE | List/search listings, change status, delete |
 | /api/admin/porch | GET, PATCH, DELETE | List/search porch posts, pin/unpin, delete |
 | /api/admin/messages | GET | View messages/threads |
-| /api/admin/flagged | GET, PATCH, POST | Flagged content queue, take actions |
+| /api/admin/flagged | GET, PATCH, POST | Flagged content queue, take actions (remove, ban, dismiss) |
 | /api/admin/audit | GET | Browse audit log |
 | /api/admin/categories | GET, POST, PATCH, DELETE | CRUD categories |
 | /api/admin/analytics | GET | Full analytics data (daily volumes, breakdowns, cron status) |
 
 **Cron:**
 | /api/cron/seed | GET | Automated content seeding (every 15 min, requires CRON_SECRET) |
-| /api/cron/notifications | GET | Listing expiry emails (daily at 9 AM ET, requires CRON_SECRET) |`,
+| /api/cron/notifications | GET | Listing expiry emails + in-app notifications (daily at 9 AM ET) |`,
     },
     {
       title: '5. Porch System',
@@ -1451,7 +1463,82 @@ function DocsTab() {
 Actions: dismiss, resolve, remove listing, ban user.`,
     },
     {
-      title: '7. Automated Seeding',
+      title: '7. Messaging & Safety',
+      content: `**Messaging flow:**
+1. User clicks "Message Seller" on listing detail page
+2. Message sent via POST /api/messages (rate limited: 30/min)
+3. Recipient gets email notification + in-app notification
+4. Inbox groups messages into threads by (listing_id, user_pair)
+5. Opening a thread auto-marks unread messages as read
+
+**Block system:**
+- POST /api/block — block a user (stored in blocked_users table)
+- DELETE /api/block — unblock
+- Inbox hides threads with blocked users
+- Sending messages checks both directions (can't message if either side blocked)
+- "Message Seller" button still shows but send fails with clear error
+
+**Thread actions (... menu in thread header):**
+- Report — reason input, submits to /api/flag with content_type: 'message'
+- Block User — confirmation dialog, blocks user, redirects to inbox
+- Delete Conversation — confirmation dialog, hard-deletes all messages in thread
+
+**Safety:**
+- Can't message yourself
+- Can't message on inactive listings
+- Messages max 2000 characters
+- Rate limited per IP`,
+    },
+    {
+      title: '8. Notifications',
+      content: `**In-app notification center** at /notifications, accessible via bell icon in nav header.
+
+**Infrastructure:**
+- notifications table — user_id, type, title, body, link, read, created_at
+- lib/notifications.ts — createNotification() helper
+- GET /api/notifications — list user's 50 most recent
+- PATCH /api/notifications — mark as read (by IDs array or "all")
+
+**Nav badge:** Bell icon shows red badge with unread notification count. Account avatar shows unread message count. Both fetched from GET /api/auth.
+
+**10 notification types wired into trigger points:**
+
+| Type | Trigger | Link |
+|------|---------|------|
+| new_message | Someone sends you a message | /messages/[threadId] |
+| porch_reply | Someone replies to your porch post | /porch/post/[id]/[slug] |
+| helpful_vote | Someone votes your reply helpful | /porch/post/[id]/[slug] |
+| listing_expiring | Listing expires in 3 days (cron) | /listings/[cat]/[id] |
+| listing_expired | Listing has expired (cron) | /account |
+| listing_removed | Mod removed your listing | /account |
+| porch_post_removed | Mod removed your porch post | /porch |
+| flag_resolved | Your report was reviewed | /notifications |
+| account_banned | Account suspended | — |
+| account_restored | Account restored | — |
+
+**Every notification also triggers the corresponding email** (24 total email templates in lib/email-templates.ts).`,
+    },
+    {
+      title: '9. Posting Gates',
+      content: `**Category-based posting requirements** enforced at POST /api/listings and shown in the post listing UI.
+
+| Category | Requirements |
+|----------|-------------|
+| For Sale, Barter, Personals, Rentals, Tickets, Pets, Community, Resumes | Verified account |
+| Services | Verified + business profile (account_type: 'business' + business_name set) |
+| Jobs | Verified + business profile + business email (not gmail/yahoo/outlook/etc.) |
+| Housing | Verified (ready for future doc upload gate) |
+
+**Frontend behavior (PostListingClient.tsx):**
+- Selecting a gated category shows a yellow warning banner explaining the requirement
+- "Create Business Profile" links to /account
+- Form fields hidden until requirements met
+- Business email check uses a list of 10 common free email domains
+
+**Location field:** Borough + Neighborhood cascading dropdowns (from lib/data.ts boroughs). Stored as "Neighborhood, Borough" string.`,
+    },
+    {
+      title: '10. Automated Seeding',
       content: `**Cron job:** Runs every 15 minutes via Vercel cron (/api/cron/seed).
 **Auth:** Requires Authorization: Bearer <CRON_SECRET> header.
 
@@ -1487,33 +1574,54 @@ Actions: dismiss, resolve, remove listing, ban user.`,
 **Enable/disable:** Set enabled=true/false in cron_seed_state table.`,
     },
     {
-      title: '8. Email System',
+      title: '11. Email System',
       content: `**Provider:** Resend (RESEND_API_KEY env var)
 **From:** NYC Classifieds <noreply@nycclassifieds.com>
 **Domain:** nycclassifieds.com must be verified in Resend
 
-**Email types:**
-1. **OTP verification** — 6-digit code, 15-min expiry. Sent on login/signup.
-2. **Welcome** — Sent after account type is set. Lists what user can do.
-3. **New message notification** — Sent when someone DMs about a listing.
-4. **Listing expiring** — 3 days before listing expires. Sent by daily cron.
-5. **Listing expired** — When listing expires. Sent by daily cron.
-6. **Porch reply notification** — When someone replies to your porch post.
+**24 email templates** in lib/email-templates.ts:
+
+**Auth & Account:**
+1. otpEmail — 6-digit OTP code (30-min expiry)
+2. welcomeEmail — After signup completion
+3. verificationSuccessEmail — After selfie verification
+4. accountBannedEmail — When admin bans account
+5. accountRestoredEmail — When admin unbans account
+6. manuallyVerifiedEmail — When admin manually verifies
+7. roleChangedEmail — When admin changes user role
+8. businessProfileLiveEmail — When business profile is saved
+
+**Listings:**
+9. listingLiveEmail — After posting a listing
+10. listingExpiringEmail — 3 days before expiry (cron)
+11. listingExpiredEmail — When listing expires (cron)
+12. listingRemovedEmail — When mod removes listing
+
+**Messaging:**
+13. newMessageEmail — When someone sends you a message
+
+**Porch:**
+14. porchReplyEmail — When someone replies to your post
+15. helpfulVoteEmail — When someone votes your reply helpful
+16. urgentPostLiveEmail — After posting a porch post
+17. porchPostRemovedEmail — When mod removes your post
+
+**Moderation:**
+18. flagConfirmationEmail — Confirmation to reporter
+19. flagResolvedEmail — When report is reviewed
+20. moderatorAlertEmail — Alert to all mods on new flag
+
+**Admin:**
+21. adminNewSignupEmail — Alert admins of new signups
+22. adminDailyDigestEmail — Daily stats digest (cron)
 
 **Infrastructure:**
 - lib/email.ts — sendEmail() wrapper around Resend
-- lib/email-templates.ts — All 6 HTML email templates
 - Consistent branding: blue accent, clean layout, NYC Classifieds header
-
-**Trigger points:**
-- OTP: app/api/auth/route.ts (send-otp action)
-- Welcome: app/api/auth/route.ts (set-account-type action)
-- Message: app/api/messages/route.ts (POST handler)
-- Porch reply: app/api/porch/[id]/replies/route.ts (POST handler)
-- Listing expiry: app/api/cron/notifications/route.ts (daily cron)`,
+- All strings HTML-escaped via esc() to prevent XSS`,
     },
     {
-      title: '9. SEO',
+      title: '12. SEO',
       content: `**Strategy:** Generate indexable pages for every borough/neighborhood/category combination.
 Target: 5 boroughs x ~130 neighborhoods x 11 categories = 7,150+ pages.
 
@@ -1533,7 +1641,7 @@ Target: 5 boroughs x ~130 neighborhoods x 11 categories = 7,150+ pages.
 - Footer with all neighborhoods linked`,
     },
     {
-      title: '10. Environment Variables',
+      title: '13. Environment Variables',
       content: `Required in Vercel (Settings > Environment Variables):
 
 **Supabase:**
@@ -1548,62 +1656,93 @@ Target: 5 boroughs x ~130 neighborhoods x 11 categories = 7,150+ pages.
 - CRON_SECRET — Secret for authenticating Vercel cron requests
 
 **Optional:**
-- NEXT_PUBLIC_SITE_URL — Base URL for email links (defaults to https://nycclassifieds.com)
+- NEXT_PUBLIC_SITE_URL — Base URL for email links (defaults to https://thenycclassifieds.com)
 
 **Domain:** nycclassifieds.com must be verified in Resend for email delivery.`,
     },
     {
-      title: '11. Audit Actions',
+      title: '14. Audit Actions',
       content: `All admin mutations are logged to audit_log table with actor, action, entity, entity_id, details, and IP.
 
 **User actions:**
 admin_toggle_verified, admin_change_role, admin_ban_user, admin_unban_user
 
 **Listing actions:**
-admin_change_listing_status, admin_delete_listing
+admin_change_listing_status, admin_delete_listing, admin_remove_flagged_listing
 
 **Porch actions:**
 admin_pin_porch_post, admin_unpin_porch_post, admin_delete_porch_post
 
 **Flag actions:**
-admin_resolve_flag, admin_dismiss_flag, admin_remove_flagged_listing
+admin_resolve_flag, admin_dismiss_flag
 
 **Category actions:**
 admin_create_category, admin_update_category, admin_delete_category
 
 **User-generated:**
-create_porch_post, create_porch_reply`,
+create_listing, create_porch_post, create_porch_reply`,
     },
     {
-      title: '12. Key Files',
+      title: '15. Key Files',
       content: `**Lib:**
 - lib/admin-auth.ts — requireAdmin() + logAdminAction()
+- lib/auth-utils.ts — signEmailToken(), hashPin()
 - lib/supabase-server.ts — Supabase admin client singleton
 - lib/supabase.ts — Supabase browser client
 - lib/rate-limit.ts — In-memory rate limiter
 - lib/email.ts — Centralized sendEmail() function
-- lib/email-templates.ts — All 6 email templates (OTP, welcome, message, expiring, expired, reply)
+- lib/email-templates.ts — 24 HTML email templates
+- lib/notifications.ts — createNotification() helper for in-app notifications
 - lib/porch-moderation.ts — moderateContent() + moderateFields()
-- lib/seed-templates.ts — All content templates (porch, listings, replies, demographics, geography)
+- lib/seed-templates.ts — Content templates (porch, listings, replies, demographics, geography)
 - lib/seed-engine.ts — Cron seed logic (scheduling, tone profiles, kill switch)
 - lib/seo.ts — SEO meta tag utilities
-- lib/data.ts — Static data
+- lib/data.ts — Static data (categories, boroughs, neighborhoods, porch post types, business categories)
 - lib/geocode.ts — Geocoding utilities
 
-**App:**
-- app/admin/AdminClient.tsx — Admin dashboard (7 tabs: Home, Users, Listings, Porch, Moderation, Analytics, Docs)
-- app/api/auth/route.ts — Auth endpoints
-- app/api/porch/route.ts — Porch CRUD
-- app/api/listings/route.ts — Listings CRUD
-- app/api/messages/route.ts — Messaging
-- app/api/cron/seed/route.ts — Automated seeding cron
-- app/api/cron/notifications/route.ts — Daily notification emails cron
+**App pages:**
+- app/admin/ — Admin dashboard (8 tabs: Home, Users, Listings, Porch, Moderation, Analytics, Ads, Docs)
+- app/(auth)/login/ — Login page (email + PIN)
+- app/(auth)/signup/ — Multi-step signup (email > OTP > name > account type > business > PIN > address > selfie)
+- app/(auth)/forgot-pin/ — PIN reset via email OTP (3 steps: email > code > new PIN)
+- app/account/ — User profile dashboard (messages, listings with view/edit/share, porch posts)
+- app/messages/ — Inbox + thread view (with block/report/delete actions)
+- app/notifications/ — Notification center (list, mark read, mark all read)
+- app/listings/new/ — Post listing form (with posting gates + borough/neighborhood dropdowns)
+- app/listings/edit/[id]/ — Edit listing form (owner only)
+- app/listings/[category]/[subcategory]/ — Listing detail + "Message Seller"
+- app/porch/ — Community feed by neighborhood
+
+**API routes:**
+- app/api/auth/ — Auth endpoints (login, OTP, PIN, signup completion)
+- app/api/listings/ — Listings CRUD + posting gates
+- app/api/porch/ — Porch CRUD + replies + helpful votes
+- app/api/messages/ — Messaging (inbox, threads, send, delete)
+- app/api/block/ — Block/unblock users
+- app/api/notifications/ — In-app notifications (list, mark read)
+- app/api/flag/ — Report content
 - app/api/admin/* — All admin API routes
+- app/api/cron/seed/ — Automated seeding cron
+- app/api/cron/notifications/ — Expiry notifications cron
 
 **Config:**
 - vercel.json — Cron schedules (seed every 15 min, notifications daily 9 AM ET)
 - middleware.ts — Request middleware
-- scripts/seed-platform.mjs — Initial bulk seeder (500 users, 1500 posts, 750 listings)`,
+- scripts/seed-platform.mjs — Initial bulk seeder (500 users, 1500 posts, 750 listings)
+- supabase/migrations/ — 7 migration files (001-007)`,
+    },
+    {
+      title: '16. User Flows',
+      content: `**Signup:** Email > OTP > Account type (personal/business) > Name > [Business details] > PIN > Address > Selfie > Done
+**Login:** Email + PIN > Dashboard
+**Forgot PIN:** Email > OTP > New PIN > Auto-login to home
+**Post listing:** Category > [posting gate check] > Title > Subcategory > Price > Description > Borough > Neighborhood > Photos > Submit
+**Edit listing:** Account > Edit button > Edit form (title, subcategory, price, description, location, photos) > Save
+**Send message:** Listing detail > "Message Seller" > Type message > Send (blocked if either side has blocked the other)
+**Block user:** Thread view > ... menu > Block User > Confirm > Back to inbox
+**Report:** Thread view > ... menu > Report > Enter reason > Submit
+**Delete conversation:** Thread view > ... menu > Delete > Confirm > Back to inbox
+**View notifications:** Bell icon in nav > /notifications page > Click to navigate, auto-marks read`,
     },
   ]
 
