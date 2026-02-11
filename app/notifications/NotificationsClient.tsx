@@ -25,6 +25,7 @@ const typeIcons: Record<string, string> = {
   flag_resolved: '\u2705',
   account_banned: '\uD83D\uDEAB',
   account_restored: '\u2705',
+  admin_notice: '\uD83D\uDCE2',
 }
 
 function timeAgo(dateStr: string) {

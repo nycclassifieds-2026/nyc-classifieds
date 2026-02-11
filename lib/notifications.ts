@@ -11,6 +11,7 @@ export type NotificationType =
   | 'flag_resolved'
   | 'account_banned'
   | 'account_restored'
+  | 'admin_notice'
 
 export async function createNotification(
   userId: number,

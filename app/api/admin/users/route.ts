@@ -59,8 +59,11 @@ export async function PATCH(request: NextRequest) {
     await db.from('users').update({ verified: newVal }).eq('id', id)
     await logAdminAction(request, auth.email, 'admin_toggle_verified', 'user', id, { verified: newVal })
 
-    if (newVal && user.email && !user.email.endsWith('@example.com')) {
-      sendEmail(user.email, manuallyVerifiedEmail(user.name || 'there')).catch(() => {})
+    if (newVal) {
+      await createNotification(id, 'admin_notice', 'Your account has been verified', 'An admin has verified your account. You now have full access to The NYC Classifieds.')
+      if (user.email && !user.email.endsWith('@example.com')) {
+        sendEmail(user.email, manuallyVerifiedEmail(user.name || 'there')).catch(() => {})
+      }
     }
 
     return NextResponse.json({ updated: true, verified: newVal })
@@ -105,6 +108,8 @@ export async function PATCH(request: NextRequest) {
     const { data: user } = await db.from('users').select('email, name').eq('id', id).single()
     await db.from('users').update({ role: value }).eq('id', id)
     await logAdminAction(request, auth.email, 'admin_change_role', 'user', id, { role: value })
+
+    await createNotification(id, 'admin_notice', 'Your account role has been updated', `Your role has been changed to ${value}.`)
 
     if (user?.email && !user.email.endsWith('@example.com')) {
       sendEmail(user.email, roleChangedEmail(user.name || 'there', value)).catch(() => {})

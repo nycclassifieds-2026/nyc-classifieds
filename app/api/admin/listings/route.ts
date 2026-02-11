@@ -84,6 +84,23 @@ export async function DELETE(request: NextRequest) {
   }
 
   const db = getSupabaseAdmin()
+
+  // Notify the listing owner before deleting
+  const { data: listing } = await db.from('listings').select('title, user_id, users!inner(email, name)').eq('id', id).single()
+  if (listing) {
+    await createNotification(
+      listing.user_id,
+      'listing_removed',
+      'Your listing was permanently removed',
+      listing.title,
+      '/account',
+    )
+    const owner = listing.users as unknown as { email: string; name: string | null }
+    if (owner?.email && !owner.email.endsWith('@example.com')) {
+      sendEmail(owner.email, listingRemovedEmail(owner.name || 'there', listing.title)).catch(() => {})
+    }
+  }
+
   await db.from('listings').delete().eq('id', id)
   await logAdminAction(request, auth.email, 'admin_delete_listing', 'listing', id)
 

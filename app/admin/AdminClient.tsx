@@ -14,7 +14,7 @@ interface TodoItem {
   category: string
 }
 
-type Tab = 'home' | 'users' | 'listings' | 'porch' | 'moderation' | 'analytics' | 'ads' | 'docs'
+type Tab = 'home' | 'users' | 'listings' | 'porch' | 'moderation' | 'analytics' | 'ads' | 'notifications' | 'docs'
 
 // ─── Styles ───────────────────────────────────────────────────
 const colors = {
@@ -423,6 +423,7 @@ export default function AdminClient() {
     { key: 'moderation', label: 'Moderation', icon: '\u2691' },
     { key: 'analytics', label: 'Analytics', icon: '\u2605' },
     { key: 'ads', label: 'Ads', icon: '\u2606' },
+    { key: 'notifications', label: 'Notifications', icon: '\u2709' },
     { key: 'docs', label: 'Docs', icon: '\u2637' },
   ]
 
@@ -452,6 +453,7 @@ export default function AdminClient() {
         {tab === 'moderation' && <ModerationTab />}
         {tab === 'analytics' && <AnalyticsTab />}
         {tab === 'ads' && <AdsTab />}
+        {tab === 'notifications' && <NotificationsTab />}
         {tab === 'docs' && <DocsTab />}
       </main>
     </div>
@@ -1327,6 +1329,297 @@ function AnalyticsTab() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Notifications Tab ────────────────────────────────────────
+interface AdminNotification {
+  id: number
+  sender_id: number
+  recipient_id: number | null
+  title: string
+  body: string | null
+  link: string | null
+  sent_notification: boolean
+  sent_email: boolean
+  recipient_count: number
+  created_at: string
+  sender: { email: string; name: string | null } | null
+  recipient: { email: string; name: string | null } | null
+}
+
+function NotificationsTab() {
+  const [mode, setMode] = useState<'single' | 'broadcast'>('single')
+  const [emailLookup, setEmailLookup] = useState('')
+  const [foundUser, setFoundUser] = useState<{ id: number; email: string; name: string | null } | null>(null)
+  const [lookupError, setLookupError] = useState('')
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+  const [link, setLink] = useState('')
+  const [sendNotification, setSendNotification] = useState(true)
+  const [sendEmailFlag, setSendEmailFlag] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [sendResult, setSendResult] = useState<{ ok: boolean; message: string } | null>(null)
+  const [confirmBroadcast, setConfirmBroadcast] = useState(false)
+
+  const [history, setHistory] = useState<AdminNotification[]>([])
+  const [historyTotal, setHistoryTotal] = useState(0)
+  const [historyPage, setHistoryPage] = useState(1)
+  const [historyLoading, setHistoryLoading] = useState(true)
+
+  const historyLimit = 50
+  const historyTotalPages = Math.ceil(historyTotal / historyLimit)
+
+  const fetchHistory = useCallback(async () => {
+    setHistoryLoading(true)
+    const data = await api(`/api/admin/notifications?page=${historyPage}`)
+    setHistory(data.notifications || [])
+    setHistoryTotal(data.total || 0)
+    setHistoryLoading(false)
+  }, [historyPage])
+
+  useEffect(() => { fetchHistory() }, [fetchHistory])
+
+  const lookupUser = async () => {
+    setLookupError('')
+    setFoundUser(null)
+    if (!emailLookup.trim()) return
+    const data = await api(`/api/admin/users?search=${encodeURIComponent(emailLookup.trim())}`)
+    const users = data.users || []
+    if (users.length === 0) {
+      setLookupError('No user found with that email')
+    } else {
+      setFoundUser({ id: users[0].id, email: users[0].email, name: users[0].name })
+    }
+  }
+
+  const handleSend = async () => {
+    if (!title.trim()) return
+    if (mode === 'single' && !foundUser) return
+    if (mode === 'broadcast' && !confirmBroadcast) {
+      setConfirmBroadcast(true)
+      return
+    }
+
+    setSending(true)
+    setSendResult(null)
+    const res = await api('/api/admin/notifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: mode === 'broadcast' ? 'all' : foundUser!.id,
+        title: title.trim(),
+        body: body.trim() || undefined,
+        link: link.trim() || undefined,
+        sendNotification,
+        sendEmail: sendEmailFlag,
+      }),
+    })
+
+    if (res.error) {
+      setSendResult({ ok: false, message: res.error })
+    } else {
+      setSendResult({ ok: true, message: `Sent to ${res.recipientCount} user${res.recipientCount === 1 ? '' : 's'}` })
+      setTitle('')
+      setBody('')
+      setLink('')
+      setFoundUser(null)
+      setEmailLookup('')
+      setConfirmBroadcast(false)
+      fetchHistory()
+    }
+    setSending(false)
+  }
+
+  return (
+    <div>
+      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem' }}>Notifications</h2>
+
+      {/* Compose */}
+      <div style={cardStyle}>
+        <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: '1rem' }}>Compose Notification</h3>
+
+        {/* Mode toggle */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+          <button
+            style={{ ...btnPrimary, backgroundColor: mode === 'single' ? colors.primary : '#e2e8f0', color: mode === 'single' ? '#fff' : colors.text }}
+            onClick={() => { setMode('single'); setConfirmBroadcast(false) }}
+          >
+            Single User
+          </button>
+          <button
+            style={{ ...btnPrimary, backgroundColor: mode === 'broadcast' ? colors.warning : '#e2e8f0', color: mode === 'broadcast' ? '#fff' : colors.text }}
+            onClick={() => { setMode('broadcast'); setConfirmBroadcast(false) }}
+          >
+            Broadcast
+          </button>
+        </div>
+
+        {/* Broadcast warning */}
+        {mode === 'broadcast' && (
+          <div style={{ backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '0.5rem', padding: '0.75rem', marginBottom: '1rem', fontSize: '0.8125rem', color: '#9a3412' }}>
+            Broadcasts go to all non-banned users. Rate limited to 2 per hour per admin.
+          </div>
+        )}
+
+        {/* Single user lookup */}
+        {mode === 'single' && (
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, display: 'block', marginBottom: '0.25rem' }}>Recipient</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input
+                style={inputStyle}
+                placeholder="Search by email or name..."
+                value={emailLookup}
+                onChange={e => { setEmailLookup(e.target.value); setFoundUser(null); setLookupError('') }}
+                onKeyDown={e => e.key === 'Enter' && lookupUser()}
+              />
+              <button style={btnPrimary} onClick={lookupUser}>Look up</button>
+            </div>
+            {lookupError && <p style={{ color: colors.danger, fontSize: '0.75rem', margin: '0.25rem 0 0' }}>{lookupError}</p>}
+            {foundUser && (
+              <div style={{ marginTop: '0.5rem', fontSize: '0.8125rem', color: colors.success }}>
+                Found: {foundUser.name || foundUser.email} ({foundUser.email})
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Title */}
+        <div style={{ marginBottom: '0.75rem' }}>
+          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, display: 'block', marginBottom: '0.25rem' }}>Title *</label>
+          <input
+            style={{ ...inputStyle, width: '100%' }}
+            placeholder="Notification title"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+          />
+        </div>
+
+        {/* Body */}
+        <div style={{ marginBottom: '0.75rem' }}>
+          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, display: 'block', marginBottom: '0.25rem' }}>Body</label>
+          <textarea
+            style={{ ...inputStyle, width: '100%', minHeight: '80px', resize: 'vertical', fontFamily: 'inherit' }}
+            placeholder="Optional message body..."
+            value={body}
+            onChange={e => setBody(e.target.value)}
+          />
+        </div>
+
+        {/* Link */}
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, display: 'block', marginBottom: '0.25rem' }}>Link (optional)</label>
+          <input
+            style={{ ...inputStyle, width: '100%' }}
+            placeholder="/path or https://..."
+            value={link}
+            onChange={e => setLink(e.target.value)}
+          />
+        </div>
+
+        {/* Delivery method */}
+        <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8125rem', cursor: 'pointer' }}>
+            <input type="checkbox" checked={sendNotification} onChange={e => setSendNotification(e.target.checked)} />
+            In-app notification
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8125rem', cursor: 'pointer' }}>
+            <input type="checkbox" checked={sendEmailFlag} onChange={e => setSendEmailFlag(e.target.checked)} />
+            Email
+          </label>
+        </div>
+
+        {/* Send button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {mode === 'broadcast' && confirmBroadcast ? (
+            <>
+              <span style={{ fontSize: '0.8125rem', color: colors.warning, fontWeight: 600 }}>Are you sure? This will send to all users.</span>
+              <button
+                style={{ ...btnPrimary, backgroundColor: colors.warning }}
+                onClick={handleSend}
+                disabled={sending || !title.trim()}
+              >
+                {sending ? 'Sending...' : 'Confirm Broadcast'}
+              </button>
+              <button style={btnOutline} onClick={() => setConfirmBroadcast(false)}>Cancel</button>
+            </>
+          ) : (
+            <button
+              style={{ ...btnPrimary, backgroundColor: mode === 'broadcast' ? colors.warning : colors.primary }}
+              onClick={handleSend}
+              disabled={sending || !title.trim() || (mode === 'single' && !foundUser) || (!sendNotification && !sendEmailFlag)}
+            >
+              {sending ? 'Sending...' : mode === 'broadcast' ? 'Send Broadcast' : 'Send Notification'}
+            </button>
+          )}
+          {sendResult && (
+            <span style={{ fontSize: '0.8125rem', color: sendResult.ok ? colors.success : colors.danger }}>
+              {sendResult.message}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* History */}
+      <div style={{ ...cardStyle, marginTop: '1.5rem' }}>
+        <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: '1rem' }}>Notification History</h3>
+
+        {historyLoading ? (
+          <p style={{ color: colors.textLight, fontSize: '0.875rem' }}>Loading...</p>
+        ) : history.length === 0 ? (
+          <p style={{ color: colors.textLight, fontSize: '0.875rem' }}>No notifications sent yet.</p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Date</th>
+                  <th style={thStyle}>Title</th>
+                  <th style={thStyle}>Recipient</th>
+                  <th style={thStyle}>Method</th>
+                  <th style={thStyle}>Count</th>
+                  <th style={thStyle}>Sender</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map(n => (
+                  <tr key={n.id}>
+                    <td style={tdStyle}>{formatDate(n.created_at)}</td>
+                    <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</td>
+                    <td style={tdStyle}>
+                      {n.recipient_id === null ? (
+                        <span style={badge('#9a3412', '#ffedd5')}>Broadcast</span>
+                      ) : (
+                        <span style={{ fontSize: '0.8125rem' }}>{n.recipient?.name || n.recipient?.email || `User #${n.recipient_id}`}</span>
+                      )}
+                    </td>
+                    <td style={tdStyle}>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        {n.sent_notification && <span style={badge('#1e40af', '#dbeafe')}>In-app</span>}
+                        {n.sent_email && <span style={badge('#166534', '#dcfce7')}>Email</span>}
+                      </div>
+                    </td>
+                    <td style={tdStyle}>{n.recipient_count}</td>
+                    <td style={tdStyle}>
+                      <span style={{ fontSize: '0.8125rem' }}>{n.sender?.name || n.sender?.email || '—'}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {historyTotalPages > 1 && (
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'center', marginTop: '1rem' }}>
+            <button style={btnOutline} disabled={historyPage <= 1} onClick={() => setHistoryPage(p => p - 1)}>Prev</button>
+            <span style={{ fontSize: '0.75rem', color: colors.textMuted }}>Page {historyPage} of {historyTotalPages}</span>
+            <button style={btnOutline} disabled={historyPage >= historyTotalPages} onClick={() => setHistoryPage(p => p + 1)}>Next</button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

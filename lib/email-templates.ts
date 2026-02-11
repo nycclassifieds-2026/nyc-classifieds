@@ -531,6 +531,28 @@ export function adminDailyDigestEmail(stats: DailyDigestStats): { subject: strin
   }
 }
 
+export function adminNoticeEmail(
+  name: string,
+  title: string,
+  body: string,
+  link?: string,
+): { subject: string; html: string } {
+  const n = esc(name), t = esc(title), b = esc(body)
+  return {
+    subject: t,
+    html: `
+      ${WRAPPER_START}
+        ${HEADER}
+        <p style="color: #475569; font-size: 0.875rem;">Hi ${n},</p>
+        <p style="color: #475569; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">${t}</p>
+        ${b ? `<p style="color: #475569; font-size: 0.875rem; margin-bottom: 1rem; white-space: pre-line;">${b}</p>` : ''}
+        ${link ? BUTTON(link, 'View Details') : ''}
+        ${FOOTER}
+      ${WRAPPER_END}
+    `,
+  }
+}
+
 export function businessProfileLiveEmail(
   name: string,
   businessName: string,

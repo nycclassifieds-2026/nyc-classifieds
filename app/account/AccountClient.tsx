@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import VerifiedBadge from '@/app/components/VerifiedBadge'
-import { porchPostTypeBySlug } from '@/lib/data'
+import { porchPostTypeBySlug, slugify } from '@/lib/data'
 
 interface User {
   id: number
@@ -415,7 +415,7 @@ export default function AccountClient() {
           {porchPosts.map(post => {
             const typeInfo = porchPostTypeBySlug[post.post_type]
             return (
-              <Link key={post.id} href={`/porch/${post.id}`} style={{
+              <Link key={post.id} href={`/porch/post/${post.id}/${slugify(post.title)}`} style={{
                 display: 'block',
                 padding: '1rem',
                 border: '1px solid #e2e8f0',
