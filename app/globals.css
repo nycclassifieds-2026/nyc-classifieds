@@ -195,12 +195,13 @@ a.link:hover {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  align-items: stretch;
+  align-items: start;
 }
 .homepage-top-left { min-width: 0; }
 .homepage-top-right {
   min-width: 0;
   display: flex;
+  max-height: 220px;
 }
 .homepage-top-right > * { width: 100%; }
 

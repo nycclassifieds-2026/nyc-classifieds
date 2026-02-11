@@ -70,6 +70,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   const isAppPage = pathname?.startsWith('/signup') || pathname?.startsWith('/login') || pathname?.startsWith('/account') || pathname?.startsWith('/messages') || pathname?.startsWith('/notifications') || pathname?.startsWith('/forgot-pin') || pathname === '/listings/new'
   const isClassifieds = pathname === '/' || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island')
   const isPorch = pathname?.startsWith('/porch')
+  const isDirectory = pathname === '/business'
 
   return (
     <>
@@ -130,6 +131,17 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                 whiteSpace: 'nowrap',
               }}>
                 Porch
+              </Link>
+              <Link href="/business" style={{
+                padding: mobile ? '6px 8px' : '6px 14px',
+                fontSize: mobile ? '0.75rem' : '0.8125rem',
+                fontWeight: isDirectory ? 600 : 500,
+                color: isDirectory ? '#111827' : '#6b7280',
+                borderBottom: isDirectory ? '2px solid #7c3aed' : '2px solid transparent',
+                fontFamily: "'DM Sans', sans-serif",
+                whiteSpace: 'nowrap',
+              }}>
+                Directory
               </Link>
             </nav>
 
@@ -372,6 +384,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                 {[
                   { label: 'About', href: '/about' },
                   { label: 'Blog', href: '/blog' },
+                  { label: 'Business Directory', href: '/business' },
                   { label: 'Guidelines', href: '/guidelines' },
                   { label: 'Legal', href: '/legal' },
                   { label: 'Privacy', href: '/privacy' },
@@ -395,6 +408,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
               }}>
                 {[
                   { label: 'Home', href: '/' },
+                  { label: 'Directory', href: '/business' },
                   { label: 'About', href: '/about' },
                   { label: 'Blog', href: '/blog' },
                   { label: 'Legal', href: '/legal' },

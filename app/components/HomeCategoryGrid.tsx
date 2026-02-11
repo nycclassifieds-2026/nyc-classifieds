@@ -101,8 +101,14 @@ export default function HomeCategoryGrid() {
       <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', marginBottom: '4px' }}>
         {locationLabel}
       </h2>
-      <p style={{ fontSize: '0.875rem', color: '#000000', marginBottom: '16px' }}>
+      <p style={{ fontSize: '0.875rem', color: '#000000', marginBottom: '10px' }}>
         <strong>Free.</strong> Real. Local. Verified NYC classifieds.
+      </p>
+      <p style={{ fontSize: '0.8125rem', color: '#64748b', marginBottom: '16px', fontFamily: "'DM Sans', sans-serif" }}>
+        Looking for a specific business?{' '}
+        <Link href="/business" style={{ color: '#111827', fontWeight: 700, textDecoration: 'underline' }}>
+          Search our Business Directory
+        </Link>
       </p>
 
       <div className="home-category-grid" style={{
