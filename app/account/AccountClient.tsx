@@ -51,6 +51,7 @@ export default function AccountClient() {
   const [user, setUser] = useState<User | null>(null)
   const [listings, setListings] = useState<Listing[]>([])
   const [porchPosts, setPorchPosts] = useState<PorchPost[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export default function AccountClient() {
           return
         }
         setUser(d.user)
+        setUnreadCount(d.unreadMessages || 0)
         // Fetch listings and porch posts in parallel
         return Promise.all([
           fetch(`/api/listings?user=${d.user.id}`).then(r => r.json()),
@@ -193,6 +195,44 @@ export default function AccountClient() {
           Log out
         </button>
       </div>
+
+      {/* My Messages */}
+      <Link href="/messages" style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '1rem',
+        marginBottom: '2rem',
+        border: '1px solid #e2e8f0',
+        borderRadius: '0.75rem',
+        textDecoration: 'none',
+        color: 'inherit',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          <span style={{ fontWeight: 600, fontSize: '0.9375rem' }}>My Messages</span>
+        </div>
+        {unreadCount > 0 ? (
+          <span style={{
+            backgroundColor: '#dc2626',
+            color: '#fff',
+            borderRadius: '9999px',
+            padding: '0.125rem 0.5rem',
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            minWidth: '20px',
+            textAlign: 'center',
+          }}>
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        )}
+      </Link>
 
       {/* Business Info Section */}
       {isBusiness && user.business_name && (
