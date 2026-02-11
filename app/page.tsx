@@ -64,7 +64,7 @@ export default function Home() {
       {/* Value prop */}
       <section style={{ padding: '12px 0 10px', fontFamily: "'DM Sans', sans-serif" }}>
         <h1 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#111827', margin: '0 0 8px', letterSpacing: '-0.01em' }}>
-          Free classifieds & real community for New York City
+          Free classifieds & real community (<Link href="/porch" style={{ color: '#059669', textDecoration: 'underline' }}>The Porch</Link>) for New York City
         </h1>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', fontSize: '0.8125rem', color: '#374151' }}>
           <span><strong style={{ color: '#2563eb' }}>Geo-verified</strong> — Selfie + GPS at your address</span>
