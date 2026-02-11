@@ -201,7 +201,41 @@ export default function SelfieVerification({ onVerified, onSubmit }: Props) {
       )}
 
       {error && (
-        <p style={{ color: '#dc2626', fontSize: '0.875rem', marginTop: '0.75rem' }}>{error}</p>
+        <div style={{ marginTop: '0.75rem' }}>
+          <p style={{ color: '#dc2626', fontSize: '0.875rem', marginBottom: '0.5rem' }}>{error}</p>
+          {error.toLowerCase().includes('location') && (
+            <div style={{
+              backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '0.5rem',
+              padding: '0.75rem 1rem', fontSize: '0.8125rem', color: '#9a3412', lineHeight: 1.6,
+            }}>
+              <strong>How to enable location:</strong>
+              <ul style={{ margin: '0.375rem 0 0', paddingLeft: '1.25rem' }}>
+                <li><strong>iPhone Safari:</strong> Settings &gt; Privacy &amp; Security &gt; Location Services &gt; Safari Websites &gt; Allow</li>
+                <li><strong>iPhone Chrome:</strong> Settings &gt; Chrome &gt; Location &gt; Allow</li>
+                <li><strong>Android Chrome:</strong> Tap the lock icon in the address bar &gt; Permissions &gt; Location &gt; Allow</li>
+                <li><strong>Desktop Chrome:</strong> Click the lock icon in the address bar &gt; Site settings &gt; Location &gt; Allow</li>
+                <li><strong>Desktop Safari:</strong> Safari &gt; Settings &gt; Websites &gt; Location &gt; Allow</li>
+              </ul>
+              <p style={{ margin: '0.375rem 0 0', fontSize: '0.75rem', color: '#c2410c' }}>After changing settings, refresh this page and try again.</p>
+            </div>
+          )}
+          {error.toLowerCase().includes('camera') && (
+            <div style={{
+              backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '0.5rem',
+              padding: '0.75rem 1rem', fontSize: '0.8125rem', color: '#9a3412', lineHeight: 1.6,
+            }}>
+              <strong>How to enable camera:</strong>
+              <ul style={{ margin: '0.375rem 0 0', paddingLeft: '1.25rem' }}>
+                <li><strong>iPhone Safari:</strong> Settings &gt; Safari &gt; Camera &gt; Allow</li>
+                <li><strong>iPhone Chrome:</strong> Settings &gt; Chrome &gt; Camera &gt; Allow</li>
+                <li><strong>Android Chrome:</strong> Tap the lock icon in the address bar &gt; Permissions &gt; Camera &gt; Allow</li>
+                <li><strong>Desktop Chrome:</strong> Click the lock icon in the address bar &gt; Site settings &gt; Camera &gt; Allow</li>
+                <li><strong>Desktop Safari:</strong> Safari &gt; Settings &gt; Websites &gt; Camera &gt; Allow</li>
+              </ul>
+              <p style={{ margin: '0.375rem 0 0', fontSize: '0.75rem', color: '#c2410c' }}>After changing settings, refresh this page and try again.</p>
+            </div>
+          )}
+        </div>
       )}
     </div>
   )
