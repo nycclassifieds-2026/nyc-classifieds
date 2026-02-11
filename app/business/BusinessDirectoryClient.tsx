@@ -76,16 +76,17 @@ export default function BusinessDirectoryClient() {
         Find local businesses in New York City
       </p>
 
-      <div style={{ maxWidth: '480px', marginBottom: '1.5rem' }}>
-        <HomepageAd />
-      </div>
-
-      <div style={{ marginBottom: '1rem' }}>
-        <SearchAutocomplete
-          initialQuery={query}
-          onSearch={handleSearch}
-          placeholder="Search businesses..."
-        />
+      <div className="homepage-top" style={{ margin: 0, marginBottom: '1rem' }}>
+        <div className="homepage-top-left">
+          <SearchAutocomplete
+            initialQuery={query}
+            onSearch={handleSearch}
+            placeholder="Search businesses..."
+          />
+        </div>
+        <div className="desktop-only-ad homepage-top-right">
+          <HomepageAd />
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
