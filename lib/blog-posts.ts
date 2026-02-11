@@ -1222,7 +1222,477 @@ That\'s what we\'re building. Not a replacement for any one platform, but the th
 
 Welcome to NYC Classifieds. We have work to do.`,
   },
+  // ── NYC category ──────────────────────────────────────────────
+  {
+    slug: 'nyc-apartment-hunting-survival-guide-2026',
+    title: 'The NYC Apartment Hunting Survival Guide (2026 Edition)',
+    date: '2026-02-10',
+    author: 'The NYC Classifieds Team',
+    category: 'NYC',
+    tags: ['housing', 'apartments', 'rentals', 'FARE Act', 'NYC', 'guide'],
+    excerpt: 'Broker fees are dead, scams are smarter, and the market moves faster than ever. Here\'s how to actually find an apartment in New York City in 2026.',
+    content: `Finding an apartment in New York has always been a contact sport. But 2026 changed the rules in ways that actually favor renters for the first time in years.
+
+## The FARE Act Changed Everything
+
+In June 2025, the FARE Act eliminated tenant-paid broker fees across New York City. That\'s roughly $13,000 you no longer need to hand over just to sign a lease. The [NYC Rent Guidelines Board](https://rentguidelinesboard.cityofnewyork.us/resources/apartment-hunting/) has updated guidance reflecting the change, and landlords are adjusting.
+
+This is massive. It means your move-in costs dropped from first month, last month, security deposit, AND broker fee to just the first essentials. More of your money stays in your pocket.
+
+## The 40x Rule Still Applies
+
+The standard NYC income requirement hasn\'t changed: your annual salary should be at least 40 times your monthly rent. For a $2,500 apartment, that means earning $100,000 per year. If you\'re short, you\'ll need a guarantor, and guarantor searches are [up 205% year over year](https://rentreboot.com/guide/nyc-apartment-hunting-strategy-2026).
+
+Get your documents ready before you start looking. Photo ID, three months of pay stubs, bank statements, tax returns, and an employment letter. Having a complete application packet means you can move fast when you find the right place.
+
+## Where to Search
+
+The [NYC HPD apartment hunting page](https://www.nyc.gov/site/hpd/services-and-information/apartment-hunting-tips.page) is an underrated starting point, especially for affordable housing lotteries. For market-rate listings, StreetEasy remains the default, but the competition there is fierce. We\'re building our [Housing section](/listings/housing) specifically for NYC renters and landlords who want verified, scam-free listings.
+
+The advantage of geo-verified listings is simple: every person posting has confirmed they\'re actually in New York City. No remote scammers posting fake apartments from overseas. Read more about [how our verification works](/blog/how-geo-verification-works).
+
+## Timing Matters
+
+Winter remains the best time to hunt. November through February typically sees rents dip 3-5% compared to summer peaks. If your lease renewal is approaching, use that leverage.
+
+## Red Flags That Save You Money
+
+Before you sign anything, look up your building through [HPD\'s online portal](https://www.nyc.gov/site/hpd/services-and-information/apartment-hunting-tips.page) to check for violations. Google your landlord. Check [BrickUnderground](https://www.brickunderground.com/live/biggest-NYC_real_estate_scams) for known scam patterns. And never, ever send money before seeing the apartment in person.
+
+The apartment market in NYC will always be competitive. But between the FARE Act savings, better information tools, and platforms like ours that prioritize verification over volume, 2026 is the most renter-friendly year in recent memory.
+
+Your dream apartment exists. You just need the right strategy to find it.`,
+  },
+  {
+    slug: 'best-thrift-stores-stoop-sales-vintage-finds-nyc',
+    title: 'Best Thrift Stores, Stoop Sales & Vintage Finds in NYC',
+    date: '2026-02-08',
+    author: 'The NYC Classifieds Team',
+    category: 'NYC',
+    tags: ['thrift', 'vintage', 'stoop sales', 'shopping', 'for-sale', 'NYC'],
+    excerpt: 'From East Village gems to Williamsburg deep cuts to the legendary West 104th Street yard sale — here\'s where New Yorkers find the best secondhand deals.',
+    content: `New York has always been a treasure hunter\'s paradise. The sheer volume of stuff cycling through this city means incredible finds are always around the corner, if you know where to look.
+
+## The Neighborhoods That Deliver
+
+**East Village** remains ground zero for affordable thrifting. The density of shops between Avenue A and Second Avenue offers everything from Japanese designer vintage to $5 band tees. This is where you go when you want options without pretension.
+
+**Williamsburg** is the vintage capital of Brooklyn. The concentration of secondhand stores per square block is unmatched. [NYC Vintage Map](https://nycvintagemap.com/) maintains a regularly updated directory of every vintage, resale, and thrift store in the city, organized by neighborhood. It\'s the best free tool for planning a thrift crawl.
+
+**Chelsea and the West Village** lean upscale. If you\'re hunting for designer pieces at a fraction of retail, City Opera Thrift Shop on West 23rd has curated racks of Carolina Herrera, silk velvets, and pristine formal wear from the 1950s through today.
+
+## Must-Know Stores
+
+**L Train Vintage** has possibly the best Levi\'s selection in the city. If you\'re looking for vintage denim, classic 90s Adidas, or retro sportswear, start here.
+
+**Tokio7** in the East Village is where to find Japanese designer labels: Sacai, Issey Miyake, Comme des Garçons, Kapital. Mostly 1990s pieces with rare 1980s finds.
+
+**Housing Works** operates multiple locations across Manhattan and Brooklyn. Everything sold funds housing and services for people affected by HIV/AIDS. Great finds, great cause.
+
+The [NYC Tourism guide to vintage and flea markets](https://www.nyctourism.com/articles/vintage-stores-thrift-shops-flea-markets-nyc/) covers the major destinations, and [TimeOut\'s thrift store rankings](https://www.timeout.com/newyork/shopping/the-best-thrift-stores-in-new-york) are updated regularly.
+
+## Stoop Sales: NYC\'s Original Classifieds
+
+Before apps and algorithms, New Yorkers sold things on their stoops. That tradition is alive and well. The [West 104th Street Block Association](https://bloomingdale.org/events-activities/yard-sale/) runs one of the city\'s best annual yard sales every September, with 60+ stalls of secondhand treasures, live music, and free admission.
+
+Stoop sales pop up across Brooklyn brownstone neighborhoods all spring and summer. The best way to find them is word of mouth, neighborhood flyers, and our [Community section](/porch) on The Porch, where neighbors post local events and stoop sale announcements.
+
+## Buy and Sell on NYC Classifieds
+
+We built our [For Sale section](/listings/for-sale) for exactly this kind of buying and selling. List vintage finds, furniture, clothing, records, and more. Every seller is geo-verified, so you know you\'re dealing with an actual New Yorker, not a dropshipper in another state.
+
+Thrifting in NYC isn\'t just shopping. It\'s a culture, a sustainability practice, and one of the best ways to furnish your apartment without going broke. This city has more secondhand treasure per square mile than anywhere on earth. Go find yours.`,
+  },
+  {
+    slug: 'nyc-hottest-job-market-sectors-2026',
+    title: 'NYC\'s Hottest Job Market Sectors in 2026 — And How to Break In',
+    date: '2026-01-29',
+    author: 'The NYC Classifieds Team',
+    category: 'NYC',
+    tags: ['jobs', 'career', 'tech', 'healthcare', 'NYC', 'hiring'],
+    excerpt: 'Tech, healthcare, and finance are booming. Here\'s what\'s actually hiring in New York, what they\'re paying, and how to get your foot in the door.',
+    content: `The New York job market in 2026 is fast-moving, specialized, and surprisingly accessible if you know where to look. Whether you\'re switching careers, picking up gigs, or hunting for your first role, here\'s what the data says.
+
+## Tech Is Still King
+
+No sector in New York is expanding faster than technology, particularly anything touching artificial intelligence, machine learning, and data infrastructure. The [NY Department of Labor](https://dol.ny.gov/labor-statistics-new-york-city-region) reports continued growth in tech employment across all five boroughs.
+
+The twist: employers want hybrid skills. AI plus finance, AI plus healthcare, AI plus digital media. Pure software engineering roles still exist, but the biggest demand is for people who can bridge tech and a specific industry. [Built In NYC](https://www.builtinnyc.com/jobs) tracks startup and tech hiring across the city and is worth bookmarking.
+
+## Healthcare Never Stops
+
+New York\'s healthcare sector employs over a million people, and the growth hasn\'t slowed. Clinical researchers, physician assistants, genetic analysts, radiology specialists, and biotech lab technicians are among the [most sought-after roles in 2026](https://www.roberthalf.com/us/en/insights/research/what-industries-are-hiring-right-now).
+
+If you\'re in nursing, allied health, or biotech, NYC has more open positions than qualified candidates. That\'s the kind of leverage you want.
+
+## Finance Is Evolving
+
+Wall Street isn\'t what it was twenty years ago, but financial services remains a pillar of NYC employment. [Business and professional services](https://www.careergroupcompanies.com/blog/nycs-whats-trending-in-nycs-job-market) saw the strongest job growth in the back half of 2025, and fintech continues to blur the line between tech and finance.
+
+## The Gig Economy Is Real
+
+Not every job comes with a salary and benefits. In NYC, [36% of workers have a side gig](https://www.gobankingrates.com/money/side-gigs/what-is-a-good-side-gig-income-for-2026/), and that number is climbing. Delivery, content creation, event staffing, tutoring, personal training — the gig economy in this city is massive.
+
+We built our [Gigs section](/listings/gigs) for exactly this. Short-term work, flexible hours, real people hiring real people. Every poster is verified, so you\'re not chasing ghost listings.
+
+## How to Stand Out
+
+The market rewards specialization. Pick a lane, build visible skills, and make your resume findable. Post it on our [Resumes section](/listings/resumes) where local employers actively search. LinkedIn is fine for networking, but local platforms connect you with the businesses actually hiring in your neighborhood.
+
+The New York job market is competitive, but it\'s also enormous. More jobs are posted in NYC every month than in most entire states. The opportunity is here. Your job is to be ready when it shows up.
+
+Check our [Jobs listings](/listings/jobs) for openings posted by verified NYC businesses and individuals. No algorithms deciding who sees your application. Just direct connections.`,
+  },
+  {
+    slug: 'nyc-events-cheat-sheet-2026',
+    title: 'Your NYC Events Cheat Sheet: Concerts, Broadway & What\'s Coming in 2026',
+    date: '2026-01-25',
+    author: 'The NYC Classifieds Team',
+    category: 'NYC',
+    tags: ['events', 'concerts', 'Broadway', 'tickets', 'NYC', 'FIFA'],
+    excerpt: 'Lady Gaga at MSG, the FIFA World Cup at MetLife, Broadway\'s hottest runs, and how to buy tickets without getting scammed.',
+    content: `2026 might be the biggest year for live events New York has ever seen. Between a World Cup, blockbuster concert tours, and a Broadway season that refuses to slow down, there\'s something happening every single night. Here\'s what you need to know.
+
+## The Big Ones
+
+**FIFA World Cup at MetLife Stadium.** New York is hosting eight World Cup matches in June and July — the first Men\'s World Cup games in the NYC area since 1994. The [NY Department of State has issued guidance](https://dos.ny.gov/news/new-york-department-states-division-consumer-protection-warns-new-yorkers-beware-scams) specifically warning about ticket scams ahead of the event. Buy from official channels only.
+
+**Lady Gaga\'s Mayhem Ball** returns to Madison Square Garden for three dates: March 19, March 20, and April 13. Expect resale prices to be astronomical.
+
+**My Chemical Romance at Citi Field** celebrating the 20th anniversary of The Black Parade. Special guest Franz Ferdinand. This will sell out.
+
+The [NYC Tourism annual events guide](https://www.nyctourism.com/annual-events/) is the official rundown, and [TimeOut\'s events calendar](https://www.timeout.com/newyork/events-calendar) covers everything from gallery openings to food festivals.
+
+## Free Events Worth Knowing About
+
+The **NY Philharmonic** does a free weeklong tour every summer across all five boroughs — Van Cortlandt Park, Central Park, Cunningham Park, Prospect Park, and Snug Harbor on Staten Island.
+
+**River to River Festival** in Lower Manhattan brings free dance performances, concerts, and art installations to downtown parks. The [Downtown Alliance](https://downtownny.com/news/downtown-nyc-events-2026/) publishes a full calendar.
+
+[Songkick](https://www.songkick.com/metro-areas/7644-us-new-york-nyc) tracks thousands of upcoming concerts and festivals across the metro area. Great for discovering smaller shows you might miss.
+
+## How to Buy Tickets Without Getting Burned
+
+Ticket scams spike before major events. The [NYTix Broadway scam guide](https://www.nytix.com/articles/broadway-ticket-scams) is required reading if you\'re buying resale. Key rules:
+
+- **Only use platforms with buyer protection.** Ticketmaster, SeatGeek, StubHub, and Vivid Seats verify tickets and offer refunds for fakes.
+- **Never buy from social media DMs.** If someone on Instagram is selling "face value" tickets to a sold-out show, it\'s almost certainly a scam.
+- **Insist on official transfer.** If a seller won\'t transfer through the ticketing platform and wants to email you a PDF instead, walk away.
+- **Check the seller\'s history.** Burner accounts with no profile picture and a fresh join date are red flags.
+
+We covered more scam patterns in our [2026 scam alerts post](/blog/2026-scam-alert-5-new-schemes-targeting-new-yorkers) — worth reading if you\'re buying anything online.
+
+## Sell and Buy Tickets Locally
+
+Our [Tickets & Events section](/listings/tickets-events) lets verified New Yorkers sell tickets to concerts, Broadway, sports, and festivals. Geo-verification means you know the seller is a real person in NYC, not a bot farm. Browse what\'s available or list tickets you can\'t use.
+
+2026 is going to be legendary for live events in this city. Just buy smart, stay safe, and enjoy the show.`,
+  },
+  {
+    slug: 'most-walkable-nyc-neighborhoods-where-community-thrives',
+    title: '10 Most Walkable NYC Neighborhoods — Where Community Still Thrives',
+    date: '2026-01-19',
+    author: 'The NYC Classifieds Team',
+    category: 'NYC',
+    tags: ['neighborhoods', 'walkability', 'community', 'housing', 'NYC'],
+    excerpt: 'The best neighborhoods in NYC aren\'t just walkable — they\'re the ones where you still know your neighbors. Here\'s where to find both.',
+    content: `There\'s a version of New York where you walk everywhere, bump into people you know, and feel like your neighborhood is actually yours. It still exists. You just need to know where to look.
+
+## The Perfect 100s
+
+According to [Walk Score](https://www.walkscore.com/NY/New_York), several NYC neighborhoods hit a perfect 100 for walkability: **Little Italy, NoLita, Chinatown, and Greenwich Village.** Everything you need — groceries, coffee, transit, nightlife — is within a ten-minute walk.
+
+But walkability alone doesn\'t make a neighborhood great. The magic ingredient is community, and that\'s harder to measure.
+
+## Where Community Actually Happens
+
+**West Village.** Tree-lined streets, historic brownstones, quiet corners. The cafés, boutiques, and restaurants are packed into charming blocks where people actually stop and talk to each other. It\'s expensive, but it earned that reputation for a reason.
+
+**East Village.** Ramen shops, record stores, dive bars, and coffeehouses, all within a ten-minute walk of each other. The energy is younger and louder, but the community bonds are real. This is where stoop culture is still alive.
+
+**Williamsburg.** Brooklyn\'s most in-demand neighborhood combines farmer\'s markets, rooftop bars, and waterfront parks into a walkable grid. The [TimeOut in-demand neighborhoods ranking](https://www.timeout.com/newyork/news/these-are-the-10-most-in-demand-nyc-neighborhoods-according-to-streeteasy-010726) consistently puts Williamsburg near the top.
+
+**Astoria.** Queens\' crown jewel for young professionals. Vibrant cultural scene, affordable by NYC standards, and a genuine neighborhood feel. The [StreetEasy homebuyer data](https://www.timeout.com/newyork/news/here-are-the-10-best-nyc-neighborhoods-for-homebuyers-in-2026-according-to-streeteasy-020626) shows growing interest for good reason.
+
+**Financial District.** The surprise entry. FiDi saw [search interest surge 47% recently](https://www.timeout.com/newyork/news/these-are-the-10-most-in-demand-nyc-neighborhoods-according-to-streeteasy-010726) as the area transforms from suits-and-salad-bars to a genuine residential neighborhood. New restaurants, parks, and community spaces are popping up monthly.
+
+**Park Slope.** Brownstones near Prospect Park, independent bookstores, and the Park Slope Food Coop — one of the city\'s most iconic community institutions. Families flock here for good reason.
+
+**Jackson Heights.** One of the most diverse neighborhoods on the planet. The food alone is worth the trip, but the community organizations, cultural events, and neighborhood pride make it special.
+
+**Sunnyside.** The most affordable neighborhood on this list with median rents under $2,700. Quiet, walkable, and fiercely proud of its community garden and local shops.
+
+**Prospect Heights.** Right next to the Brooklyn Museum, Botanic Garden, and Prospect Park. Walkable, cultured, and with a growing food scene that rivals any neighborhood in the city.
+
+**Washington Heights.** Uptown\'s best-kept secret. Fort Tryon Park, The Cloisters, affordable rents, and a tight-knit Dominican community that defines neighborhood character.
+
+## Why This Matters for What We\'re Building
+
+The Porch — our [community feed](/porch) — is organized by borough and neighborhood for exactly this reason. What matters in Astoria is different from what matters in Park Slope. Local conversations should stay local.
+
+Every neighborhood on this list has an active community. We\'re building the digital version of that stoop conversation, and it starts with knowing where you are. That\'s why [geo-verification](/blog/how-geo-verification-works) isn\'t optional on our platform. Real neighborhoods need real neighbors.
+
+Browse The Porch by your borough, find your neighborhood, and see what\'s happening on your block. That\'s what community looks like in 2026.`,
+  },
+  // ── Guides category ───────────────────────────────────────────
+  {
+    slug: 'how-to-write-a-listing-that-sells-fast',
+    title: 'How to Write a Listing That Sells Fast on NYC Classifieds',
+    date: '2026-02-02',
+    author: 'The NYC Classifieds Team',
+    category: 'Guides',
+    tags: ['selling', 'tips', 'listings', 'photos', 'guide'],
+    excerpt: 'Great listings sell in hours. Bad ones sit for weeks. Here\'s the formula NYC sellers use to move items fast on classifieds.',
+    content: `Every day, thousands of items get posted on classifieds platforms across New York. Some sell in hours. Most sit for weeks. The difference isn\'t luck — it\'s how you write the listing.
+
+## Start With the Photo
+
+Photos sell things. Words explain them. If you only do one thing right, make it the photo.
+
+[StreetEasy\'s furniture selling guide](https://streeteasy.com/blog/where-to-sell-used-furniture-in-nyc/) nails this: shoot in natural light, show the full item in context, and include close-ups of any wear or damage. A clean, bright photo of your couch in your living room helps buyers picture it in theirs.
+
+Take at least three photos: one wide shot, one detail shot, and one showing scale. For furniture, include dimensions in the description. For electronics, show it powered on.
+
+## The Title Formula
+
+Your listing title should answer three questions: **What is it? What condition? What neighborhood?**
+
+- Bad: "Couch for sale"
+- Good: "West Elm sectional sofa, excellent condition — Williamsburg"
+- Better: "West Elm Harmony Sectional, 2024, slate gray — Williamsburg pickup"
+
+Specific titles get more clicks because they match what buyers are searching for. Include the brand, model, color, and pickup location.
+
+## Price It Right
+
+Check what similar items are selling for before you set your price. [6sqft](https://www.6sqft.com/the-best-websites-for-buying-and-selling-used-furniture-in-nyc/) recommends looking at completed sales, not just active listings, to see what buyers actually pay.
+
+A general rule: used furniture in good condition sells for 30-50% of retail. Electronics depreciate faster. Vintage and collectible items are wildcards — price based on comparable sales.
+
+If you want to sell fast, price 10-15% below the average and note "price firm" or "OBO" (or best offer) so buyers know where you stand.
+
+## Write a Description That Builds Trust
+
+Skip the sales pitch. Buyers want facts:
+
+- **Condition:** Be honest about scratches, stains, or missing parts. Honesty builds trust and avoids wasted trips.
+- **Dimensions:** Critical for furniture. NYC apartments are small. Buyers need to know if it fits.
+- **Age and history:** When did you buy it? How much use has it seen?
+- **Reason for selling:** "Moving out of the city" or "upgrading" tells buyers this isn\'t junk.
+- **Pickup details:** What floor? Is there an elevator? Can you help carry?
+
+## Choose the Right Category
+
+On NYC Classifieds, listings are organized by [category and subcategory](/listings/for-sale). A mid-century modern chair should go in **For Sale > Furniture**, not dumped in a general section. The right category puts your listing in front of the right buyers.
+
+## The Verification Advantage
+
+On platforms like The List and The Feed\'s Garage Sale, buyers have no idea who they\'re dealing with. On NYC Classifieds, every seller is [geo-verified](/blog/how-geo-verification-works). That blue checkmark tells buyers you\'re a real person in New York City, which means more responses and faster sales.
+
+Write clear titles. Take good photos. Price honestly. And post on a platform where buyers trust the sellers. That\'s the formula.`,
+  },
+  {
+    slug: 'nyc-side-hustle-playbook-gigs-services-barter',
+    title: 'The NYC Side Hustle Playbook: Gigs, Services & Barter',
+    date: '2026-01-27',
+    author: 'The NYC Classifieds Team',
+    category: 'Guides',
+    tags: ['side hustle', 'gigs', 'freelance', 'barter', 'services', 'guide'],
+    excerpt: 'Over a third of Americans have a side gig. In NYC, it\'s practically mandatory. Here\'s how to find work, offer services, and trade skills — no algorithm required.',
+    content: `The cost of living in New York City makes one income feel like a suggestion rather than a plan. Over [36% of Americans now have a side gig](https://www.hostinger.com/tutorials/side-hustle-statistics), and in a city where a studio apartment costs $2,800, that number is probably higher.
+
+The good news: NYC is the single best city in America for side hustles. The demand for services is insatiable, the gig economy is enormous, and barter culture has deep roots here.
+
+## Finding Gigs
+
+The traditional gig platforms take 20-30% of your earnings. That\'s a hard cut when you\'re already hustling. Our [Gigs section](/listings/gigs) connects you directly with people who need help — no middleman fee, no algorithm deciding who sees your profile.
+
+What\'s hot right now in NYC gigs:
+
+- **Moving help and furniture assembly.** New Yorkers move constantly, and nobody wants to carry a couch up five flights alone.
+- **Dog walking and pet sitting.** The pet economy in this city is massive. Our [Pets section](/listings/pets) connects pet owners with local sitters.
+- **Event setup and cleanup.** Weddings, corporate events, gallery openings — there\'s always an event that needs hands.
+- **Content creation.** Product photos, short videos, social media management. Every small business in NYC needs this and most can\'t afford an agency.
+- **Tech help.** Setting up smart home devices, fixing Wi-Fi, recovering data. You\'d be amazed what people will pay to avoid calling Geek Squad.
+
+## Offering Services
+
+If you have a skill, you have a business. The [NYC DCWP self-employed resources page](https://www.nyc.gov/site/dca/businesses/self-employed-resources.page) offers free workshops on tax filing and recordkeeping for freelancers. Don\'t sleep on it.
+
+The [Freelancers Hub](https://freelancersunion.org/hub/) provides free co-working space, business development workshops, and printing for Freelancers Union members. It\'s one of the best free resources for self-employed New Yorkers.
+
+Post your services on our [Services section](/listings/services). Cleaning, tutoring, handyman work, graphic design, personal training, music lessons — if New Yorkers need it, there\'s demand for it. Every service provider on our platform is verified, which means clients trust you before you even meet them.
+
+## The Barter Economy
+
+Before there was money, there was barter. And in NYC, it\'s making a comeback. [IMS Barter](https://www.imsbarter.com/new-york-city-barter) has been facilitating business-to-business trades in New York for over 43 years.
+
+The [NYC TimeBanks resource list](https://www.nyc.gov/html/timebanks/downloads/pdf/tb_online_resources_list.pdf) catalogs non-monetary exchange networks across the city. The concept is simple: one hour of your time equals one hour of someone else\'s. Teach guitar for an hour, get an hour of accounting help.
+
+Our [Barter section](/listings/barter) is built for this. Goods for goods, goods for skills, skills for skills. No money changes hands. It\'s classifieds the way they started, and it works especially well in a city where everyone has something to offer and something they need.
+
+## The Bottom Line
+
+[72% of Americans rely on secondary income](https://www.indexbox.io/blog/2026-survey-72-of-americans-rely-on-secondary-income-trend-now-woven-into-work-life/) in 2026. That\'s not a trend, it\'s the new normal. NYC is built for hustlers. The question isn\'t whether the opportunity exists. It\'s whether you know where to find it.
+
+Start with our [Gigs](/listings/gigs), [Services](/listings/services), and [Barter](/listings/barter) sections. Real people, real work, no platform taking a cut.`,
+  },
+  {
+    slug: 'first-time-buyers-guide-spotting-legit-listings',
+    title: 'First-Time Buyer\'s Guide: Spotting Legit Listings (And Avoiding Scams)',
+    date: '2026-01-21',
+    author: 'The NYC Classifieds Team',
+    category: 'Guides',
+    tags: ['scams', 'safety', 'buying', 'verification', 'trust', 'guide'],
+    excerpt: 'The internet is full of fake listings. Here\'s how to tell the real ones from the scams — and why platform choice matters more than you think.',
+    content: `Every year, millions of dollars are lost to fake listings on platforms that don\'t verify their users. The [NYPD rental scam prevention guide](https://www.nyc.gov/assets/nypd/downloads/pdf/crime_prevention/NYPDcptips_RentalScam.pdf) warns that scammers routinely copy real listings, pose as landlords, and collect deposits for apartments they don\'t own.
+
+It\'s not just rentals. Fake for-sale listings, phantom job postings, and phishing service ads plague every unverified platform. Here\'s how to protect yourself.
+
+## The Red Flags
+
+**Price too good to be true.** A one-bedroom in the West Village for $1,400? A MacBook Pro for $200? If it\'s dramatically below market rate, it\'s bait. [BrickUnderground\'s scam database](https://www.brickunderground.com/live/biggest-NYC_real_estate_scams) catalogs the most common schemes.
+
+**Urgency pressure.** "Someone else is interested, I need a deposit today." Legitimate sellers don\'t pressure you into instant financial decisions. Scammers do, because time is their enemy.
+
+**Refuses to meet in person.** Anyone selling something in NYC should be willing to meet locally. If they\'re "traveling" or "out of state" but have an active listing, that\'s a red flag.
+
+**Unusual payment methods.** Requests for wire transfers, gift cards, cryptocurrency, or Zelle to strangers are scam hallmarks. Legitimate transactions happen in person with cash, or through protected payment methods.
+
+**No verifiable identity.** On The List and The Feed\'s Garage Sale, anyone can post anything with zero identity verification. That anonymity is what scammers exploit.
+
+## The Platform Matters
+
+This is the part most buyer\'s guides skip, but it\'s the most important: **the platform you shop on determines your risk level.**
+
+Unverified platforms attract scammers because there\'s no cost to creating fake listings. No identity check, no location proof, no accountability.
+
+On NYC Classifieds, every user goes through [geo-verification](/blog/how-geo-verification-works) — a selfie plus GPS confirmation that proves they\'re a real person in New York City. We built our entire [trust and safety system](/blog/safety-and-trust-how-were-building-a-platform-you-can-actually-trust) around this principle. It doesn\'t eliminate all risk, but it eliminates the easiest scam vectors.
+
+## Safe Buying Checklist
+
+1. **Research the price.** Check what similar items sell for before engaging.
+2. **Communicate on-platform.** Keep conversations within the platform\'s messaging system. Scammers try to move you to email or text where there\'s no record.
+3. **Meet in public.** For in-person transactions, meet in a well-lit, populated area. Many NYC police precincts offer safe exchange zones.
+4. **Inspect before paying.** Test electronics, examine furniture, verify condition matches the description.
+5. **Trust your gut.** If something feels off, it probably is. Walk away.
+6. **Report suspicious listings.** Flagging helps the entire community. Our moderation team reviews every report.
+
+## Beyond Classifieds
+
+The same principles apply everywhere. [Ziprent\'s safety guide](https://ziprent.com/how-to-avoid-rental-scams-stay-safe-on-craigslist-and-facebook/) covers rental-specific scams in detail. Our [2026 scam alerts](/blog/2026-scam-alert-5-new-schemes-targeting-new-yorkers) post covers the newest schemes including AI-generated fake listings and QR code theft.
+
+The internet isn\'t inherently dangerous. But unverified platforms are. Choose where you shop as carefully as you choose what you buy.`,
+  },
+  {
+    slug: 'moving-to-nyc-classifieds-survival-guide',
+    title: 'Moving to NYC? The Classifieds Survival Guide',
+    date: '2026-01-15',
+    author: 'The NYC Classifieds Team',
+    category: 'Guides',
+    tags: ['moving', 'NYC', 'apartments', 'furniture', 'services', 'guide'],
+    excerpt: 'Everything you need to set up life in New York City — from finding movers to furnishing your apartment to meeting your neighbors — using classifieds the smart way.',
+    content: `Moving to New York City is one of those life decisions that\'s simultaneously thrilling and terrifying. The logistics alone can overwhelm you before you even unpack your first box. Here\'s your playbook for using classifieds to make the transition smoother and cheaper.
+
+## Step 1: Find Your Apartment
+
+Start with our [NYC apartment hunting guide](/blog/nyc-apartment-hunting-survival-guide-2026) for the full strategy. The short version: the FARE Act killed broker fees, winter is the cheapest season, and the [Rent Guidelines Board](https://rentguidelinesboard.cityofnewyork.us/resources/apartment-hunting/finding-an-apartment/) has free resources for renters. Browse verified [Housing listings](/listings/housing) on our platform for apartments posted by real, geo-verified New Yorkers.
+
+## Step 2: Hire Movers (Smart)
+
+NYC moving is its own beast. Narrow hallways, walk-ups without elevators, alternate side parking, and buildings that require proof of insurance from your moving company before they\'ll let anyone through the door.
+
+Get at least three quotes from licensed, insured movers. [ConsumerAffairs](https://www.consumeraffairs.com/movers/new-york/new-york/) reviews and ranks NYC moving companies, and [MoveBuddha](https://www.movebuddha.com/movers/ny/new-york-city/) provides side-by-side comparisons. Insist on written quotes based on an inventory check, not phone estimates.
+
+Key NYC detail: most buildings require your mover to have insurance naming the building management as "additional insured." Ask your building management office about this before moving day, not on moving day.
+
+Need help but don\'t want to hire a full crew? Our [Gigs section](/listings/gigs) has verified locals offering moving help, furniture assembly, and heavy lifting at hourly rates.
+
+## Step 3: Furnish Without Going Broke
+
+New Yorkers move constantly, which means the secondhand furniture market is always stocked. Our [For Sale section](/listings/for-sale) has furniture, appliances, electronics, and home decor from sellers in every borough.
+
+[Manhattan Living\'s guide to selling and donating furniture](https://www.glenwoodnyc.com/manhattan-living/apartment-living/where-to-sell-donate-and-get-rid-of-furniture-in-nyc/) works in reverse too — the same channels where people sell are where you buy. Check our [listing guide](/blog/how-to-write-a-listing-that-sells-fast) for tips on finding good deals.
+
+The best time to find furniture? End of month, when leases turn over and people are desperate to sell before they move.
+
+## Step 4: Set Up Services
+
+You\'ll need an internet installer, probably a cleaning service before you unpack, maybe a locksmith, and eventually a handyman for all the things your landlord won\'t fix. Our [Services section](/listings/services) connects you with verified local providers.
+
+## Step 5: Meet Your Neighbors
+
+This is the part most moving guides skip, and it\'s the most important. New York can be lonely if you don\'t make an effort to connect locally.
+
+The Porch — our [community feed](/porch) — is organized by borough and neighborhood. Introduce yourself, ask for local recommendations, find out which grocery store has the best prices and which laundromat to avoid. Read about [what makes The Porch different](/blog/the-porch-where-neighbors-actually-talk) from other neighborhood apps.
+
+## The First-Month Checklist
+
+- **Week 1:** Apartment secured, movers booked, utilities scheduled
+- **Week 2:** Furniture acquired (secondhand from classifieds), internet installed
+- **Week 3:** Services set up (cleaning, laundry, gym), neighborhood explored on foot
+- **Week 4:** Introduced yourself on The Porch, found your coffee shop, claimed your grocery store
+
+Moving to NYC is hard. Doing it with the right tools makes it significantly less hard. Welcome to the city. You\'re going to love it here.`,
+  },
+  {
+    slug: 'guide-to-the-porch-nycs-local-feed',
+    title: 'Your Guide to The Porch — Getting the Most Out of NYC\'s Local Feed',
+    date: '2026-01-13',
+    author: 'The NYC Classifieds Team',
+    category: 'Guides',
+    tags: ['porch', 'community', 'neighbors', 'guide', 'local'],
+    excerpt: 'The Porch is where neighbors actually talk. Here\'s how to use every feature — from neighborhood questions to lost & found to stoop sale announcements.',
+    content: `The Porch is our community feed, and it\'s fundamentally different from anything you\'ve used before. No algorithm deciding what you see. No promoted posts masquerading as organic content. No engagement-bait drama. Just your neighbors, talking about your neighborhood.
+
+Here\'s how to get the most out of it.
+
+## How It\'s Organized
+
+The Porch is structured by **borough and neighborhood**. When you open [The Porch](/porch), you see conversations from your area. You can browse by borough — [Manhattan](/porch/manhattan), [Brooklyn](/porch/brooklyn), [Queens](/porch/queens), the Bronx, or Staten Island — and then drill into your specific neighborhood.
+
+This isn\'t an accident. We built it this way because what matters on the Upper East Side is different from what matters in Bed-Stuy. Local conversations should stay local.
+
+## Post Types
+
+The Porch supports multiple post types, each designed for a specific kind of neighborhood conversation:
+
+- **Neighborhood Questions.** "Does anyone know a good plumber near Prospect Heights?" "What\'s the best pizza in Astoria?" These are the conversations that used to happen on stoops. Now they happen here.
+- **Recommendations.** Share your favorite local businesses, restaurants, shops, and service providers. These posts help neighbors discover what\'s great in their area.
+- **Local Alerts.** Package theft on your block? Construction detour? Water main break? Alert your neighbors in real time.
+- **Events.** Block parties, stoop sales, community meetings, neighborhood clean-ups. Post them here and the right people see them.
+- **Lost & Found.** Lost your dog in Prospect Park? Found a set of keys on the L train? These posts connect people in ways social media can\'t.
+- **Pet Sightings.** Spotted a lost cat? Post the sighting with the location and help reunite pets with their owners. Our [Pets section](/listings/pets) is also available for adoption, dog walking, grooming, and pet sitting needs.
+- **Welcome / New Here.** Just moved to the neighborhood? Introduce yourself. New Yorkers are friendlier than their reputation suggests.
+
+## Why It\'s Different From The Green App
+
+The Green App started with good intentions but devolved into passive-aggressive complaint threads, political arguments, and thinly veiled discrimination. We watched that happen, and we built The Porch to avoid it.
+
+How? **Moderation that catches negativity before it spreads.** Posts that violate our [community guidelines](/guidelines) get reviewed quickly. We\'re not censoring opinions — we\'re preventing the toxicity spiral that killed community trust on other platforms.
+
+And because every user is [geo-verified](/blog/how-geo-verification-works), the anonymous trolling that plagued The Green App simply can\'t happen here. You know your neighbors are real. They know you\'re real. That accountability changes the tone of every conversation.
+
+## Tips for Getting the Most Out of It
+
+1. **Start by reading.** See what your neighbors are talking about before you post. Get a feel for the vibe.
+2. **Ask questions.** "Where should I get my bike fixed in Williamsburg?" gets you better answers than any Google search because the answers come from people who live there.
+3. **Share what you know.** Found an amazing Thai place? Your dry cleaner does miracles? Share it. The Porch runs on generosity.
+4. **Post your events.** Hosting a stoop sale? Having a block party? The Porch is how your neighbors find out.
+5. **Report bad actors.** If you see spam, harassment, or suspicious activity, flag it. Every report makes the community safer.
+
+## The Bigger Picture
+
+The Porch is built on a simple idea: neighborhoods are stronger when neighbors talk to each other. Not through algorithms, not through ads, not through engagement metrics. Just people sharing what they know with the people who live near them.
+
+[Best Friends Animal Society in SoHo](https://bestfriends.org/new-york-city) and the [ASPCA](https://www.aspca.org/adopt-pet) are two organizations doing incredible community work in NYC. The Porch is our way of building that same kind of local connection, digitally.
+
+This is what community looks like when you build it right. Come to [The Porch](/porch) and say hello.`,
+  },
 ]
+
+// Sort newest-first so display order is always correct
+blogPosts.sort((a, b) => b.date.localeCompare(a.date))
 
 export function getPostBySlug(slug: string): BlogPost | undefined {
   return blogPosts.find(p => p.slug === slug)

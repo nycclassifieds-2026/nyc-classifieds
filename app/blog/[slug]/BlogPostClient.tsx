@@ -46,6 +46,12 @@ export default function BlogPostClient({
     }
   }
 
+  // Inline markdown: bold + links
+  const md = (s: string) =>
+    s
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#2563eb">$1</a>')
+
   // Parse content into paragraphs
   const paragraphs = post.content.split('\n\n')
 
@@ -221,9 +227,7 @@ export default function BlogPostClient({
             {paragraphs.map((para, i) => {
               if (para.startsWith('## ')) {
                 return (
-                  <h2 key={i} style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', marginTop: '28px', marginBottom: '12px' }}>
-                    {para.slice(3)}
-                  </h2>
+                  <h2 key={i} style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', marginTop: '28px', marginBottom: '12px' }} dangerouslySetInnerHTML={{ __html: md(para.slice(3)) }} />
                 )
               }
 
@@ -233,7 +237,7 @@ export default function BlogPostClient({
                   <ol key={i} style={{ paddingLeft: '20px', marginBottom: '16px' }}>
                     {items.map((item, j) => (
                       <li key={j} style={{ marginBottom: '6px' }} dangerouslySetInnerHTML={{
-                        __html: item.replace(/^\d+\.\s/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                        __html: md(item.replace(/^\d+\.\s/, ''))
                       }} />
                     ))}
                   </ol>
@@ -246,7 +250,7 @@ export default function BlogPostClient({
                   <ul key={i} style={{ paddingLeft: '20px', marginBottom: '16px' }}>
                     {items.map((item, j) => (
                       <li key={j} style={{ marginBottom: '6px' }} dangerouslySetInnerHTML={{
-                        __html: item.replace(/^- /, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                        __html: md(item.replace(/^- /, ''))
                       }} />
                     ))}
                   </ul>
@@ -255,7 +259,7 @@ export default function BlogPostClient({
 
               return (
                 <p key={i} style={{ marginBottom: '16px' }} dangerouslySetInnerHTML={{
-                  __html: para.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                  __html: md(para)
                 }} />
               )
             })}
