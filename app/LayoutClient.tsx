@@ -135,30 +135,8 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 
             <div style={{ flex: 1 }} />
 
-            {/* Right nav: Feedback | Bell | Post | Account */}
+            {/* Right nav: Bell | Post | Account */}
             <nav style={{ display: 'flex', alignItems: 'center', gap: mobile ? '8px' : '12px', flexShrink: 0 }}>
-              {/* Feedback link */}
-              <button
-                onClick={() => {
-                  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-                  setTimeout(() => {
-                    const widget = document.querySelector('[data-feedback-widget]') as HTMLElement
-                    if (widget) widget.click()
-                  }, 600)
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#6b7280',
-                  fontSize: mobile ? '0.7rem' : '0.8125rem',
-                  fontFamily: "'DM Sans', sans-serif",
-                  cursor: 'pointer',
-                  padding: mobile ? '4px' : '4px 8px',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                Feedback?
-              </button>
               {/* Notifications bell */}
               {user && (
                 <Link href="/notifications" style={{
