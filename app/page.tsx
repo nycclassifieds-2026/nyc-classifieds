@@ -37,7 +37,7 @@ export default function Home() {
       ))}
 
       {/* Directory launch banner — red, blinking */}
-      <Link href="/business" className="launch-banner" style={{
+      <Link href="/signup" className="launch-banner" style={{
         display: 'block',
         backgroundColor: '#fef2f2',
         border: '1px solid #fca5a5',
@@ -51,9 +51,9 @@ export default function Home() {
         lineHeight: 1.5,
         textAlign: 'center',
       }}>
-        <span className="launch-blink" style={{ color: '#dc2626', fontWeight: 700 }}>NEW</span>{' '}
-        NYC Business Directory — just launched, for you. Get your business listed for free. Only works if you use it!{' '}
-        <span style={{ color: '#dc2626', fontWeight: 600 }}>Check it out →</span>
+        <span className="launch-blink" style={{ color: '#dc2626', fontWeight: 700 }}>JUST LAUNCHED</span>{' '}
+        We just went live — a free classifieds platform built for real New Yorkers. No fees, no algorithms, no corporate nonsense. It only works if you use it. Post something, tell a neighbor, be one of the first.{' '}
+        <span style={{ color: '#dc2626', fontWeight: 600 }}>Sign up free →</span>
       </Link>
 
       {/* Mobile ad — above search */}
