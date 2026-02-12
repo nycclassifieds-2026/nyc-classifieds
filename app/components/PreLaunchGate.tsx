@@ -3,8 +3,8 @@
 import { useState, useEffect, ReactNode } from 'react'
 import Link from 'next/link'
 
-const PRELAUNCH = process.env.NEXT_PUBLIC_PRELAUNCH === 'true'
-const TARGET = parseInt(process.env.NEXT_PUBLIC_PRELAUNCH_TARGET || '10000', 10)
+const PRELAUNCH = true // flip to false at launch
+const TARGET = 10000
 
 const categoryTeasers = [
   { name: 'Housing', icon: '🏠', desc: 'Apartments, rooms, sublets' },
