@@ -20,8 +20,8 @@ export async function generateMetadata({ params }: { params: Promise<{ borough: 
 
   const subSample = cat.subs.slice(0, 5).join(', ')
   return buildMetadata({
-    title: `${cat.name} in ${nh.name}, ${b.name} — Free Listings`,
-    description: `Browse free ${cat.name.toLowerCase()} listings in ${nh.name}, ${b.name}. ${subSample}, and more. All posters are geo-verified to their NYC address.`,
+    title: `${cat.name} in ${nh.name}, ${b.name} — Verified Local Listings`,
+    description: `${cat.name} in ${nh.name}, ${b.name} from your verified neighbors. ${subSample} & more. Every poster is confirmed to live or work in ${nh.name}. Free to post.`,
     path: `/${borough}/${slug}/${category}`,
   })
 }

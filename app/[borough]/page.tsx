@@ -9,15 +9,39 @@ export async function generateStaticParams() {
   return boroughs.map(b => ({ borough: b.slug }))
 }
 
+const boroughMeta: Record<string, { title: string; desc: string }> = {
+  'manhattan': {
+    title: 'Manhattan Classifieds — Apartments, Jobs & Services in 41 Neighborhoods',
+    desc: 'Free classifieds in Manhattan. Find apartments, jobs, services & more from the Upper East Side to Tribeca. Every poster is verified with a selfie + GPS at their Manhattan address.',
+  },
+  'brooklyn': {
+    title: 'Brooklyn Classifieds — Buy, Sell & Hire Local in 28 Neighborhoods',
+    desc: 'Free classifieds in Brooklyn. Apartments, jobs, services, for sale & gigs from Williamsburg to Bay Ridge. Every poster is geo-verified to their Brooklyn address.',
+  },
+  'queens': {
+    title: 'Queens Classifieds — Local Listings Across 30 Neighborhoods',
+    desc: 'Free classifieds in Queens. Apartments, jobs, services & more from Astoria to Flushing. Every poster is verified with a selfie + GPS at their Queens address.',
+  },
+  'bronx': {
+    title: 'Bronx Classifieds — Apartments, Jobs & Services in 15 Neighborhoods',
+    desc: 'Free classifieds in the Bronx. Find apartments, jobs, services & more from Fordham to Riverdale. Every poster is geo-verified to their Bronx address.',
+  },
+  'staten-island': {
+    title: 'Staten Island Classifieds — Local Listings Across 10 Neighborhoods',
+    desc: 'Free classifieds in Staten Island. Apartments, jobs, services & more from Tottenville to St. George. Every poster is geo-verified to their Staten Island address.',
+  },
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ borough: string }> }): Promise<Metadata> {
   const { borough } = await params
   const b = boroughBySlug[borough]
   if (!b) return { title: 'Not Found' }
 
+  const custom = boroughMeta[b.slug]
   const nhSample = b.neighborhoods.slice(0, 6).join(', ')
   return buildMetadata({
-    title: `${b.name} Classifieds — Free Listings in ${b.name}, NYC`,
-    description: `Browse free classifieds in ${b.name}, New York City. Housing, jobs, services, for sale, and more across ${b.neighborhoods.length} neighborhoods including ${nhSample}. All users are geo-verified.`,
+    title: custom?.title || `${b.name} Classifieds — Free Listings Across ${b.neighborhoods.length} Neighborhoods`,
+    description: custom?.desc || `Free classifieds in ${b.name}, NYC. Apartments, jobs, services & more across ${b.neighborhoods.length} neighborhoods including ${nhSample}. Geo-verified posters only.`,
     path: `/${b.slug}`,
   })
 }

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { boroughs, categories, neighborhoodSlug, slugify, porchPostTypes } from '@/lib/data'
+import { getAllSlugs as getBlogSlugs } from '@/lib/blog-posts'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
 
@@ -120,13 +121,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Business directory
   entries.push({ url: `${SITE_URL}/business`, lastModified: now, changeFrequency: 'daily', priority: 0.9 })
 
-  // Static pages (only include pages that actually exist)
-  for (const page of ['search', 'porch']) {
+  // Blog index + all posts
+  entries.push({ url: `${SITE_URL}/blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 })
+  for (const slug of getBlogSlugs()) {
+    entries.push({
+      url: `${SITE_URL}/blog/${slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    })
+  }
+
+  // Static pages
+  for (const page of ['about', 'search', 'legal', 'privacy', 'terms', 'guidelines']) {
     entries.push({
       url: `${SITE_URL}/${page}`,
       lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.5,
+      changeFrequency: 'monthly',
+      priority: 0.4,
     })
   }
 

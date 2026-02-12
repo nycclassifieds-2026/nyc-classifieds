@@ -20,8 +20,8 @@ export async function generateMetadata({ params }: { params: Promise<{ borough: 
   if (!b || !nh || !cat || !subName) return { title: 'Not Found' }
 
   return buildMetadata({
-    title: `${subName} in ${nh.name}, ${b.name} — Free ${subName} Listings`,
-    description: `Find free ${subName.toLowerCase()} listings in ${nh.name}, ${b.name}, New York City. Browse ${subName.toLowerCase()} from geo-verified locals in your neighborhood. Post for free on NYC Classifieds.`,
+    title: `${subName} in ${nh.name}, ${b.name} — From Verified Locals`,
+    description: `${subName} in ${nh.name}, ${b.name}. Posted by neighbors verified to ${nh.name} with a selfie + GPS. Browse or post ${subName.toLowerCase()} free.`,
     path: `/${borough}/${slug}/${category}/${subcategory}`,
   })
 }

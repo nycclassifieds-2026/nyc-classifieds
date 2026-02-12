@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 const SITE_NAME = 'The NYC Classifieds'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
-const SITE_DESC = 'Free local classifieds for New York City. Buy, sell, find housing, jobs, and services from real, geo-verified New Yorkers.'
+const SITE_DESC = 'The only NYC classifieds where every user is verified with a live selfie + GPS. Apartments, jobs, services, for sale & more across 126+ neighborhoods. 100% free.'
 
 // ─── Metadata builder ───
 

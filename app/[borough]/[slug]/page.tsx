@@ -21,8 +21,8 @@ export async function generateMetadata({ params }: { params: Promise<{ borough: 
   if (cat) {
     const subSample = cat.subs.slice(0, 5).join(', ')
     return buildMetadata({
-      title: `${cat.name} in ${b.name}, NYC — Free ${cat.name} Listings`,
-      description: `Browse free ${cat.name.toLowerCase()} listings in ${b.name}, New York City. ${subSample}, and more. Geo-verified NYC locals only. Post for free.`,
+      title: `${cat.name} in ${b.name} — Verified Local ${cat.name} Listings`,
+      description: `Find ${cat.name.toLowerCase()} in ${b.name} from geo-verified locals. ${subSample} & more. Free to post. Every user is verified with a selfie + GPS at their ${b.name} address.`,
       path: `/${borough}/${slug}`,
     })
   }
@@ -30,8 +30,8 @@ export async function generateMetadata({ params }: { params: Promise<{ borough: 
   const nh = findNeighborhood(borough, slug)
   if (nh) {
     return buildMetadata({
-      title: `${nh.name}, ${b.name} Classifieds — Free Listings in ${nh.name}`,
-      description: `Browse free classifieds in ${nh.name}, ${b.name}. Housing, jobs, services, for sale, gigs, and community listings. All users are geo-verified to ${nh.name}.`,
+      title: `${nh.name}, ${b.name} — Local Classifieds from Verified Residents`,
+      description: `Free classifieds in ${nh.name}, ${b.name}. Apartments, jobs, services, items for sale, gigs & community posts from neighbors verified to ${nh.name}. Post anything free.`,
       path: `/${borough}/${slug}`,
     })
   }

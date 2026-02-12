@@ -19,8 +19,8 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   if (subName) {
     const catName = cat?.name || category
     return buildMetadata({
-      title: `${subName} in New York City — Free ${subName} Listings in ${catName}`,
-      description: `Browse free ${subName.toLowerCase()} listings in ${catName.toLowerCase()} in New York City. Post for free. Find ${subName.toLowerCase()} near you from geo-verified NYC locals. Manhattan, Brooklyn, Queens, Bronx & Staten Island.`,
+      title: `${subName} in NYC — ${catName} from Verified New Yorkers`,
+      description: `${subName} listings in New York City. Posted by geo-verified locals across Manhattan, Brooklyn, Queens, Bronx & Staten Island. Browse or post ${subName.toLowerCase()} free.`,
       path: `/listings/${category}/${subcategory}`,
     })
   }

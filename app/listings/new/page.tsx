@@ -3,6 +3,7 @@ import PostListingClient from './PostListingClient'
 
 export const metadata: Metadata = {
   title: 'Post a Listing',
+  robots: { index: false, follow: false },
 }
 
 export default function PostListingPage() {

@@ -3,6 +3,7 @@ import InboxClient from './InboxClient'
 
 export const metadata: Metadata = {
   title: 'Messages',
+  robots: { index: false, follow: false },
 }
 
 export default function MessagesPage() {
