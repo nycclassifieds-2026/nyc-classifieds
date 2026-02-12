@@ -325,9 +325,11 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                 <span>{homeName}</span>
               </div>
             )}
-            <p style={{ fontSize: '0.8125rem', color: '#000000', margin: 0 }}>
-              <strong>Free.</strong> Real. Local. Verified NYC classifieds.
-            </p>
+            {homeName && (
+              <p style={{ fontSize: '0.8125rem', color: '#000000', margin: 0 }}>
+                <strong>Free.</strong> Real. Local. Verified NYC classifieds.
+              </p>
+            )}
           </div>
         </div>
       )}
