@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import ListingGrid from '@/app/components/ListingGrid'
+import PreLaunchGate from '@/app/components/PreLaunchGate'
 
 interface Business {
   id: number
@@ -122,6 +123,7 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
   }
 
   return (
+    <PreLaunchGate>
     <main style={{ maxWidth: '1050px', margin: '0 auto', padding: '24px 24px 48px' }}>
       {/* Responsive grid for mobile */}
       <style>{`.biz-grid { display: grid; grid-template-columns: 1fr 320px; gap: 32px; } @media (max-width: 768px) { .biz-grid { grid-template-columns: 1fr !important; } }`}</style>
@@ -325,6 +327,7 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
         </div>
       )}
     </main>
+    </PreLaunchGate>
   )
 }
 

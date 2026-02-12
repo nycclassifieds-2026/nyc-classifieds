@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import ListingGrid from '@/app/components/ListingGrid'
 import SearchAutocomplete from '@/app/components/SearchAutocomplete'
+import PreLaunchGate from '@/app/components/PreLaunchGate'
 
 interface Listing {
   id: number
@@ -80,6 +81,7 @@ export default function SearchClient() {
   }, [category, sort])
 
   return (
+    <PreLaunchGate>
     <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Search Listings</h1>
 
@@ -135,6 +137,7 @@ export default function SearchClient() {
         </div>
       )}
     </main>
+    </PreLaunchGate>
   )
 }
 

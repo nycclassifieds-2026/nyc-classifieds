@@ -5,6 +5,7 @@ import HomeSearch from './components/HomeSearch'
 import BoroughNav from './components/BoroughNav'
 import HomeCategoryGrid from './components/HomeCategoryGrid'
 import HomepageAd from './components/HomepageAd'
+import PreLaunchBanner from './components/PreLaunchBanner'
 
 export default function Home() {
   const categoryItems = categories.map(c => ({ name: c.name, url: `/listings/${c.slug}` }))
@@ -39,25 +40,8 @@ export default function Home() {
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(s) }} />
       ))}
 
-      {/* Launch banner */}
-      <Link href="/signup" style={{
-        display: 'block',
-        backgroundColor: '#f0f5ff',
-        border: '1px solid #c7d7fe',
-        borderRadius: '8px',
-        padding: '8px 16px',
-        marginBottom: '12px',
-        textDecoration: 'none',
-        fontFamily: "'DM Sans', sans-serif",
-        fontSize: '0.8125rem',
-        color: '#1e3a5f',
-        lineHeight: 1.5,
-        textAlign: 'center',
-      }}>
-        <span className="launch-blink" style={{ color: '#1a56db', fontWeight: 700 }}>JUST LAUNCHED</span>{' '}
-        — We just went live. It only works if you use it. Post something, tell a neighbor, be one of the first.{' '}
-        <span style={{ color: '#1a56db', fontWeight: 600 }}>Sign up free →</span>
-      </Link>
+      {/* Launch / pre-launch banner */}
+      <PreLaunchBanner />
 
       {/* Mobile ad — above search */}
       <div className="mobile-only-ad">

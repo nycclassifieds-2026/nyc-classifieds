@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import PreLaunchGate from '@/app/components/PreLaunchGate'
 
 interface Thread {
   threadId: string
@@ -30,6 +31,7 @@ export default function InboxClient() {
   if (loading) return <main style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Loading...</main>
 
   return (
+    <PreLaunchGate>
     <main style={{ maxWidth: '700px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
         <Link href="/account" style={{ color: '#2563eb', fontSize: '1.25rem' }}>&larr;</Link>
@@ -124,6 +126,7 @@ export default function InboxClient() {
         </div>
       )}
     </main>
+    </PreLaunchGate>
   )
 }
 

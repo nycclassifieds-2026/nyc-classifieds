@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import VerifiedBadge from '@/app/components/VerifiedBadge'
+import PreLaunchGate from '@/app/components/PreLaunchGate'
 
 interface Listing {
   id: number
@@ -78,6 +79,7 @@ export default function ListingDetailClient({ id }: { id: string }) {
   const isOwner = currentUser && currentUser.id === listing.user_id
 
   return (
+    <PreLaunchGate>
     <main style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <button onClick={() => router.back()} style={{
         background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer',
@@ -238,5 +240,6 @@ export default function ListingDetailClient({ id }: { id: string }) {
         </div>
       </div>
     </main>
+    </PreLaunchGate>
   )
 }

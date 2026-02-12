@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import SearchAutocomplete from '@/app/components/SearchAutocomplete'
 import { businessCategories, boroughs } from '@/lib/data'
+import PreLaunchGate from '@/app/components/PreLaunchGate'
 
 interface Business {
   id: number
@@ -69,6 +70,7 @@ export default function BusinessDirectoryClient() {
   }, [category, borough, doSearch])
 
   return (
+    <PreLaunchGate>
     <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' }}>NYC Business Directory</h1>
       <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem' }}>
@@ -273,6 +275,7 @@ export default function BusinessDirectoryClient() {
         </div>
       )}
     </main>
+    </PreLaunchGate>
   )
 }
 

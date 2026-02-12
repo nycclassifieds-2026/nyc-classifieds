@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import ListingGrid, { getDisplayMode } from './ListingGrid'
+import PreLaunchGate from './PreLaunchGate'
 import { type Category, slugify } from '@/lib/data'
 
 interface Listing {
@@ -72,6 +73,7 @@ export default function BrowsePage({
   }, [effectiveCategorySlug, activeSub, borough, neighborhood, sort, page])
 
   return (
+    <PreLaunchGate>
     <main style={{ maxWidth: '1050px', margin: '0 auto', padding: '24px 24px 32px' }}>
       {/* Breadcrumbs */}
       <nav style={{ display: 'flex', gap: '6px', fontSize: '0.75rem', color: '#6b7280', marginBottom: '16px', flexWrap: 'wrap' }}>
@@ -238,6 +240,7 @@ export default function BrowsePage({
         </div>
       )}
     </main>
+    </PreLaunchGate>
   )
 }
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import PreLaunchGate from '@/app/components/PreLaunchGate'
 
 interface Message {
   id: number
@@ -156,6 +157,7 @@ export default function ThreadClient({ threadId }: { threadId: string }) {
   if (loading) return <main style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Loading...</main>
 
   return (
+    <PreLaunchGate>
     <main style={{ maxWidth: '700px', margin: '0 auto', padding: '0', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 60px)' }}>
       {/* Header */}
       <div style={{
@@ -402,5 +404,6 @@ export default function ThreadClient({ threadId }: { threadId: string }) {
         </button>
       </div>
     </main>
+    </PreLaunchGate>
   )
 }

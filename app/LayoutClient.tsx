@@ -10,6 +10,8 @@ import HomepageAd from './components/HomepageAd'
 import FeedbackWidget from './components/FeedbackWidget'
 import PushPrompt from './components/PushPrompt'
 
+const IS_PRELAUNCH = process.env.NEXT_PUBLIC_PRELAUNCH === 'true'
+
 function useIsMobile(breakpoint = 640) {
   const [mobile, setMobile] = useState(false)
   useEffect(() => {
@@ -193,7 +195,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                 </Link>
               )}
 
-              <Link href={user ? '/listings/new' : '/signup'} style={{
+              <Link href={user ? (IS_PRELAUNCH ? '/porch' : '/listings/new') : '/signup'} style={{
                 backgroundColor: '#1a56db',
                 color: '#ffffff',
                 padding: mobile ? '5px 10px' : '7px 18px',
@@ -203,7 +205,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                 fontFamily: "'DM Sans', sans-serif",
                 whiteSpace: 'nowrap',
               }}>
-                {user ? 'Post' : 'Sign Up'}
+                {user ? (IS_PRELAUNCH ? 'Share' : 'Post') : 'Sign Up'}
               </Link>
 
               {/* Account */}

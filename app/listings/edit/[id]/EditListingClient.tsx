@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ImageUploader from '@/app/components/ImageUploader'
 import { categories, slugify, boroughs } from '@/lib/data'
+import PreLaunchGate from '@/app/components/PreLaunchGate'
 
 export default function EditListingClient({ id }: { id: string }) {
   const router = useRouter()
@@ -100,6 +101,7 @@ export default function EditListingClient({ id }: { id: string }) {
   if (!authed) return null
 
   return (
+    <PreLaunchGate>
     <main style={{ maxWidth: '640px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Edit Listing</h1>
@@ -180,6 +182,7 @@ export default function EditListingClient({ id }: { id: string }) {
         {saving ? 'Saving...' : 'Save Changes'}
       </button>
     </main>
+    </PreLaunchGate>
   )
 }
 
