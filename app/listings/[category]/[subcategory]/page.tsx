@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { categories, categoryBySlug, slugify } from '@/lib/data'
-import { buildMetadata } from '@/lib/seo'
+import { buildMetadata, faqSchema, speakableSchema } from '@/lib/seo'
+import { subcategoryFaqs } from '@/lib/seo-faqs'
 import SubcategoryPageClient from './SubcategoryPageClient'
 import ListingDetailClient from './ListingDetailClient'
 
@@ -56,10 +57,15 @@ export default async function SubcategoryOrDetailPage({ params }: { params: Prom
       ],
     }
 
+    const scFaqLd = faqSchema(subcategoryFaqs(subName, cat?.name || category))
+    const scSpeakLd = speakableSchema({ url: `/listings/${category}/${subcategory}` })
+
     return (
       <>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(scFaqLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(scSpeakLd) }} />
         <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
           <SubcategoryPageClient categorySlug={category} subcategorySlug={subcategory} />
         </Suspense>

@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { boroughs, boroughBySlug, categoryBySlug, findNeighborhood, neighborhoodSlug, categories } from '@/lib/data'
-import { buildMetadata } from '@/lib/seo'
+import { buildMetadata, faqSchema, speakableSchema } from '@/lib/seo'
+import { neighborhoodFaqs, boroughCategoryFaqs } from '@/lib/seo-faqs'
 import BoroughCategoryClient from './BoroughCategoryClient'
 import NeighborhoodPageClient from './NeighborhoodPageClient'
 
@@ -62,10 +63,14 @@ export default async function BoroughSlugPage({ params }: { params: Promise<{ bo
       description: `Free ${cat.name.toLowerCase()} listings in ${b.name}, NYC.`,
       url: `${siteUrl}/${borough}/${slug}`,
     }
+    const bcFaqLd = faqSchema(boroughCategoryFaqs(b.name, cat.name))
+    const bcSpeakLd = speakableSchema({ url: `/${borough}/${slug}` })
     return (
       <>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(bcFaqLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(bcSpeakLd) }} />
         <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
           <BoroughCategoryClient boroughSlug={borough} categorySlug={slug} />
         </Suspense>
@@ -104,11 +109,15 @@ export default async function BoroughSlugPage({ params }: { params: Promise<{ bo
         })),
       },
     }
+    const nhFaqLd = faqSchema(neighborhoodFaqs(nh.name, b.name))
+    const nhSpeakLd = speakableSchema({ url: `/${borough}/${slug}` })
     return (
       <>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(placeLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(nhFaqLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(nhSpeakLd) }} />
         <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
           <NeighborhoodPageClient boroughSlug={borough} neighborhoodSlug={slug} />
         </Suspense>

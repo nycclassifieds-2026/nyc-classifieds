@@ -287,6 +287,20 @@ export function itemListSchema(opts: {
   }
 }
 
+// ─── Speakable Schema (for voice assistants + AI) ───
+
+export function speakableSchema(opts: { url: string; cssSelectors?: string[] }) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    url: `${SITE_URL}${opts.url}`,
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: opts.cssSelectors || ['h1', '[data-speakable]'],
+    },
+  }
+}
+
 // ─── Helpers ───
 
 export function jsonLdScript(schema: Record<string, unknown> | Record<string, unknown>[]) {

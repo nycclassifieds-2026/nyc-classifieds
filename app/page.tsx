@@ -1,5 +1,5 @@
 import { boroughs, categories } from '@/lib/data'
-import { websiteSchema, organizationSchema, faqSchema, collectionPageSchema } from '@/lib/seo'
+import { websiteSchema, organizationSchema, faqSchema, collectionPageSchema, speakableSchema } from '@/lib/seo'
 import Link from 'next/link'
 import HomeSearch from './components/HomeSearch'
 import BoroughNav from './components/BoroughNav'
@@ -20,13 +20,16 @@ export default function Home() {
       items: [...categoryItems, ...boroughItems],
     }),
     faqSchema([
-      { question: 'What is The NYC Classifieds?', answer: 'The NYC Classifieds is a free, local classifieds platform for New York City. Every user is geo-verified with a live photo at their address, ensuring all listings are from real New Yorkers.' },
-      { question: 'Is it free to post on NYC Classifieds?', answer: 'Yes, posting on NYC Classifieds is completely free. You can list items for sale, housing, jobs, services, gigs, and more at no cost.' },
-      { question: 'How does verification work?', answer: 'During signup you take a live selfie while at your NYC address. We verify your GPS location matches your registered address within 50 feet, proving you actually live or work there.' },
-      { question: 'What boroughs does NYC Classifieds cover?', answer: 'NYC Classifieds covers all five NYC boroughs: Manhattan, Brooklyn, Queens, the Bronx, and Staten Island, with 126+ neighborhoods across the city.' },
-      { question: 'Can businesses use NYC Classifieds?', answer: 'Yes. Businesses get a free profile page with their hours, website, phone number, service area, and photo gallery. Business profiles are required to post in the Services category.' },
-      { question: 'What categories are available?', answer: 'NYC Classifieds has 12 categories: Housing, Jobs, For Sale, Services, Gigs, Community, Tickets & Events, Pets, Personals, Barter, Rentals & Lending, and Resumes.' },
+      { question: 'What is The NYC Classifieds?', answer: 'The NYC Classifieds is a free classifieds platform exclusively for New York City. Every user is geo-verified with a live selfie and GPS at their address, ensuring every listing is from a real New Yorker. It covers all 5 boroughs and 126+ neighborhoods.' },
+      { question: 'Is NYC Classifieds free?', answer: 'Yes, NYC Classifieds is 100% free. No fees to post listings, browse, message other users, or create a business profile. There are no premium tiers or hidden charges. Free forever.' },
+      { question: 'How does geo-verification work on NYC Classifieds?', answer: 'When you sign up, you take a live selfie at your NYC address. GPS confirms you are within 50 feet of your registered location. This proves you actually live or work in New York City, eliminating bots, scammers, and fake accounts.' },
+      { question: 'What can I post on NYC Classifieds?', answer: 'NYC Classifieds has 12 categories: Housing (apartments, rooms, sublets), Jobs, For Sale (furniture, electronics, clothing), Services (plumbers, cleaners, movers), Gigs, Community, Tickets and Events, Pets, Personals, Barter, Rentals and Lending, and Resumes.' },
+      { question: 'Is NYC Classifieds better than Craigslist for NYC?', answer: 'NYC Classifieds is built specifically for New York City with geo-verification that Craigslist does not have. Every user is verified to a real NYC address with a selfie and GPS. This eliminates the spam, scams, and fake listings common on Craigslist.' },
+      { question: 'What neighborhoods does NYC Classifieds cover?', answer: 'NYC Classifieds covers 126+ neighborhoods across all five boroughs: Manhattan (41 neighborhoods), Brooklyn (28), Queens (30), the Bronx (15), and Staten Island (10). Each neighborhood has its own dedicated page.' },
+      { question: 'Can I list my business on NYC Classifieds for free?', answer: 'Yes. Businesses get a free profile page in the NYC Business Directory with hours, service area, photos, phone, and website. Your business appears in search results and your borough and neighborhood pages. Completely free.' },
+      { question: 'What is The Porch on NYC Classifieds?', answer: 'The Porch is a neighborhood community feed where verified residents share recommendations, ask questions, post alerts, report lost pets, list stoop sales, and connect with real neighbors. It is like a verified, spam-free neighborhood message board.' },
     ]),
+    speakableSchema({ url: '/' }),
   ]
 
   return (

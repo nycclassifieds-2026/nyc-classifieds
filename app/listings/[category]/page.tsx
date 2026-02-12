@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { categories, categoryBySlug, slugify } from '@/lib/data'
-import { buildMetadata } from '@/lib/seo'
+import { buildMetadata, faqSchema, speakableSchema } from '@/lib/seo'
+import { categoryFaqs } from '@/lib/seo-faqs'
 import CategoryPageClient from './CategoryPageClient'
 
 export async function generateStaticParams() {
@@ -110,10 +111,16 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
     ],
   }
 
+  const faqs = categoryFaqs[category]
+  const faqLd = faqs ? faqSchema(faqs) : null
+  const speakableLd = speakableSchema({ url: `/listings/${category}` })
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      {faqLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableLd) }} />
       <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
         <CategoryPageClient categorySlug={category} />
       </Suspense>

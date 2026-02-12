@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { boroughs, boroughBySlug, categories } from '@/lib/data'
-import { buildMetadata } from '@/lib/seo'
+import { buildMetadata, faqSchema, speakableSchema } from '@/lib/seo'
+import { boroughFaqs } from '@/lib/seo-faqs'
 import BoroughPageClient from './BoroughPageClient'
 
 export async function generateStaticParams() {
@@ -90,11 +91,17 @@ export default async function BoroughPage({ params }: { params: Promise<{ boroug
     ],
   }
 
+  const nhSample = b.neighborhoods.slice(0, 8).join(', ')
+  const faqLd = faqSchema(boroughFaqs(b.name, b.neighborhoods.length, nhSample))
+  const speakableLd = speakableSchema({ url: `/${b.slug}` })
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(placeLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableLd) }} />
       <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
         <BoroughPageClient boroughSlug={borough} />
       </Suspense>

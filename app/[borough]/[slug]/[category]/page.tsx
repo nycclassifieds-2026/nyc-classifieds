@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { boroughs, boroughBySlug, categoryBySlug, findNeighborhood, neighborhoodSlug, categories, slugify } from '@/lib/data'
-import { buildMetadata } from '@/lib/seo'
+import { buildMetadata, faqSchema, speakableSchema } from '@/lib/seo'
+import { neighborhoodCategoryFaqs } from '@/lib/seo-faqs'
 import NeighborhoodCategoryClient from './NeighborhoodCategoryClient'
 
 export const dynamicParams = true
@@ -60,10 +61,15 @@ export default async function NeighborhoodCategoryPage({ params }: { params: Pro
     },
   }
 
+  const ncFaqLd = faqSchema(neighborhoodCategoryFaqs(nh.name, b.name, cat.name))
+  const ncSpeakLd = speakableSchema({ url: `/${borough}/${slug}/${category}` })
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ncFaqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ncSpeakLd) }} />
       <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
         <NeighborhoodCategoryClient boroughSlug={borough} neighborhoodSlug={slug} categorySlug={category} />
       </Suspense>
