@@ -28,7 +28,7 @@ export default function LegalPage() {
       ))}
       <main style={{ maxWidth: '720px', margin: '0 auto', padding: '40px 20px 64px', fontFamily: "'DM Sans', sans-serif" }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
-          Legal
+          NYC Classifieds — Legal Information
         </h1>
         <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '32px' }}>
           Last updated: February 11, 2026

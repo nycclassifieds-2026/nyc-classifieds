@@ -83,7 +83,7 @@ export default function SearchClient() {
   return (
     <PreLaunchGate>
     <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Search Listings</h1>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Search Free NYC Classifieds</h1>
 
       <div style={{ marginBottom: '1rem' }}>
         <SearchAutocomplete

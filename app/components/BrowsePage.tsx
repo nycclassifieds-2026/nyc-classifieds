@@ -73,9 +73,8 @@ export default function BrowsePage({
   }, [effectiveCategorySlug, activeSub, borough, neighborhood, sort, page])
 
   return (
-    <PreLaunchGate>
     <main style={{ maxWidth: '1050px', margin: '0 auto', padding: '24px 24px 32px' }}>
-      {/* Breadcrumbs */}
+      {/* Breadcrumbs — always visible for SEO */}
       <nav style={{ display: 'flex', gap: '6px', fontSize: '0.75rem', color: '#6b7280', marginBottom: '16px', flexWrap: 'wrap' }}>
         <Link href="/" style={{ color: '#1a56db', textDecoration: 'none' }}>Home</Link>
         {breadcrumbs.map((bc, i) => (
@@ -90,7 +89,7 @@ export default function BrowsePage({
         ))}
       </nav>
 
-      {/* Header */}
+      {/* H1 — always visible for SEO */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
         <div>
           <h1 style={{ fontSize: '1.375rem', fontWeight: 700, color: '#111827' }}>{title}</h1>
@@ -110,6 +109,7 @@ export default function BrowsePage({
         </Link>
       </div>
 
+      <PreLaunchGate>
       {/* Subcategory filter + sort */}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
         {subs.length > 0 && !subcategorySlug && (
@@ -239,8 +239,8 @@ export default function BrowsePage({
           </button>
         </div>
       )}
+      </PreLaunchGate>
     </main>
-    </PreLaunchGate>
   )
 }
 

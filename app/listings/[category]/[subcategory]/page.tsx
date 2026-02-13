@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { categories, categoryBySlug, slugify } from '@/lib/data'
-import { buildMetadata, faqSchema, speakableSchema } from '@/lib/seo'
+import { categoryBySlug, slugify } from '@/lib/data'
+import { buildMetadata, faqSchema, speakableSchema, SITE_URL } from '@/lib/seo'
 import { subcategoryFaqs } from '@/lib/seo-faqs'
+import { getSupabaseAdmin } from '@/lib/supabase-server'
 import SubcategoryPageClient from './SubcategoryPageClient'
 import ListingDetailClient from './ListingDetailClient'
 
@@ -12,11 +13,43 @@ export async function generateStaticParams() {
   return []
 }
 
+// ─── Server-side listing fetch ───
+
+interface ListingRow {
+  id: number
+  title: string
+  description: string | null
+  price: number | null
+  images: string[]
+  location: string | null
+  category_slug: string
+  subcategory_slug: string | null
+  status: string
+  created_at: string
+  user_id: number
+  users: { id: number; name: string; verified: boolean; created_at: string }
+}
+
+async function fetchListing(id: string): Promise<ListingRow | null> {
+  const db = getSupabaseAdmin()
+  const { data, error } = await db
+    .from('listings')
+    .select('*, users!inner(id, name, verified, created_at)')
+    .eq('id', id)
+    .neq('status', 'removed')
+    .single()
+  if (error || !data) return null
+  return data as ListingRow
+}
+
+// ─── Metadata ───
+
 export async function generateMetadata({ params }: { params: Promise<{ category: string; subcategory: string }> }): Promise<Metadata> {
   const { category, subcategory } = await params
   const cat = categoryBySlug[category]
   const subName = cat?.subs.find(s => slugify(s) === subcategory)
 
+  // Subcategory browse page
   if (subName) {
     const catName = cat?.name || category
     return buildMetadata({
@@ -26,8 +59,25 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
     })
   }
 
+  // Listing detail page
+  const listing = await fetchListing(subcategory)
+  if (listing) {
+    const catName = cat?.name || category
+    const statusPrefix = listing.status === 'sold' ? '[SOLD] ' : listing.status === 'expired' ? '[EXPIRED] ' : ''
+    const loc = listing.location || ''
+    return buildMetadata({
+      title: `${statusPrefix}${listing.title} — ${catName}${loc ? ` in ${loc}` : ''}`,
+      description: listing.description?.slice(0, 155) || `${listing.title} — free classified listing from a verified NYC resident.${loc ? ` Located in ${loc}.` : ''} Browse more on NYC Classifieds.`,
+      path: `/listings/${category}/${subcategory}`,
+    })
+  }
+
   return { title: `Listing #${subcategory}` }
 }
+
+// ─── Page ───
+
+const PRODUCT_CATEGORIES = new Set(['for-sale', 'rentals', 'tickets', 'pets', 'barter', 'housing'])
 
 export default async function SubcategoryOrDetailPage({ params }: { params: Promise<{ category: string; subcategory: string }> }) {
   const { category, subcategory } = await params
@@ -36,7 +86,7 @@ export default async function SubcategoryOrDetailPage({ params }: { params: Prom
 
   if (isSubcategory) {
     const subName = cat?.subs.find(s => slugify(s) === subcategory) || subcategory
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
+    const siteUrl = SITE_URL
 
     const jsonLd = {
       '@context': 'https://schema.org',
@@ -73,9 +123,57 @@ export default async function SubcategoryOrDetailPage({ params }: { params: Prom
     )
   }
 
+  // ─── Listing detail ───
+  const listing = await fetchListing(subcategory)
+  const siteUrl = SITE_URL
+  const catName = cat?.name || category
+  const fullUrl = `${siteUrl}/listings/${category}/${subcategory}`
+
+  // JSON-LD: Product schema for applicable categories
+  const schemas: Record<string, unknown>[] = []
+
+  if (listing) {
+    if (PRODUCT_CATEGORIES.has(category)) {
+      schemas.push({
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: listing.title,
+        description: listing.description || undefined,
+        url: fullUrl,
+        offers: {
+          '@type': 'Offer',
+          price: listing.price ? (listing.price / 100).toFixed(2) : '0',
+          priceCurrency: 'USD',
+          availability: listing.status === 'sold'
+            ? 'https://schema.org/SoldOut'
+            : listing.status === 'expired'
+              ? 'https://schema.org/Discontinued'
+              : 'https://schema.org/InStock',
+          seller: { '@type': 'Person', name: listing.users.name },
+        },
+      })
+    }
+
+    // Breadcrumb always
+    schemas.push({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+        { '@type': 'ListItem', position: 2, name: catName, item: `${siteUrl}/listings/${category}` },
+        { '@type': 'ListItem', position: 3, name: listing.title, item: fullUrl },
+      ],
+    })
+  }
+
   return (
-    <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
-      <ListingDetailClient id={subcategory} />
-    </Suspense>
+    <>
+      {schemas.map((schema, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      ))}
+      <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
+        <ListingDetailClient id={subcategory} />
+      </Suspense>
+    </>
   )
 }

@@ -3,8 +3,8 @@ import { Suspense } from 'react'
 import SearchClient from './SearchClient'
 
 export const metadata: Metadata = {
-  title: 'Search Listings — The NYC Classifieds',
-  description: 'Search free classifieds in New York City. Find apartments, jobs, services, furniture, and more from geo-verified NYC residents across all five boroughs.',
+  title: 'Search Free NYC Classifieds — Apartments, Jobs, Services & More',
+  description: 'Search free local classifieds in New York City. Find apartments, jobs, services, furniture, gigs and more from geo-verified NYC residents across all 5 boroughs.',
 }
 
 export default function SearchPage() {

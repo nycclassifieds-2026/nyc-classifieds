@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 const SITE_NAME = 'The NYC Classifieds'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
-const SITE_DESC = 'The only NYC classifieds where every user is verified with a live selfie + GPS. Apartments, jobs, services, for sale & more across 126+ neighborhoods. 100% free.'
+const SITE_DESC = 'Free local classifieds for NYC. Apartments, jobs, services, for sale, gigs & more across 126+ neighborhoods in all 5 boroughs. Every user geo-verified. 100% free.'
 
 // ─── Metadata builder ───
 
@@ -46,6 +46,8 @@ export function websiteSchema() {
     name: SITE_NAME,
     url: SITE_URL,
     description: SITE_DESC,
+    inLanguage: 'en-US',
+    publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
     potentialAction: {
       '@type': 'SearchAction',
       target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/search?q={search_term_string}` },
@@ -61,11 +63,31 @@ export function organizationSchema() {
     name: SITE_NAME,
     url: SITE_URL,
     description: SITE_DESC,
+    logo: {
+      '@type': 'ImageObject',
+      url: `${SITE_URL}/icon-512.png`,
+      width: 512,
+      height: 512,
+    },
     areaServed: {
       '@type': 'City',
       name: 'New York',
       sameAs: 'https://en.wikipedia.org/wiki/New_York_City',
     },
+    knowsAbout: [
+      'NYC classifieds',
+      'free classifieds',
+      'local classifieds',
+      'New York City apartments',
+      'NYC jobs',
+      'NYC services',
+      'NYC for sale',
+      'neighborhood community boards',
+      'NYC housing',
+      'NYC gigs',
+      'Craigslist alternative',
+    ],
+    slogan: 'Free local classifieds for New York City — every user geo-verified',
   }
 }
 

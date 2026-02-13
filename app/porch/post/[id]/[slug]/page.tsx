@@ -3,30 +3,43 @@ import { Suspense } from 'react'
 import { buildMetadata } from '@/lib/seo'
 import PorchPostClient from './PorchPostClient'
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string; slug: string }> }): Promise<Metadata> {
-  const { id, slug } = await params
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
+interface PostData {
+  title?: string
+  body?: string
+  created_at?: string
+  updated_at?: string
+  borough_slug?: string
+  neighborhood_slug?: string
+  user?: { name?: string }
+  reply_count?: number
+}
 
-  // Attempt to fetch post data for metadata
+async function fetchPost(id: string): Promise<PostData | null> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
   try {
     const res = await fetch(`${siteUrl}/api/porch?post_id=${id}`, { next: { revalidate: 60 } })
-    if (res.ok) {
-      const data = await res.json()
-      const post = data.posts?.[0] || data.post
-      if (post) {
-        const titleText = post.title || slug.replace(/-/g, ' ')
-        const neighborhood = post.neighborhood_slug?.replace(/-/g, ' ') || ''
-        const borough = post.borough_slug?.replace(/-/g, ' ') || ''
-        const location = neighborhood && borough ? ` in ${neighborhood}, ${borough}` : ''
-        return buildMetadata({
-          title: `${titleText}${location} — The Porch | NYC Classifieds`,
-          description: post.body?.slice(0, 160) || `Community discussion${location} on The Porch.`,
-          path: `/porch/post/${id}/${slug}`,
-        })
-      }
-    }
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.posts?.[0] || data.post || null
   } catch {
-    // Fall through to default metadata
+    return null
+  }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string; slug: string }> }): Promise<Metadata> {
+  const { id, slug } = await params
+
+  const post = await fetchPost(id)
+  if (post) {
+    const titleText = post.title || slug.replace(/-/g, ' ')
+    const neighborhood = post.neighborhood_slug?.replace(/-/g, ' ') || ''
+    const borough = post.borough_slug?.replace(/-/g, ' ') || ''
+    const location = neighborhood && borough ? ` in ${neighborhood}, ${borough}` : ''
+    return buildMetadata({
+      title: `${titleText}${location} — The Porch | NYC Classifieds`,
+      description: post.body?.slice(0, 160) || `Community discussion${location} on The Porch.`,
+      path: `/porch/post/${id}/${slug}`,
+    })
   }
 
   const readableSlug = slug.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
@@ -41,16 +54,43 @@ export default async function PorchPostPage({ params }: { params: Promise<{ id: 
   const { id, slug } = await params
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
 
+  const post = await fetchPost(id)
+
   const readableSlug = slug.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
+  const authorName = post?.user?.name || 'NYC Resident'
+  const headline = post?.title || readableSlug
+  const neighborhood = post?.neighborhood_slug?.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) || ''
+  const borough = post?.borough_slug?.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) || ''
 
   const forumLd = {
     '@context': 'https://schema.org',
     '@type': 'DiscussionForumPosting',
-    headline: readableSlug,
-    text: readableSlug,
+    headline,
+    text: post?.body || readableSlug,
     url: `${siteUrl}/porch/post/${id}/${slug}`,
-    datePublished: new Date().toISOString(),
-    author: { '@type': 'Person', name: 'NYC Resident' },
+    datePublished: post?.created_at || new Date().toISOString(),
+    ...(post?.updated_at && { dateModified: post.updated_at }),
+    author: { '@type': 'Person', name: authorName },
+    ...(post?.reply_count != null && { commentCount: post.reply_count }),
+    ...(post?.reply_count != null && {
+      interactionStatistic: {
+        '@type': 'InteractionCounter',
+        interactionType: 'https://schema.org/CommentAction',
+        userInteractionCount: post.reply_count,
+      },
+    }),
+    ...(neighborhood && borough && {
+      spatialCoverage: {
+        '@type': 'Place',
+        name: `${neighborhood}, ${borough}`,
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: borough,
+          addressRegion: 'NY',
+          addressCountry: 'US',
+        },
+      },
+    }),
     isPartOf: {
       '@type': 'DiscussionForum',
       name: 'The Porch — NYC Neighborhood Feed',
@@ -64,7 +104,7 @@ export default async function PorchPostPage({ params }: { params: Promise<{ id: 
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
       { '@type': 'ListItem', position: 2, name: 'The Porch', item: `${siteUrl}/porch` },
-      { '@type': 'ListItem', position: 3, name: readableSlug, item: `${siteUrl}/porch/post/${id}/${slug}` },
+      { '@type': 'ListItem', position: 3, name: headline, item: `${siteUrl}/porch/post/${id}/${slug}` },
     ],
   }
 

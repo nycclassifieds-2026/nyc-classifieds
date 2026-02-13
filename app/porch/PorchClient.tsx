@@ -304,7 +304,7 @@ export default function PorchClient({ boroughSlug, neighborhoodSlug, postTypeSlu
         <div>
           <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#059669' }} />
-            The Porch
+            The Porch — NYC Neighborhood Community Board
           </h1>
           <p style={{ color: '#6b7280', fontSize: '0.8125rem', marginTop: '2px' }}>
             {subtitle} &middot; {total} post{total !== 1 ? 's' : ''}

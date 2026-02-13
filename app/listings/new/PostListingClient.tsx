@@ -104,7 +104,7 @@ export default function PostListingClient() {
   return (
     <PreLaunchGate>
     <main style={{ maxWidth: '640px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Post a Listing</h1>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Post a Free Classified in NYC</h1>
 
       <div style={{ marginBottom: '1.25rem' }}>
         <label style={labelStyle}>Title *</label>

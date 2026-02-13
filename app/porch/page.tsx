@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { buildMetadata, faqSchema, speakableSchema } from '@/lib/seo'
+import { buildMetadata, itemListSchema, speakableSchema } from '@/lib/seo'
+import { getSupabaseAdmin } from '@/lib/supabase-server'
 import PorchClient from './PorchClient'
 import PorchRedirect from '@/app/components/PorchRedirect'
 
@@ -12,8 +13,31 @@ export async function generateMetadata(): Promise<Metadata> {
   })
 }
 
-export default function PorchPage() {
+function slugify(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 80)
+}
+
+export default async function PorchPage() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
+
+  // Fetch recent posts for ItemList schema
+  let recentItems: { name: string; url?: string }[] = []
+  try {
+    const db = getSupabaseAdmin()
+    const { data } = await db
+      .from('porch_posts')
+      .select('id, title')
+      .order('created_at', { ascending: false })
+      .limit(20)
+    if (data) {
+      recentItems = data.map(p => ({
+        name: p.title,
+        url: `${siteUrl}/porch/post/${p.id}/${slugify(p.title)}`,
+      }))
+    }
+  } catch {
+    // Graceful fallback — schema just won't include items
+  }
 
   const forumLd = {
     '@context': 'https://schema.org',
@@ -48,6 +72,15 @@ export default function PorchPage() {
   }
   const porchSpeakLd = speakableSchema({ url: '/porch' })
 
+  const itemsLd = recentItems.length > 0
+    ? itemListSchema({
+        name: 'Recent Porch Discussions',
+        description: 'Latest community discussions from NYC neighborhoods on The Porch.',
+        url: '/porch',
+        items: recentItems,
+      })
+    : null
+
   return (
     <>
       <PorchRedirect />
@@ -55,6 +88,7 @@ export default function PorchPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(porchFaqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(porchSpeakLd) }} />
+      {itemsLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemsLd) }} />}
       <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
         <PorchClient />
       </Suspense>

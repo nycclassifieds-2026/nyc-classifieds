@@ -439,10 +439,9 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
               marginTop: mobile ? '0' : '24px',
               paddingTop: mobile ? '0' : '16px',
               display: 'flex',
-              flexDirection: mobile ? 'column' : 'row',
-              justifyContent: 'space-between',
+              flexDirection: 'column',
               alignItems: 'center',
-              gap: mobile ? '4px' : '0',
+              gap: '4px',
             }}>
               <span style={{
                 fontFamily: "'DM Sans', sans-serif",
@@ -454,6 +453,12 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
               </span>
               <span style={{ color: '#4b5563', fontSize: '0.6875rem' }}>
                 Free. Real. Local. Verified. &copy; {new Date().getFullYear()}
+              </span>
+              <span style={{ color: '#4b5563', fontSize: '0.625rem' }}>
+                Digital Marketing, SEO &amp; AI by{' '}
+                <a href="https://www.consortiumnyc.com/" target="_blank" rel="noopener" style={{ color: '#6b7280', textDecoration: 'underline' }}>
+                  Consortium NYC
+                </a>
               </span>
             </div>
           </div>

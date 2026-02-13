@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import VerifiedBadge from '@/app/components/VerifiedBadge'
 import PreLaunchGate from '@/app/components/PreLaunchGate'
+import { categoryBySlug } from '@/lib/data'
 
 interface Listing {
   id: number
@@ -77,6 +79,10 @@ export default function ListingDetailClient({ id }: { id: string }) {
   if (!listing) return <main style={{ padding: '3rem', textAlign: 'center' }}><h1>Listing not found</h1></main>
 
   const isOwner = currentUser && currentUser.id === listing.user_id
+  const isActive = listing.status === 'active'
+  const isSold = listing.status === 'sold'
+  const isExpired = listing.status === 'expired'
+  const catName = categoryBySlug[listing.category_slug]?.name || listing.category_slug
 
   return (
     <PreLaunchGate>
@@ -87,6 +93,23 @@ export default function ListingDetailClient({ id }: { id: string }) {
       }}>
         &larr; Back
       </button>
+
+      {(isSold || isExpired) && (
+        <div style={{
+          padding: '12px 16px',
+          borderRadius: '8px',
+          marginBottom: '16px',
+          backgroundColor: isSold ? '#fef3c7' : '#f3f4f6',
+          border: `1px solid ${isSold ? '#fbbf24' : '#d1d5db'}`,
+        }}>
+          <p style={{ fontWeight: 600, margin: '0 0 4px 0', color: isSold ? '#92400e' : '#374151' }}>
+            {isSold ? 'This listing has been sold.' : 'This listing has expired.'}
+          </p>
+          <Link href={`/listings/${listing.category_slug}`} style={{ fontSize: '0.875rem', color: '#2563eb' }}>
+            Browse more {catName} listings &rarr;
+          </Link>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: listing.images.length ? '1fr 1fr' : '1fr', gap: '2rem' }}>
         {/* Images */}
@@ -169,7 +192,7 @@ export default function ListingDetailClient({ id }: { id: string }) {
           )}
 
           {/* Actions */}
-          {!isOwner && currentUser && (
+          {!isOwner && currentUser && isActive && (
             <div>
               {!showMessage && !sent && (
                 <button onClick={() => setShowMessage(true)} style={{
@@ -216,7 +239,7 @@ export default function ListingDetailClient({ id }: { id: string }) {
             </div>
           )}
 
-          {!currentUser && (
+          {!currentUser && isActive && (
             <a href="/signup" style={{
               display: 'block', textAlign: 'center', padding: '0.75rem',
               borderRadius: '0.5rem', backgroundColor: '#2563eb', color: '#fff',

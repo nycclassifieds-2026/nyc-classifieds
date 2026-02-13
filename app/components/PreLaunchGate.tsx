@@ -46,11 +46,11 @@ function GateUI() {
   }
 
   return (
-    <main style={{ maxWidth: '640px', margin: '0 auto', padding: '48px 24px 64px', fontFamily: "'DM Sans', sans-serif", textAlign: 'center' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', lineHeight: 1.3, marginBottom: '8px' }}>
+    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '48px 24px 64px', fontFamily: "'DM Sans', sans-serif", textAlign: 'center' }}>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', lineHeight: 1.3, marginBottom: '8px' }}>
         NYC Classifieds is launching at<br />
         <span style={{ color: '#1a56db' }}>{targetStr} verified New Yorkers</span>
-      </h1>
+      </h2>
       <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '24px' }}>
         Free classifieds for all 5 boroughs — housing, jobs, services, for sale & more.
         Every user is geo-verified with a selfie + GPS.
@@ -151,7 +151,7 @@ function GateUI() {
           ))}
         </div>
       </div>
-    </main>
+    </div>
   )
 }
 
