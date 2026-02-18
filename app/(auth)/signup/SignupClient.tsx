@@ -141,7 +141,7 @@ export default function SignupClient() {
       trackEvent('otp', 'completed')
       if (data.hasPin) {
         // Existing user — already logged in via cookie
-        router.push('/')
+        window.location.href = '/account'
       } else {
         // New signup — store token, continue flow (nothing saved to DB yet)
         setEmailToken(data.emailToken)
@@ -243,7 +243,7 @@ export default function SignupClient() {
   const handleVerified = () => {
     trackEvent('done', 'completed')
     setStep('done')
-    setTimeout(() => router.push('/'), 2000)
+    setTimeout(() => { window.location.href = '/account' }, 2000)
   }
 
   const toggleArea = (n: string) => {

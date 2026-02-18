@@ -134,7 +134,21 @@ export const TRAINS = ['A','C','E','B','D','F','M','N','Q','R','W','1','2','3','
 
 // ─── Porch templates ───
 
-interface PorchTemplate { t: string; b: string }
+export interface PorchTemplate { t: string; b: string; s?: number[] }
+
+// Season helpers — months 1-12 (Jan=1, Dec=12)
+const SPRING = [3, 4, 5]
+const SUMMER = [5, 6, 7, 8, 9]
+const FALL = [9, 10, 11]
+const WINTER = [11, 12, 1, 2, 3]
+const WARM = [4, 5, 6, 7, 8, 9, 10]  // outdoor-friendly
+const COLD = [11, 12, 1, 2, 3]
+
+/** Filter templates to only those valid for the current month */
+export function filterSeasonal(templates: PorchTemplate[], month?: number): PorchTemplate[] {
+  const m = month ?? (new Date().getMonth() + 1) // 1-12
+  return templates.filter(t => !t.s || t.s.includes(m))
+}
 
 export const PORCH: Record<string, PorchTemplate[]> = {
   recommendation: [
@@ -173,7 +187,7 @@ export const PORCH: Record<string, PorchTemplate[]> = {
     { t: 'Anyone know a good plumber?', b: 'Kitchen sink backed up and Draino isnt cutting it. Need someone reliable who wont overcharge. {nh} area.' },
     { t: 'Best grocery store in {nh}?', b: 'New to the neighborhood. Where does everyone shop? Looking for good produce and reasonable prices.' },
     { t: 'Parking situation in {nh}?', b: 'Thinking about getting a car. How bad is street parking around here? Any monthly lots that arent insane?' },
-    { t: 'Dog-friendly restaurants in {nh}?', b: 'Have a well-behaved lab. Looking for places with outdoor seating that welcome dogs.' },
+    { t: 'Dog-friendly restaurants in {nh}?', b: 'Have a well-behaved lab. Looking for places with outdoor seating that welcome dogs.', s: WARM },
     { t: 'Best barber in {nh}?', b: 'Need a good fade. Tired of chain places. Who does everyone go to around here?' },
     { t: 'Internet provider — {nh}?', b: 'Moving to {nh}. Optimum or Fios? Anyone have experience? Need reliable wifi for WFH.' },
     { t: 'Where to watch the game in {nh}?', b: 'Looking for a sports bar with big screens, decent wings, not too packed. Any spots?' },
@@ -237,26 +251,32 @@ export const PORCH: Record<string, PorchTemplate[]> = {
     { t: 'lost my metrocard with monthly pass', b: 'i know its a long shot but i dropped my unlimited metrocard somewhere near {street} station. still had 2 weeks left on it. pain. if anyone found it lmk' },
   ],
   event: [
-    { t: 'Free yoga in the park — {nh}', b: 'Every Saturday at 9am at {street} park. All levels welcome. Bring your own mat. 3 years running.' },
-    { t: 'Block party this Saturday — {street}', b: '{street} between {street2} and {street3} is having a block party. DJ, food, kids activities. 2pm-8pm. Free.' },
+    { t: 'Free yoga in the park — {nh}', b: 'Every Saturday at 9am at {street} park. All levels welcome. Bring your own mat. 3 years running.', s: WARM },
+    { t: 'Block party this Saturday — {street}', b: '{street} between {street2} and {street3} is having a block party. DJ, food, kids activities. 2pm-8pm. Free.', s: WARM },
     { t: 'Open mic night — {nh}', b: '{place} is hosting open mic every Thursday at 8pm. Comedy, poetry, music. Sign up at the bar.' },
-    { t: 'Farmers market opens this weekend', b: 'The {nh} farmers market is back! Sundays 8am-2pm at {street}. Produce, bread, honey, flowers.' },
-    { t: 'Community garden volunteer day', b: 'Help us get the {nh} garden ready for spring. This Saturday 10am-1pm. Tools provided.' },
-    { t: 'Free outdoor movie — {nh}', b: 'Showing {movie} this Friday at sundown in the park. Bring blankets and snacks.' },
+    { t: 'Farmers market opens this weekend', b: 'The {nh} farmers market is back! Sundays 8am-2pm at {street}. Produce, bread, honey, flowers.', s: WARM },
+    { t: 'Community garden volunteer day', b: 'Help us get the {nh} garden ready for spring. This Saturday 10am-1pm. Tools provided.', s: [3, 4, 5] },
+    { t: 'Free outdoor movie — {nh}', b: 'Showing {movie} this Friday at sundown in the park. Bring blankets and snacks.', s: SUMMER },
     { t: 'Salsa night — {nh}', b: 'Free salsa lessons + dancing at {place} every Wednesday 7-10pm. Beginners welcome. No partner needed.' },
     { t: 'Kids art class — free, {nh}', b: 'The community center on {street} is offering free art classes for kids 5-12. Saturdays 11am.' },
-    { t: 'FREE CONCERT THIS SATURDAY — {nh}', b: 'LIVE MUSIC ON {street}!! Local bands playing 4pm-10pm. Food vendors, beer garden, face painting for kids. Bring chairs and blankets.' },
-    { t: '{nh} outdoor movie night — {movie}', b: 'We are screening {movie} in the park near {street} this Friday at sundown. Bring a blanket, bring snacks, bring your whole family. Free popcorn while it lasts. Rain date is Saturday.' },
-    { t: 'Cultural Festival — {nh}', b: 'The annual {nh} Cultural Festival is this weekend on {street}. Food from 20+ countries, live performances, art vendors, and activities for children. Saturday and Sunday, 11am-7pm. Free admission.' },
+    { t: 'FREE CONCERT THIS SATURDAY — {nh}', b: 'LIVE MUSIC ON {street}!! Local bands playing 4pm-10pm. Food vendors, beer garden, face painting for kids. Bring chairs and blankets.', s: WARM },
+    { t: '{nh} outdoor movie night — {movie}', b: 'We are screening {movie} in the park near {street} this Friday at sundown. Bring a blanket, bring snacks, bring your whole family. Free popcorn while it lasts. Rain date is Saturday.', s: SUMMER },
+    { t: 'Cultural Festival — {nh}', b: 'The annual {nh} Cultural Festival is this weekend on {street}. Food from 20+ countries, live performances, art vendors, and activities for children. Saturday and Sunday, 11am-7pm. Free admission.', s: WARM },
     { t: 'anyone tryna come to this popup??', b: 'theres a sick popup market at {place} on {street} this saturday. local artists, vintage clothes, jewelry, and a DJ. starts at noon. im def pulling up whos coming w me' },
     { t: 'Trivia night @ {place} — {nh}', b: 'Every Tuesday at 8pm. Teams of 2-6. Winning team gets a $50 bar tab. Its getting competitive lol. Come thru {nh} lets see what you got.' },
     { t: 'DRAG BRUNCH SUNDAY — {nh}', b: 'Drag brunch at {place} on {street} this Sunday! Bottomless mimosas + a full show. $45 per person, reservations required. Trust me its the most fun youll have in {nh} all month.' },
     { t: 'Senior Social — {nh} Community Center', b: 'Join us at the {nh} Community Center on {street} for our weekly senior social. Cards, coffee, conversation, and occasionally bingo. Every Wednesday at 1pm. All are welcome.' },
-    { t: 'Pickup basketball — {street} courts', b: 'we run pickup games every saturday morning at the courts on {street}. 9am. all skill levels but no one who argues every call lol. just come and hoop' },
-    { t: '{nh} Night Market Returns!', b: 'The {nh} Night Market is BACK on {street} every Friday evening through the summer. 50+ food vendors, live music, crafts. 5pm-11pm. Bring cash, most vendors dont take cards. See you there!' },
+    { t: 'Pickup basketball — {street} courts', b: 'we run pickup games every saturday morning at the courts on {street}. 9am. all skill levels but no one who argues every call lol. just come and hoop', s: WARM },
+    { t: '{nh} Night Market Returns!', b: 'The {nh} Night Market is BACK on {street} every Friday evening through the summer. 50+ food vendors, live music, crafts. 5pm-11pm. Bring cash, most vendors dont take cards. See you there!', s: SUMMER },
     { t: 'Storytime at the Library — {nh}', b: 'Every Wednesday at 10:30am, the {nh} branch on {street} does storytime for toddlers. Songs, books, crafts. My little one absolutely loves it. Great way to meet other parents too.' },
     { t: 'Comedy show — {place}, {nh}', b: 'Stand-up comedy at {place} on {street} every Friday. $10 cover. Last week had me CRYING. Some of these comedians are gonna be famous one day. Support local comedy yall.' },
-    { t: 'Rooftop party this weekend — {nh}', b: 'My building on {street} is throwing a rooftop party Saturday at 6pm. BYOB, DJ, good vibes. Residents can bring guests. Come meet your neighbors.' },
+    { t: 'Rooftop party this weekend — {nh}', b: 'My building on {street} is throwing a rooftop party Saturday at 6pm. BYOB, DJ, good vibes. Residents can bring guests. Come meet your neighbors.', s: SUMMER },
+    // Winter indoor events
+    { t: 'Indoor flea market — {nh}', b: 'The {nh} community center on {street} is hosting an indoor flea market this Saturday. Vintage, handmade, art, and food. 10am-5pm. Free entry. Perfect way to spend a cold weekend.' , s: COLD },
+    { t: 'Game night at {place} — {nh}', b: '{place} on {street} is doing board game nights every Saturday. They have a whole shelf of games. $5 gets you a table and a drink. Staying in is the new going out.', s: COLD },
+    { t: 'Live jazz — {place}, {nh}', b: 'Every Friday at {place} on {street}. Intimate jazz night, no cover, just buy a drink. Perfect cold weather vibes. Gets crowded so come early.', s: COLD },
+    { t: 'Soup swap — {nh}', b: 'We are doing a neighborhood soup swap this Sunday at the community center on {street}. Bring a pot of soup, take home containers of everyone elses. 12-3pm. Last time we had 15 different soups!', s: COLD },
+    { t: 'Paint night at {place} — {nh}', b: '{place} is doing paint nights every other Thursday. $30 includes all supplies + a drink. No talent needed, just vibes. Last time someone painted their dog and it was honestly better than mine.', s: COLD },
   ],
   'stoop-sale': [
     { t: 'Stoop sale Saturday — {street}, {nh}', b: 'Clothes, books, kitchen stuff, furniture. Everything must go. Starting 9am. Cash or Venmo.' },
@@ -285,13 +305,13 @@ export const PORCH: Record<string, PorchTemplate[]> = {
   volunteer: [
     { t: 'Soup kitchen needs volunteers — {nh}', b: 'The {nh} Community Kitchen needs help Saturdays 8am-12pm. Serving 200+ meals. No experience needed.' },
     { t: 'Tutoring volunteers — after school', b: '{nh} after school program needs math and reading tutors. Tues/Thurs 3-5pm. Make a difference.' },
-    { t: 'Park cleanup this weekend', b: 'Help clean up the park near {street}. Bags and gloves provided. Meet at main entrance 10am Saturday.' },
+    { t: 'Park cleanup this weekend', b: 'Help clean up the park near {street}. Bags and gloves provided. Meet at main entrance 10am Saturday.', s: WARM },
     { t: 'Senior center needs visitors', b: 'The {nh} Senior Center needs people to visit elderly residents. Even 1 hour/week helps so much.' },
     { t: 'Dog shelter needs walkers — {nh}', b: 'Animal Care Center near {street} needs volunteer dog walkers. Mornings or afternoons. Rewarding work.' },
     { t: 'Community fridge needs stockers — {nh}', b: 'The community fridge on {street} needs people to stock it regularly. If you can donate food or time once a week, it makes a huge difference. DM me to coordinate.' },
     { t: 'VOLUNTEERS NEEDED — {nh} food pantry', b: 'We serve 300+ families every Saturday and we are SHORT on help. 7am-1pm at the church on {street}. No experience needed. Just show up with a good attitude. Please share this.' },
-    { t: 'anyone wanna help paint a mural?', b: 'were painting a community mural on {street} this weekend and need more hands. no art experience needed, well teach you. just wear clothes you dont care about. saturday + sunday 10am-4pm' },
-    { t: 'Beach cleanup — {nh}', b: 'Organizing a beach/shoreline cleanup this Saturday at 9am. Meet at the entrance near {street}. Bags and gloves provided. Bring sunscreen and water. All ages welcome.' },
+    { t: 'anyone wanna help paint a mural?', b: 'were painting a community mural on {street} this weekend and need more hands. no art experience needed, well teach you. just wear clothes you dont care about. saturday + sunday 10am-4pm', s: WARM },
+    { t: 'Beach cleanup — {nh}', b: 'Organizing a beach/shoreline cleanup this Saturday at 9am. Meet at the entrance near {street}. Bags and gloves provided. Bring sunscreen and water. All ages welcome.', s: WARM },
     { t: 'ESL tutors needed — {nh}', b: 'The community center on {street} needs volunteers to help with English classes. Tuesday and Thursday evenings 6-8pm. Even once a month helps.' },
   ],
   carpool: [
@@ -362,20 +382,41 @@ export const PORCH: Record<string, PorchTemplate[]> = {
     { t: 'I love this neighborhood so much', b: 'Every morning I walk to get coffee and at least 3 people say good morning. The lady at the fruit stand saves me the best mangoes. The doorman next door always asks about my mom. {nh} is family.' },
   ],
   seasonal: [
-    { t: 'Snow day vibes in {nh}', b: 'Streets are covered and the park looks magical. Whos building a snowman on {street}? Kids welcome. Bring hot cocoa.' },
-    { t: 'NYC Marathon — road closures near {nh}', b: 'Marathon is Sunday. {street} will be closed most of the day. Plan accordingly. Go cheer for the runners if you can!' },
-    { t: 'Heat wave survival guide — {nh}', b: 'Its gonna be 100+ this week. Cooling centers open at the {nh} community center on {street}. Stay hydrated, check on elderly neighbors, and dont forget your pets.' },
-    { t: 'Cherry blossoms are blooming in {nh}!', b: 'The trees near {street} park are in full bloom. Gorgeous right now. Go take a walk before the petals drop.' },
-    { t: 'Halloween on {street} was AMAZING', b: 'The houses on {street} went all out this year. Full-size candy bars, decorations, the works. This block is legendary. Already planning for next year.' },
-    { t: 'Thanksgiving food drive — {nh}', b: 'Collecting turkeys, sides, and canned goods for families in need. Drop off at {street} church through Wednesday. Every bit helps.' },
-    { t: 'NYE plans in {nh}?', b: 'Not trying to deal with Times Square. Anyone know of local spots doing something fun for New Years in {nh}? Bars, restaurants, house parties, anything.' },
-    { t: 'Summer Fridays at the park — {nh}', b: 'Every Friday this summer theres live music at the park on {street} from 5-8pm. Bring a blanket and something to drink. Best free event in the neighborhood.' },
-    { t: 'Back to school tips for {nh} parents', b: 'School starts next week. Reminder that the free uniform drive is at {street} community center Saturday. Also the after-school program at {place} still has spots.' },
-    { t: 'Fourth of July — best fireworks views in {nh}', b: 'You can see the East River fireworks perfectly from the rooftops on {street}. If your building has roof access, bring chairs and get up there early.' },
-    { t: 'Spring is here and {nh} is GLOWING', b: 'The trees on {street} are blooming, people are on their stoops, kids are out playing, the park is alive again. After that long winter this feels like a miracle. I love this city in spring.' },
-    { t: 'Fall in {nh} hits different', b: 'The leaves on {street} are turning gold and the air finally has that crisp fall feeling. Grabbed a hot cider from {place} and walked through the neighborhood. Moments like this are why I live here.' },
-    { t: 'First snowfall in {nh} and its magic', b: 'Everything is quiet and white and beautiful. Watched kids having a snowball fight on {street} from my window. An old couple was walking arm in arm through it. This city knows how to do winter.' },
-    { t: 'Summer nights in {nh} are undefeated', b: 'People out on stoops, music from open windows, the smell of grills, kids running through hydrants. {street} at sunset is the most beautiful place in the world and I will die on this hill.' },
+    // Winter (Nov-Mar)
+    { t: 'Snow day vibes in {nh}', b: 'Streets are covered and the park looks magical. Whos building a snowman on {street}? Kids welcome. Bring hot cocoa.', s: WINTER },
+    { t: 'First snowfall in {nh} and its magic', b: 'Everything is quiet and white and beautiful. Watched kids having a snowball fight on {street} from my window. An old couple was walking arm in arm through it. This city knows how to do winter.', s: WINTER },
+    { t: 'Best hot chocolate in {nh}?', b: 'Its freezing. I need the thickest, richest hot chocolate in {nh}. Not that watery cocoa mix stuff, I want the real deal. Who has it?', s: COLD },
+    { t: 'Heating broken — landlord ghosting me', b: 'Its 45 degrees in my apartment and my landlord wont return calls. Anyone in {nh} dealt with this? I know theres a 311 complaint option but does it actually work?', s: COLD },
+    { t: 'winter coat drive — {nh}', b: 'Collecting gently used coats, hats, gloves, and scarves for neighbors in need. Drop off at {street} community center through Friday. Adult and kids sizes needed.', s: COLD },
+    { t: 'Black ice warning — {street}', b: 'That sidewalk near {street} and {street2} is a death trap right now. Nearly wiped out twice this morning. Someone needs to salt that. Be careful walking thru {nh}.', s: WINTER },
+    { t: 'Best soup spots in {nh} for this weather', b: 'its literally 15 degrees rn I need the best soup within walking distance. pho? ramen? pozole? give me your go-to in {nh} im begging', s: COLD },
+    { t: 'Pipes froze in my building — {nh}', b: 'Anyone else in {nh} having plumbing issues? Our building on {street} has frozen pipes and no hot water. Management said theyre working on it. Day 2.', s: WINTER },
+    { t: 'Indoor activities for kids — {nh}', b: 'Its too cold to go to the park. What are you all doing with your kids in {nh}? Mine is going stir crazy. Need indoor options that arent just screen time.', s: COLD },
+    { t: 'Cozy cafe recs for rainy/cold days — {nh}', b: '{place} on {street} is my go-to when its gross outside. Good wifi, comfy seating, they dont rush you. Any other cozy spots in {nh}?', s: COLD },
+    { t: 'Valentines Day dinner spots — {nh}', b: 'Looking for somewhere nice but not crazy expensive for Valentines in {nh}. Italian? Thai? Whatever. Just needs good vibes and ideally under $100 for two.', s: [1, 2] },
+    { t: 'Tax prep recommendations — {nh}', b: 'Anyone use a good accountant near {nh}? Last year I did TurboTax and feel like I left money on the table. Looking for someone reasonably priced.', s: [1, 2, 3, 4] },
+    { t: 'Super Bowl watch party — {nh}', b: 'Any bars in {nh} doing a Super Bowl thing? Big screens, specials? Or anyone hosting? I bring good wings and better energy.', s: [1, 2] },
+    { t: 'Salt your sidewalk please — {street}', b: 'To whoever owns the building on {street} between {street2} and {street3}: SALT YOUR SIDEWALK. 3 people slipped there today including me. Its a liability.', s: WINTER },
+    { t: 'Winter farmers market — {nh}', b: 'Did you know the {nh} farmers market runs indoors in winter? Saturdays at the community center on {street}. Root veggies, bread, preserves, hot cider. 9am-1pm.', s: COLD },
+    { t: 'Space heater recommendations?', b: 'My apartment is always freezing no matter what I do. Radiator is lukewarm at best. Need a good space heater that wont destroy my electric bill. Any recs?', s: COLD },
+    { t: 'Lunar New Year celebrations — {nh}', b: 'Happy Lunar New Year! The parade is this weekend on {street}. Firecracker ceremony, lion dances, incredible food. One of the best events in the city every year.', s: [1, 2] },
+    { t: 'Snow removal — who do you call?', b: 'Need someone to shovel my driveway and front walk in {nh}. Getting too old to do it myself. Anyone know a reliable person? Happy to pay fair price.', s: WINTER },
+    // Spring (Mar-May)
+    { t: 'Cherry blossoms are blooming in {nh}!', b: 'The trees near {street} park are in full bloom. Gorgeous right now. Go take a walk before the petals drop.', s: SPRING },
+    { t: 'Spring is here and {nh} is GLOWING', b: 'The trees on {street} are blooming, people are on their stoops, kids are out playing, the park is alive again. After that long winter this feels like a miracle. I love this city in spring.', s: SPRING },
+    // Summer (May-Sep)
+    { t: 'Heat wave survival guide — {nh}', b: 'Its gonna be 100+ this week. Cooling centers open at the {nh} community center on {street}. Stay hydrated, check on elderly neighbors, and dont forget your pets.', s: SUMMER },
+    { t: 'Summer Fridays at the park — {nh}', b: 'Every Friday this summer theres live music at the park on {street} from 5-8pm. Bring a blanket and something to drink. Best free event in the neighborhood.', s: SUMMER },
+    { t: 'Fourth of July — best fireworks views in {nh}', b: 'You can see the East River fireworks perfectly from the rooftops on {street}. If your building has roof access, bring chairs and get up there early.', s: [6, 7] },
+    { t: 'Summer nights in {nh} are undefeated', b: 'People out on stoops, music from open windows, the smell of grills, kids running through hydrants. {street} at sunset is the most beautiful place in the world and I will die on this hill.', s: SUMMER },
+    // Fall (Sep-Nov)
+    { t: 'Fall in {nh} hits different', b: 'The leaves on {street} are turning gold and the air finally has that crisp fall feeling. Grabbed a hot cider from {place} and walked through the neighborhood. Moments like this are why I live here.', s: FALL },
+    { t: 'NYC Marathon — road closures near {nh}', b: 'Marathon is Sunday. {street} will be closed most of the day. Plan accordingly. Go cheer for the runners if you can!', s: [10, 11] },
+    { t: 'Halloween on {street} was AMAZING', b: 'The houses on {street} went all out this year. Full-size candy bars, decorations, the works. This block is legendary. Already planning for next year.', s: [10, 11] },
+    { t: 'Thanksgiving food drive — {nh}', b: 'Collecting turkeys, sides, and canned goods for families in need. Drop off at {street} church through Wednesday. Every bit helps.', s: [11] },
+    { t: 'Back to school tips for {nh} parents', b: 'School starts next week. Reminder that the free uniform drive is at {street} community center Saturday. Also the after-school program at {place} still has spots.', s: [8, 9] },
+    // Year-end
+    { t: 'NYE plans in {nh}?', b: 'Not trying to deal with Times Square. Anyone know of local spots doing something fun for New Years in {nh}? Bars, restaurants, house parties, anything.', s: [12, 1] },
   ],
   group: [
     { t: '{nh} running group — all levels', b: 'We run 3x/week. Tues/Thurs 6:30am, Saturday 8am. All paces welcome. Meet at {street} park.' },
@@ -387,7 +428,7 @@ export const PORCH: Record<string, PorchTemplate[]> = {
     { t: '{nh} Dog Owners Group', b: 'Starting a group for dog owners in {nh}. Group walks, doggy playdates, vet recommendations, emergency pet sitting swaps. Meet at the park near {street} Saturdays at 10am. DM to join our group chat.' },
     { t: 'Writers group — {nh}', b: 'Looking for 5-6 writers to meet biweekly at {place}. Fiction, nonfiction, poetry, whatever. Workshop format — bring pages, get feedback. Supportive but honest. Thursday evenings.' },
     { t: '{nh} Board Game Night', b: 'Every Wednesday at 7pm at {place} on {street}. We have Catan, Ticket to Ride, Codenames, and more. Bring your own if you want. Beginners totally welcome. Usually 8-12 people. Just come!' },
-    { t: 'Cycling group — {nh}', b: 'Weekend rides through the city. Meet at {street} Saturdays at 7am. All speeds welcome but you need to be able to do 20+ miles. Road or hybrid bikes. Casual, no lycra required.' },
+    { t: 'Cycling group — {nh}', b: 'Weekend rides through the city. Meet at {street} Saturdays at 7am. All speeds welcome but you need to be able to do 20+ miles. Road or hybrid bikes. Casual, no lycra required.', s: WARM },
   ],
 }
 

@@ -9,7 +9,7 @@
 
 import { SupabaseClient } from '@supabase/supabase-js'
 import {
-  pick, rb, nhName, fill,
+  pick, rb, nhName, fill, filterSeasonal,
   BOROUGHS, BOROUGH_WEIGHTS, NAMES, DEMO_WEIGHTS,
   STREETS, PLACES, CITIES, HOBBIES, MOVIES, BOOKS, TRAINS,
   PORCH, REPLIES_SHORT, REPLIES_MEDIUM, REPLIES_LONG,
@@ -357,8 +357,10 @@ function createNeighborhoodTracker() {
 }
 
 function generatePorchPost(user: SeedUser, created_at: string, postType: string, usedTemplates: Set<string>) {
-  const templates = PORCH[postType]
-  if (!templates) return null
+  const allTemplates = PORCH[postType]
+  if (!allTemplates) return null
+  // Filter by current season before selecting
+  const templates = filterSeasonal(allTemplates)
   const available = templates.filter(t => !usedTemplates.has(`${postType}:${t.t}`))
   if (available.length === 0) return null
 

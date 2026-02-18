@@ -20,6 +20,7 @@ interface Business {
   selfie_url: string | null
   business_photo: string | null
   business_address: string | null
+  social_links: Record<string, string> | null
   verified: boolean
   created_at: string
 }
@@ -124,6 +125,14 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
         name: `${n}, New York, NY`,
       })),
     }),
+    ...(business.social_links && (() => {
+      const urls: string[] = []
+      if (business.social_links.instagram) urls.push(`https://instagram.com/${business.social_links.instagram.replace(/^@/, '')}`)
+      if (business.social_links.facebook) urls.push(business.social_links.facebook.startsWith('http') ? business.social_links.facebook : `https://facebook.com/${business.social_links.facebook}`)
+      if (business.social_links.linkedin) urls.push(business.social_links.linkedin.startsWith('http') ? business.social_links.linkedin : `https://linkedin.com/in/${business.social_links.linkedin}`)
+      if (business.social_links.yelp) urls.push(business.social_links.yelp.startsWith('http') ? business.social_links.yelp : `https://yelp.com/biz/${business.social_links.yelp}`)
+      return urls.length > 0 ? { sameAs: urls } : {}
+    })()),
   }
 
   return (
@@ -321,6 +330,50 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
             )}
           </div>
 
+          {/* Social Links */}
+          {business.social_links && Object.values(business.social_links).some(v => v) && (
+            <div style={{ ...cardStyle, marginTop: '16px' }}>
+              <h3 style={cardHeading}>Follow</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {business.social_links.instagram && (
+                  <a href={`https://instagram.com/${business.social_links.instagram.replace(/^@/, '')}`}
+                    target="_blank" rel="noopener noreferrer" style={socialLink}>
+                    Instagram
+                  </a>
+                )}
+                {business.social_links.tiktok && (
+                  <a href={`https://tiktok.com/@${business.social_links.tiktok.replace(/^@/, '')}`}
+                    target="_blank" rel="noopener noreferrer" style={socialLink}>
+                    TikTok
+                  </a>
+                )}
+                {business.social_links.facebook && (
+                  <a href={business.social_links.facebook.startsWith('http') ? business.social_links.facebook : `https://facebook.com/${business.social_links.facebook}`}
+                    target="_blank" rel="noopener noreferrer" style={socialLink}>
+                    Facebook
+                  </a>
+                )}
+                {business.social_links.yelp && (
+                  <a href={business.social_links.yelp.startsWith('http') ? business.social_links.yelp : `https://yelp.com/biz/${business.social_links.yelp}`}
+                    target="_blank" rel="noopener noreferrer" style={socialLink}>
+                    Yelp
+                  </a>
+                )}
+                {business.social_links.google && (
+                  <a href={business.social_links.google} target="_blank" rel="noopener noreferrer" style={socialLink}>
+                    Google
+                  </a>
+                )}
+                {business.social_links.linkedin && (
+                  <a href={business.social_links.linkedin.startsWith('http') ? business.social_links.linkedin : `https://linkedin.com/in/${business.social_links.linkedin}`}
+                    target="_blank" rel="noopener noreferrer" style={socialLink}>
+                    LinkedIn
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Member since */}
           <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '12px', textAlign: 'center' }}>
             Member since {new Date(business.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
@@ -354,4 +407,10 @@ const cardStyle: React.CSSProperties = {
 
 const cardHeading: React.CSSProperties = {
   fontSize: '0.875rem', fontWeight: 700, color: '#111827', marginBottom: '10px',
+}
+
+const socialLink: React.CSSProperties = {
+  display: 'inline-block', padding: '5px 12px', borderRadius: '1rem',
+  backgroundColor: '#eff6ff', color: '#2563eb', fontSize: '0.8125rem',
+  fontWeight: 500, textDecoration: 'none',
 }

@@ -380,130 +380,146 @@ export default function PorchPostClient({ postId }: PorchPostClientProps) {
 
       {/* Replies */}
       <section>
-        <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#111827', marginBottom: '12px' }}>
+        <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#111827', marginBottom: '16px' }}>
           {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
         </h2>
 
         {replies.length === 0 && (
           <div style={{
-            padding: '20px', textAlign: 'center', border: '1px dashed #e5e7eb',
+            padding: '24px', textAlign: 'center', backgroundColor: '#f9fafb',
             borderRadius: '8px', marginBottom: '16px',
           }}>
-            <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>No replies yet. Be the first to respond.</p>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>No replies yet. Be the first to chime in.</p>
           </div>
         )}
 
-        {replies.map(reply => {
-          const replyUser = reply.users
-          const voted = userVotes.includes(reply.id)
+        {replies.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+            {replies.map((reply, idx) => {
+              const replyUser = reply.users
+              const voted = userVotes.includes(reply.id)
+              const isLast = idx === replies.length - 1
 
-          return (
-            <div key={reply.id} style={{
-              backgroundColor: '#ffffff',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              padding: '12px 14px',
-              marginBottom: '8px',
-            }}>
-              {/* Reply header: face + name + time */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Avatar user={replyUser || { name: 'Anonymous', selfie_url: null }} size={28} />
-                  <Link href={`#`} style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#111827', textDecoration: 'none' }}>
-                    {replyUser?.name || 'Anonymous'}
-                  </Link>
-                  {replyUser?.verified && <VerifiedBadge size={13} />}
+              return (
+                <div key={reply.id} style={{ display: 'flex', gap: '12px' }}>
+                  {/* Thread line + avatar */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                    <Avatar user={replyUser || { name: 'Anonymous', selfie_url: null }} size={32} />
+                    {!isLast && (
+                      <div style={{ width: '2px', flex: 1, backgroundColor: '#e5e7eb', marginTop: '4px' }} />
+                    )}
+                  </div>
+
+                  {/* Reply content */}
+                  <div style={{ flex: 1, paddingBottom: isLast ? '0' : '16px', minWidth: 0 }}>
+                    {/* Name + time row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#111827' }}>
+                        {replyUser?.name || 'Anonymous'}
+                      </span>
+                      {replyUser?.verified && <VerifiedBadge size={13} />}
+                      <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>&middot; {getTimeAgo(reply.created_at)}</span>
+                    </div>
+
+                    {/* Reply body */}
+                    <div style={{
+                      fontSize: '0.9375rem', color: '#374151', lineHeight: 1.55,
+                      whiteSpace: 'pre-wrap',
+                    }}>
+                      {reply.body}
+                    </div>
+
+                    {/* Actions row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                      <button
+                        onClick={(e) => { e.preventDefault(); handleHelpful(reply.id) }}
+                        disabled={!user || helpfulLoading[reply.id]}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '4px',
+                          background: 'none', border: 'none',
+                          cursor: user ? 'pointer' : 'default',
+                          fontSize: '0.75rem', fontWeight: 500,
+                          color: voted ? '#1a56db' : '#9ca3af',
+                          padding: '2px 0',
+                        }}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill={voted ? '#1a56db' : 'none'} stroke={voted ? '#1a56db' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z" />
+                          <path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3" />
+                        </svg>
+                        <span>{reply.helpful_count > 0 ? reply.helpful_count : ''} Helpful</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{getTimeAgo(reply.created_at)}</span>
-              </div>
-
-              {/* Reply body */}
-              <div style={{
-                fontSize: '0.875rem', color: '#374151', lineHeight: 1.5,
-                whiteSpace: 'pre-wrap', marginBottom: '6px',
-              }}>
-                {reply.body}
-              </div>
-
-              {/* Helpful button */}
-              <button
-                onClick={(e) => { e.preventDefault(); handleHelpful(reply.id) }}
-                disabled={!user || helpfulLoading[reply.id]}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '4px',
-                  background: 'none', border: 'none',
-                  cursor: user ? 'pointer' : 'default',
-                  fontSize: '0.75rem', fontWeight: 500,
-                  color: voted ? '#1a56db' : '#9ca3af',
-                  padding: '2px 0',
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill={voted ? '#1a56db' : 'none'} stroke={voted ? '#1a56db' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z" />
-                  <path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3" />
-                </svg>
-                <span>{reply.helpful_count > 0 ? `${reply.helpful_count} Helpful` : 'Helpful'}</span>
-              </button>
-            </div>
-          )
-        })}
+              )
+            })}
+          </div>
+        )}
 
         {/* Reply form */}
-        <div style={{
-          backgroundColor: '#ffffff', border: '1px solid #e5e7eb',
-          borderRadius: '8px', padding: '14px', marginTop: '12px',
-        }}>
+        <div style={{ marginTop: '20px' }}>
           {!authChecked ? (
-            <div style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Loading...</div>
+            <div style={{ color: '#9ca3af', fontSize: '0.875rem', padding: '12px' }}>Loading...</div>
           ) : !user ? (
-            <div style={{ textAlign: 'center', padding: '8px' }}>
+            <div style={{
+              textAlign: 'center', padding: '16px',
+              backgroundColor: '#f9fafb', borderRadius: '8px',
+            }}>
               <Link href="/login" style={{ color: '#1a56db', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none' }}>
                 Log in to reply
               </Link>
             </div>
           ) : (
-            <>
-              <label style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#374151', marginBottom: '6px', display: 'block' }}>
-                Write a reply
-              </label>
-              <textarea
-                value={replyBody}
-                onChange={e => setReplyBody(e.target.value.slice(0, 300))}
-                placeholder="Share your thoughts..."
-                rows={3}
-                style={{
-                  width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e5e7eb',
-                  fontSize: '0.875rem', color: '#111827', outline: 'none', resize: 'vertical',
-                  fontFamily: "'DM Sans', sans-serif", boxSizing: 'border-box',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                  {replyBody.length}/300 &middot; 3 replies max per conversation
-                </div>
-                <button
-                  onClick={handleSubmitReply}
-                  disabled={replySubmitting || !replyBody.trim()}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <Avatar user={{ name: user.name, selfie_url: null }} size={32} />
+              <div style={{ flex: 1 }}>
+                <textarea
+                  value={replyBody}
+                  onChange={e => setReplyBody(e.target.value.slice(0, 300))}
+                  placeholder="Write a reply..."
+                  rows={2}
+                  onFocus={e => { e.target.rows = 3 }}
                   style={{
-                    backgroundColor: replySubmitting || !replyBody.trim() ? '#9ca3af' : '#1a56db',
-                    color: '#ffffff', padding: '6px 18px', borderRadius: '6px',
-                    fontSize: '0.8125rem', fontWeight: 600, border: 'none',
-                    cursor: replySubmitting || !replyBody.trim() ? 'not-allowed' : 'pointer',
+                    width: '100%', padding: '10px 14px', borderRadius: '8px',
+                    border: '1px solid #e5e7eb', backgroundColor: '#f9fafb',
+                    fontSize: '0.875rem', color: '#111827', outline: 'none', resize: 'none',
+                    fontFamily: "'DM Sans', sans-serif", boxSizing: 'border-box',
+                    transition: 'border-color 0.15s, background-color 0.15s',
                   }}
-                >
-                  {replySubmitting ? 'Posting...' : 'Reply'}
-                </button>
-              </div>
+                  onFocusCapture={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#1a56db'; (e.target as HTMLTextAreaElement).style.backgroundColor = '#fff' }}
+                  onBlurCapture={e => { (e.target as HTMLTextAreaElement).style.borderColor = '#e5e7eb'; (e.target as HTMLTextAreaElement).style.backgroundColor = '#f9fafb' }}
+                />
+                {(replyBody.trim() || replyError) && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
+                      {replyBody.length}/300
+                    </div>
+                    <button
+                      onClick={handleSubmitReply}
+                      disabled={replySubmitting || !replyBody.trim()}
+                      style={{
+                        backgroundColor: replySubmitting || !replyBody.trim() ? '#93c5fd' : '#1a56db',
+                        color: '#ffffff', padding: '6px 20px', borderRadius: '6px',
+                        fontSize: '0.8125rem', fontWeight: 600, border: 'none',
+                        cursor: replySubmitting || !replyBody.trim() ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {replySubmitting ? 'Posting...' : 'Reply'}
+                    </button>
+                  </div>
+                )}
 
-              {replyError && (
-                <div style={{
-                  backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px',
-                  padding: '8px 12px', marginTop: '8px', fontSize: '0.8125rem', color: '#dc2626',
-                }}>
-                  {replyError}
-                </div>
-              )}
-            </>
+                {replyError && (
+                  <div style={{
+                    backgroundColor: '#fef2f2', borderRadius: '6px',
+                    padding: '8px 12px', marginTop: '8px', fontSize: '0.8125rem', color: '#dc2626',
+                  }}>
+                    {replyError}
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </section>
