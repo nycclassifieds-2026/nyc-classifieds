@@ -379,6 +379,14 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
           </div>
         )}
 
+        {/* ═══ MISSION BANNER ═══ */}
+        <div style={{
+          background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '10px',
+          padding: '12px 16px', marginBottom: '12px', fontSize: '0.8125rem', color: '#0c4a6e', lineHeight: 1.5,
+        }}>
+          The NYC Classifieds helps small business owners connect with customers — completely free. No fees, no ads, no catches. Just genuine support for the people who make New York&apos;s neighborhoods great.
+        </div>
+
         {/* ═══ HERO BANNER ═══ */}
         <div style={{
           background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
@@ -480,14 +488,6 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
           <span style={{ margin: '0 6px' }}>/</span>
           <span style={{ color: '#111827', fontWeight: 500 }}>{business.business_name}</span>
         </nav>
-
-        {/* ═══ MISSION BANNER ═══ */}
-        <div style={{
-          background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '10px',
-          padding: '12px 16px', marginBottom: '16px', fontSize: '0.8125rem', color: '#0c4a6e', lineHeight: 1.5,
-        }}>
-          The NYC Classifieds helps small business owners connect with customers — completely free. No fees, no ads, no catches. Just genuine support for the people who make New York&apos;s neighborhoods great.
-        </div>
 
         {/* ═══ CTA ROW ═══ */}
         <div className="bp-cta-row" style={{ marginBottom: '20px' }}>
