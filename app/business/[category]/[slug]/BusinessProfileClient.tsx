@@ -305,8 +305,38 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
     count: reviews.filter(r => r.rating === star).length,
   }))
 
+  // JSON-LD for SEO
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: business.business_name,
+    ...(business.business_category && { additionalType: business.business_category }),
+    ...(business.business_description && { description: business.business_description }),
+    url: `${typeof window !== 'undefined' ? window.location.origin : ''}/business/${category}/${slug}`,
+    address: {
+      '@type': 'PostalAddress',
+      ...(business.business_address && { streetAddress: business.business_address }),
+      addressLocality: 'New York',
+      addressRegion: 'NY',
+      addressCountry: 'US',
+    },
+    ...(business.phone && { telephone: business.phone }),
+    ...(websiteUrl && { url: websiteUrl }),
+    ...(bizAvatar && { image: bizAvatar }),
+    ...(reviewCount > 0 && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: reviewAverage,
+        reviewCount,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }),
+  }
+
   return (
     <PreLaunchGate>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <style>{`
         .bp-grid { display: grid; grid-template-columns: 1fr 340px; gap: 32px; }
         .bp-cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
