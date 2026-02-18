@@ -21,7 +21,7 @@ export default function LoginClient() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Login failed')
-      router.push('/')
+      router.push('/account')
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Login failed'
       setError(msg)
