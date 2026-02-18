@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { runSeedCron } from '@/lib/seed-engine'
+import { runListingSeedCron } from '@/lib/seed-listings-engine'
+import { createDailySeedUsers } from '@/lib/seed-users'
 
 export async function GET(request: NextRequest) {
   // Verify cron secret
@@ -17,11 +19,21 @@ export async function GET(request: NextRequest) {
 
   try {
     const db = getSupabaseAdmin()
-    const result = await runSeedCron(db)
+
+    // Create new seed users first (5-15/day)
+    const newUsers = await createDailySeedUsers(db)
+
+    // Run both engines in parallel
+    const [porchResult, listingResult] = await Promise.all([
+      runSeedCron(db),
+      runListingSeedCron(db),
+    ])
 
     return NextResponse.json({
       ok: true,
-      ...result,
+      porch: porchResult,
+      listings: listingResult,
+      new_seed_users: newUsers,
       timestamp: new Date().toISOString(),
     })
   } catch (err) {

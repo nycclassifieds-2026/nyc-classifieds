@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import VerifiedBadge from '@/app/components/VerifiedBadge'
-import { porchPostTypeBySlug, slugify } from '@/lib/data'
+import { porchPostTypeBySlug, slugify, businessCategories } from '@/lib/data'
 
 interface User {
   id: number
@@ -53,6 +53,15 @@ export default function AccountClient() {
   const [porchPosts, setPorchPosts] = useState<PorchPost[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [showUpgrade, setShowUpgrade] = useState(false)
+  const [upgrading, setUpgrading] = useState(false)
+  const [upgradeForm, setUpgradeForm] = useState({
+    business_name: '',
+    business_category: '',
+    business_description: '',
+    website: '',
+    phone: '',
+  })
 
   useEffect(() => {
     fetch('/api/auth')
@@ -99,6 +108,32 @@ export default function AccountClient() {
       body: JSON.stringify({ status: 'sold' }),
     })
     setListings(prev => prev.map(l => l.id === listingId ? { ...l, status: 'sold' } : l))
+  }
+
+  const handleUpgrade = async () => {
+    if (!upgradeForm.business_name.trim() || !upgradeForm.business_category) return
+    setUpgrading(true)
+    try {
+      const res = await fetch('/api/account/upgrade-business', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(upgradeForm),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        // Refresh user data
+        const authRes = await fetch('/api/auth')
+        const authData = await authRes.json()
+        if (authData.authenticated) setUser(authData.user)
+        setShowUpgrade(false)
+      } else {
+        alert(data.error || 'Failed to upgrade')
+      }
+    } catch {
+      alert('Failed to upgrade')
+    } finally {
+      setUpgrading(false)
+    }
   }
 
   if (loading) return <main style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Loading...</main>
@@ -166,20 +201,54 @@ export default function AccountClient() {
           {/* Email */}
           <div style={{ color: '#64748b', fontSize: '0.8125rem', marginBottom: '0.5rem' }}>{user.email}</div>
 
-          {/* Account type badge */}
-          <span style={{
-            display: 'inline-block',
-            fontSize: '0.7rem',
-            fontWeight: 600,
-            padding: '0.2rem 0.6rem',
-            borderRadius: '9999px',
-            backgroundColor: isBusiness ? '#eff6ff' : '#f0fdf4',
-            color: isBusiness ? '#1d4ed8' : '#16a34a',
-            textTransform: 'uppercase',
-            letterSpacing: '0.03em',
-          }}>
-            {isBusiness ? 'Business' : 'Personal'}
-          </span>
+          {/* Account type badges */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{
+              display: 'inline-block',
+              fontSize: '0.7rem',
+              fontWeight: 600,
+              padding: '0.2rem 0.6rem',
+              borderRadius: '9999px',
+              backgroundColor: '#f0fdf4',
+              color: '#16a34a',
+              textTransform: 'uppercase',
+              letterSpacing: '0.03em',
+            }}>
+              Personal
+            </span>
+            {isBusiness && (
+              <span style={{
+                display: 'inline-block',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                padding: '0.2rem 0.6rem',
+                borderRadius: '9999px',
+                backgroundColor: '#eff6ff',
+                color: '#1d4ed8',
+                textTransform: 'uppercase',
+                letterSpacing: '0.03em',
+              }}>
+                + Business
+              </span>
+            )}
+            {!isBusiness && (
+              <button
+                onClick={() => setShowUpgrade(true)}
+                style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  padding: '0.2rem 0.6rem',
+                  borderRadius: '9999px',
+                  border: '1px solid #2563eb',
+                  backgroundColor: '#fff',
+                  color: '#2563eb',
+                  cursor: 'pointer',
+                }}
+              >
+                + Add Business Profile
+              </button>
+            )}
+          </div>
         </div>
 
         <button onClick={handleLogout} style={{
@@ -241,7 +310,7 @@ export default function AccountClient() {
           paddingBottom: '2rem',
           borderBottom: '1px solid #e2e8f0',
         }}>
-          <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.75rem' }}>Business Info</h2>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.75rem' }}>Business Profile</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
             <div>
               <span style={{ color: '#64748b' }}>Name: </span>
@@ -451,8 +520,130 @@ export default function AccountClient() {
           })}
         </div>
       )}
+
+      {/* Upgrade to Business Modal */}
+      {showUpgrade && (
+        <div style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000, padding: '1rem',
+        }} onClick={() => setShowUpgrade(false)}>
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              backgroundColor: '#fff', borderRadius: '1rem', padding: '2rem',
+              maxWidth: '480px', width: '100%', maxHeight: '90vh', overflowY: 'auto',
+            }}
+          >
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Add Business Profile</h2>
+            <p style={{ fontSize: '0.8125rem', color: '#64748b', marginBottom: '1.5rem' }}>
+              Add a business profile to your account. Your personal profile stays as your main identity — you&apos;ll choose which to post as. Since you&apos;re already verified, this is instant.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={labelStyle}>Business Name *</label>
+                <input
+                  value={upgradeForm.business_name}
+                  onChange={e => setUpgradeForm(f => ({ ...f, business_name: e.target.value }))}
+                  placeholder="e.g. Maria's Cleaning Service"
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Category *</label>
+                <select
+                  value={upgradeForm.business_category}
+                  onChange={e => setUpgradeForm(f => ({ ...f, business_category: e.target.value }))}
+                  style={inputStyle}
+                >
+                  <option value="">Select a category</option>
+                  {businessCategories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Description</label>
+                <textarea
+                  value={upgradeForm.business_description}
+                  onChange={e => setUpgradeForm(f => ({ ...f, business_description: e.target.value }))}
+                  placeholder="Tell NYC about your business"
+                  rows={3}
+                  style={{ ...inputStyle, resize: 'vertical' }}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Website</label>
+                <input
+                  value={upgradeForm.website}
+                  onChange={e => setUpgradeForm(f => ({ ...f, website: e.target.value }))}
+                  placeholder="https://yourbusiness.com"
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Phone</label>
+                <input
+                  value={upgradeForm.phone}
+                  onChange={e => setUpgradeForm(f => ({ ...f, phone: e.target.value }))}
+                  placeholder="(212) 555-1234"
+                  style={inputStyle}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  onClick={() => setShowUpgrade(false)}
+                  style={{
+                    flex: 1, padding: '0.75rem', borderRadius: '0.5rem',
+                    border: '1px solid #e2e8f0', backgroundColor: '#fff',
+                    color: '#475569', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpgrade}
+                  disabled={upgrading || !upgradeForm.business_name.trim() || !upgradeForm.business_category}
+                  style={{
+                    flex: 1, padding: '0.75rem', borderRadius: '0.5rem',
+                    border: 'none', backgroundColor: '#2563eb', color: '#fff',
+                    fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer',
+                    opacity: (upgrading || !upgradeForm.business_name.trim() || !upgradeForm.business_category) ? 0.5 : 1,
+                  }}
+                >
+                  {upgrading ? 'Adding...' : 'Add Business Profile'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '0.8125rem',
+  fontWeight: 600,
+  color: '#334155',
+  marginBottom: '0.375rem',
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '0.625rem 0.75rem',
+  borderRadius: '0.5rem',
+  border: '1px solid #e2e8f0',
+  fontSize: '0.875rem',
+  outline: 'none',
+  boxSizing: 'border-box',
 }
 
 const smallLinkStyle: React.CSSProperties = {

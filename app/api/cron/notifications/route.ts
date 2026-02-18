@@ -103,6 +103,10 @@ export async function GET(request: NextRequest) {
 
   let digestSent = false
   try {
+    // Yesterday boundaries for growth comparison
+    const yesterdayStart = new Date(todayStart.getTime() - 86400000)
+    const yesterdayStartISO2 = yesterdayStart.toISOString()
+
     // Gather today's stats (real users only, exclude @example.com seed users)
     const [
       { count: newUsers },
@@ -138,12 +142,65 @@ export async function GET(request: NextRequest) {
         .eq('status', 'active'),
     ])
 
-    // Seed posts today
-    const { count: seedPostsToday } = await db
-      .from('porch_posts')
-      .select('id', { count: 'exact', head: true })
+    // Seed stats today
+    const [
+      { count: seedPostsToday },
+      { count: seedRepliesToday },
+      { count: seedListingsToday },
+      { count: seedNewUsers },
+      { count: totalSeedUsers },
+      { count: totalPorchPosts },
+      { count: totalSeedListings },
+    ] = await Promise.all([
+      db.from('porch_posts').select('id', { count: 'exact', head: true })
+        .gte('created_at', todayStartISO)
+        .filter('user_id', 'in', `(SELECT id FROM users WHERE email LIKE '%@example.com')`),
+      db.from('porch_replies').select('id', { count: 'exact', head: true })
+        .gte('created_at', todayStartISO)
+        .filter('user_id', 'in', `(SELECT id FROM users WHERE email LIKE '%@example.com')`),
+      db.from('listings').select('id', { count: 'exact', head: true })
+        .gte('created_at', todayStartISO)
+        .filter('user_id', 'in', `(SELECT id FROM users WHERE email LIKE '%@example.com')`),
+      db.from('users').select('id', { count: 'exact', head: true })
+        .gte('created_at', todayStartISO)
+        .like('email', '%@example.com'),
+      db.from('users').select('id', { count: 'exact', head: true })
+        .like('email', '%@example.com'),
+      db.from('porch_posts').select('id', { count: 'exact', head: true }),
+      db.from('listings').select('id', { count: 'exact', head: true })
+        .filter('user_id', 'in', `(SELECT id FROM users WHERE email LIKE '%@example.com')`)
+        .eq('status', 'active'),
+    ])
+
+    // Yesterday stats for growth comparison
+    const [
+      { count: yesterdayListings },
+      { count: yesterdayPorchPosts },
+      { count: yesterdaySeedUsers },
+    ] = await Promise.all([
+      db.from('listings').select('id', { count: 'exact', head: true })
+        .gte('created_at', yesterdayStartISO2)
+        .lt('created_at', todayStartISO),
+      db.from('porch_posts').select('id', { count: 'exact', head: true })
+        .gte('created_at', yesterdayStartISO2)
+        .lt('created_at', todayStartISO),
+      db.from('users').select('id', { count: 'exact', head: true })
+        .gte('created_at', yesterdayStartISO2)
+        .lt('created_at', todayStartISO)
+        .like('email', '%@example.com'),
+    ])
+
+    // Seed listings by category today
+    const { data: seedListingCats } = await db
+      .from('listings')
+      .select('category_slug')
       .gte('created_at', todayStartISO)
       .filter('user_id', 'in', `(SELECT id FROM users WHERE email LIKE '%@example.com')`)
+
+    const seedListingsByCategory: Record<string, number> = {}
+    for (const row of seedListingCats || []) {
+      seedListingsByCategory[row.category_slug] = (seedListingsByCategory[row.category_slug] || 0) + 1
+    }
 
     const stats: DailyDigestStats = {
       newUsers: newUsers || 0,
@@ -157,6 +214,16 @@ export async function GET(request: NextRequest) {
       totalListings: totalListings || 0,
       expiringNotified,
       expiredNotified,
+      seedListingsToday: seedListingsToday || 0,
+      seedRepliesToday: seedRepliesToday || 0,
+      seedNewUsers: seedNewUsers || 0,
+      totalSeedUsers: totalSeedUsers || 0,
+      totalPorchPosts: totalPorchPosts || 0,
+      totalSeedListings: totalSeedListings || 0,
+      yesterdayListings: yesterdayListings || 0,
+      yesterdayPorchPosts: yesterdayPorchPosts || 0,
+      yesterdaySeedUsers: yesterdaySeedUsers || 0,
+      seedListingsByCategory,
     }
 
     // Send to all admins

@@ -1,18 +1,72 @@
 import type { MetadataRoute } from 'next'
 import { boroughs, categories, neighborhoodSlug, slugify, porchPostTypes } from '@/lib/data'
 import { getAllSlugs as getBlogSlugs } from '@/lib/blog-posts'
+import { getSupabaseAdmin } from '@/lib/supabase-server'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date().toISOString()
   const entries: MetadataRoute.Sitemap = []
+  const db = getSupabaseAdmin()
 
-  // Homepage
+  // ── Query which category+subcategory combos have active listings ──
+  const { data: listingCombos } = await db
+    .from('listings')
+    .select('category_slug, subcategory_slug, location')
+    .eq('status', 'active')
+
+  // Build sets of populated slugs
+  const populatedCategories = new Set<string>()
+  const populatedSubcategories = new Set<string>()  // "cat:sub"
+  const populatedLocations = new Set<string>()       // raw location text for matching
+
+  if (listingCombos) {
+    for (const row of listingCombos) {
+      populatedCategories.add(row.category_slug)
+      if (row.subcategory_slug) {
+        populatedSubcategories.add(`${row.category_slug}:${row.subcategory_slug}`)
+      }
+      if (row.location) {
+        populatedLocations.add(row.location.toLowerCase())
+      }
+    }
+  }
+
+  // ── Query which borough/neighborhood combos have porch posts ──
+  const { data: porchCombos } = await db
+    .from('porch_posts')
+    .select('borough_slug, neighborhood_slug, post_type')
+
+  const populatedPorchBoroughs = new Set<string>()
+  const populatedPorchNeighborhoods = new Set<string>()  // "borough:nh"
+  const populatedPorchTypes = new Set<string>()           // "borough:nh:type"
+
+  if (porchCombos) {
+    for (const row of porchCombos) {
+      populatedPorchBoroughs.add(row.borough_slug)
+      populatedPorchNeighborhoods.add(`${row.borough_slug}:${row.neighborhood_slug}`)
+      populatedPorchTypes.add(`${row.borough_slug}:${row.neighborhood_slug}:${row.post_type}`)
+    }
+  }
+
+  // Helper: check if a neighborhood has any listing content
+  function nhHasListings(nhName: string, boroughName: string): boolean {
+    const needle = nhName.toLowerCase()
+    const boroughNeedle = boroughName.toLowerCase()
+    for (const loc of populatedLocations) {
+      if (loc.includes(needle) && loc.includes(boroughNeedle)) return true
+    }
+    return false
+  }
+
+  // ── Homepage — always included ──
   entries.push({ url: SITE_URL, lastModified: now, changeFrequency: 'daily', priority: 1.0 })
 
-  // Category pages: /listings/housing (12)
+  // ── Category pages — only if category has listings ──
   for (const cat of categories) {
+    if (!populatedCategories.has(cat.slug)) continue
+
     entries.push({
       url: `${SITE_URL}/listings/${cat.slug}`,
       lastModified: now,
@@ -20,10 +74,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     })
 
-    // Subcategory pages: /listings/housing/apartments (~200)
+    // Subcategory pages — only if subcategory has listings
     for (const sub of cat.subs) {
+      const subSlug = slugify(sub)
+      if (!populatedSubcategories.has(`${cat.slug}:${subSlug}`)) continue
+
       entries.push({
-        url: `${SITE_URL}/listings/${cat.slug}/${slugify(sub)}`,
+        url: `${SITE_URL}/listings/${cat.slug}/${subSlug}`,
         lastModified: now,
         changeFrequency: 'daily',
         priority: 0.8,
@@ -31,7 +88,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }
   }
 
-  // Borough pages: /manhattan (5)
+  // ── Borough pages — always include (these are hub pages) ──
   for (const b of boroughs) {
     entries.push({
       url: `${SITE_URL}/${b.slug}`,
@@ -40,8 +97,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     })
 
-    // Borough + category: /manhattan/housing (60)
+    // Borough + category — only if category has listings
     for (const cat of categories) {
+      if (!populatedCategories.has(cat.slug)) continue
       entries.push({
         url: `${SITE_URL}/${b.slug}/${cat.slug}`,
         lastModified: now,
@@ -50,9 +108,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       })
     }
 
-    // Neighborhood pages: /manhattan/east-village (~126)
+    // Neighborhood pages — only if neighborhood has content
     for (const n of b.neighborhoods) {
       const nhSlug = neighborhoodSlug(n)
+      const hasListings = nhHasListings(n, b.slug.replace(/-/g, ' '))
+      const hasPorch = populatedPorchNeighborhoods.has(`${b.slug}:${nhSlug}`)
+
+      if (!hasListings && !hasPorch) continue
+
       entries.push({
         url: `${SITE_URL}/${b.slug}/${nhSlug}`,
         lastModified: now,
@@ -60,68 +123,65 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: 0.8,
       })
 
-      // Neighborhood + category: /manhattan/east-village/housing (~1,560)
-      for (const cat of categories) {
-        entries.push({
-          url: `${SITE_URL}/${b.slug}/${nhSlug}/${cat.slug}`,
-          lastModified: now,
-          changeFrequency: 'weekly',
-          priority: 0.6,
-        })
-
-        // Neighborhood + subcategory: /manhattan/east-village/housing/apartments (~26,000)
-        for (const sub of cat.subs) {
+      // Neighborhood + category — only if category has content
+      if (hasListings) {
+        for (const cat of categories) {
+          if (!populatedCategories.has(cat.slug)) continue
           entries.push({
-            url: `${SITE_URL}/${b.slug}/${nhSlug}/${cat.slug}/${slugify(sub)}`,
+            url: `${SITE_URL}/${b.slug}/${nhSlug}/${cat.slug}`,
             lastModified: now,
             changeFrequency: 'weekly',
-            priority: 0.5,
+            priority: 0.6,
+          })
+          // Skip neighborhood+category+subcategory — too granular until we have density
+        }
+      }
+    }
+  }
+
+  // ── The Porch — only populated sections ──
+  if (populatedPorchBoroughs.size > 0) {
+    entries.push({ url: `${SITE_URL}/porch`, lastModified: now, changeFrequency: 'daily', priority: 0.9 })
+
+    for (const b of boroughs) {
+      if (!populatedPorchBoroughs.has(b.slug)) continue
+
+      entries.push({
+        url: `${SITE_URL}/porch/${b.slug}`,
+        lastModified: now,
+        changeFrequency: 'daily',
+        priority: 0.8,
+      })
+
+      for (const n of b.neighborhoods) {
+        const nhSlug = neighborhoodSlug(n)
+        if (!populatedPorchNeighborhoods.has(`${b.slug}:${nhSlug}`)) continue
+
+        entries.push({
+          url: `${SITE_URL}/porch/${b.slug}/${nhSlug}`,
+          lastModified: now,
+          changeFrequency: 'daily',
+          priority: 0.8,
+        })
+
+        // Post type pages — only if that combo has posts
+        for (const pt of porchPostTypes) {
+          if (!populatedPorchTypes.has(`${b.slug}:${nhSlug}:${pt.slug}`)) continue
+          entries.push({
+            url: `${SITE_URL}/porch/${b.slug}/${nhSlug}/${pt.slug}`,
+            lastModified: now,
+            changeFrequency: 'weekly',
+            priority: 0.6,
           })
         }
       }
     }
   }
 
-  // ── The Porch ──
-
-  // /porch (1)
-  entries.push({ url: `${SITE_URL}/porch`, lastModified: now, changeFrequency: 'daily', priority: 0.9 })
-
-  // /porch/[borough] (5)
-  for (const b of boroughs) {
-    entries.push({
-      url: `${SITE_URL}/porch/${b.slug}`,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.8,
-    })
-
-    // /porch/[borough]/[neighborhood] (~126)
-    for (const n of b.neighborhoods) {
-      const nhSlug = neighborhoodSlug(n)
-      entries.push({
-        url: `${SITE_URL}/porch/${b.slug}/${nhSlug}`,
-        lastModified: now,
-        changeFrequency: 'daily',
-        priority: 0.8,
-      })
-
-      // /porch/[borough]/[neighborhood]/[postType] (~1,512)
-      for (const pt of porchPostTypes) {
-        entries.push({
-          url: `${SITE_URL}/porch/${b.slug}/${nhSlug}/${pt.slug}`,
-          lastModified: now,
-          changeFrequency: 'weekly',
-          priority: 0.6,
-        })
-      }
-    }
-  }
-
-  // Business directory
+  // ── Business directory — always include ──
   entries.push({ url: `${SITE_URL}/business`, lastModified: now, changeFrequency: 'daily', priority: 0.9 })
 
-  // Blog index + all posts
+  // ── Blog ──
   entries.push({ url: `${SITE_URL}/blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 })
   for (const slug of getBlogSlugs()) {
     entries.push({
@@ -132,7 +192,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })
   }
 
-  // Static pages
+  // ── Static pages ──
   for (const page of ['about', 'search', 'legal', 'privacy', 'terms', 'guidelines']) {
     entries.push({
       url: `${SITE_URL}/${page}`,

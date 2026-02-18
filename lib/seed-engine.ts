@@ -1,10 +1,10 @@
 /**
- * Cron seed engine — generates a full day's Porch content in one batch.
+ * Cron seed engine — generates Porch content incrementally throughout the day.
  *
- * Called once daily at 08:00 EST (13:00 UTC) by Vercel cron.
- * Uses a single-row `cron_seed_state` table for persistence.
- * Generates 20-50 Porch actions/day (posts + replies) with staggered
- * timestamps across all hours including late night.
+ * Called every 2 hours by Vercel cron (12x/day).
+ * Each run creates a fraction of the daily target (~1/12 per run).
+ * 30 distinct tone profiles. Systematic neighborhood coverage.
+ * Generates 80-200 Porch actions/day (posts + replies).
  */
 
 import { SupabaseClient } from '@supabase/supabase-js'
@@ -20,11 +20,11 @@ import { moderateFields } from './porch-moderation'
 
 interface CronState {
   id: number
-  date: string          // ET date string e.g. "2026-02-10"
+  date: string
   posts_today: number
   replies_today: number
   last_post_at: string | null
-  posts_by_user: Record<string, number>  // userId -> count
+  posts_by_user: Record<string, number>
   start_date: string
   enabled: boolean
 }
@@ -48,55 +48,112 @@ interface RunResult {
   enabled: boolean
 }
 
-// ─── 12 Tone Profiles ───
+// ─── 30 Tone Profiles ───
+// Each user gets a consistent personality based on their ID
 
 type ToneProfile =
-  | 'gen_z' | 'millennial' | 'boomer' | 'texter'
-  | 'professional' | 'storyteller' | 'straight_shooter' | 'hype'
-  | 'chill' | 'parent' | 'old_school_nyc' | 'poet'
+  | 'gen_z_chill' | 'gen_z_hype' | 'gen_z_dry'
+  | 'millennial_earnest' | 'millennial_ironic' | 'millennial_anxious'
+  | 'boomer_formal' | 'boomer_warm' | 'boomer_grumpy'
+  | 'texter_fast' | 'texter_emoji' | 'texter_minimal'
+  | 'professional_polished' | 'professional_casual'
+  | 'storyteller_long' | 'storyteller_nostalgic'
+  | 'straight_shooter' | 'hype_beast'
+  | 'chill_surfer' | 'chill_stoner'
+  | 'parent_tired' | 'parent_proud'
+  | 'old_school_nyc' | 'old_school_brooklyn'
+  | 'poet_lyrical' | 'poet_haiku'
+  | 'immigrant_grateful' | 'transplant_excited'
+  | 'activist_passionate' | 'local_historian'
+
+const TONES: ToneProfile[] = [
+  'gen_z_chill', 'gen_z_hype', 'gen_z_dry',
+  'millennial_earnest', 'millennial_ironic', 'millennial_anxious',
+  'boomer_formal', 'boomer_warm', 'boomer_grumpy',
+  'texter_fast', 'texter_emoji', 'texter_minimal',
+  'professional_polished', 'professional_casual',
+  'storyteller_long', 'storyteller_nostalgic',
+  'straight_shooter', 'hype_beast',
+  'chill_surfer', 'chill_stoner',
+  'parent_tired', 'parent_proud',
+  'old_school_nyc', 'old_school_brooklyn',
+  'poet_lyrical', 'poet_haiku',
+  'immigrant_grateful', 'transplant_excited',
+  'activist_passionate', 'local_historian',
+]
 
 function getToneProfile(userId: number): ToneProfile {
-  const tones: ToneProfile[] = [
-    'gen_z', 'millennial', 'boomer', 'texter',
-    'professional', 'storyteller', 'straight_shooter', 'hype',
-    'chill', 'parent', 'old_school_nyc', 'poet',
-  ]
-  return tones[userId % tones.length]
+  return TONES[userId % TONES.length]
 }
 
 function applyTone(text: string, tone: ToneProfile): string {
   switch (tone) {
-    case 'gen_z':
-      return text.toLowerCase().replace(/\./g, '').replace(/'/g, '').replace(/!+/g, ' fr').replace(/,\s/g, ' ').trim()
-    case 'millennial':
-      return text.replace(/\.$/, ' lol').replace(/!$/, ' tbh')
-    case 'boomer':
-      return text.replace(/(^|\. )([a-z])/g, (_, pre, c) => pre + c.toUpperCase())
-    case 'texter':
-      return text.toLowerCase().replace(/\./g, '').replace(/'/g, '').replace(/you/g, 'u').replace(/are/g, 'r').replace(/to /g, '2 ').replace(/for /g, '4 ')
-    case 'professional':
+    case 'gen_z_chill':
+      return text.toLowerCase().replace(/\./g, '').replace(/!+/g, '').replace(/,\s/g, ' ').trim()
+    case 'gen_z_hype':
+      return text.replace(/\./g, ' fr fr').replace(/!/, ' NO CAP')
+    case 'gen_z_dry':
+      return text.toLowerCase().replace(/!/g, '.').replace(/\.\./g, '.').trim()
+    case 'millennial_earnest':
+      return text.replace(/\.$/, ' tbh').replace(/!$/, ' honestly')
+    case 'millennial_ironic':
+      return text.replace(/\.$/, ' lol').replace(/!$/, ' I guess')
+    case 'millennial_anxious':
+      return text.replace(/\.$/, '...right?').replace(/!$/, '!! (asking for a friend)')
+    case 'boomer_formal':
+      return text.replace(/(^|\. )([a-z])/g, (_, pre, c) => pre + c.toUpperCase()).replace(/dont/g, 'do not').replace(/cant/g, 'cannot')
+    case 'boomer_warm':
+      return text.replace(/\.$/, '. God bless.')
+    case 'boomer_grumpy':
+      return text.replace(/\.$/, '. But what do I know.')
+    case 'texter_fast':
+      return text.toLowerCase().replace(/\./g, '').replace(/you/g, 'u').replace(/are/g, 'r').replace(/to /g, '2 ').replace(/for /g, '4 ').replace(/'/g, '')
+    case 'texter_emoji':
+      return text.replace(/\./g, ' ').replace(/!/, ' ').trim()
+    case 'texter_minimal':
+      return text.toLowerCase().replace(/[.!,]/g, '').trim()
+    case 'professional_polished':
       return text.replace(/(^|\. )([a-z])/g, (_, pre, c) => pre + c.toUpperCase()).replace(/dont/g, 'do not').replace(/cant/g, 'cannot').replace(/wont/g, 'will not')
-    case 'storyteller':
+    case 'professional_casual':
+      return text.replace(/(^|\. )([a-z])/g, (_, pre, c) => pre + c.toUpperCase())
+    case 'storyteller_long':
       return text
+    case 'storyteller_nostalgic':
+      return text.replace(/\.$/, '. Reminds me of the old days.')
     case 'straight_shooter':
       return text.replace(/!+/g, '.').replace(/\.\./g, '.')
-    case 'hype':
+    case 'hype_beast':
       return Math.random() < 0.3 ? text.toUpperCase() : text.replace(/\.$/, '!!!')
-    case 'chill':
+    case 'chill_surfer':
+      return text.replace(/\./g, '~').replace(/!/g, ' dude')
+    case 'chill_stoner':
       return text.replace(/\./g, '...').replace(/!/g, '...')
-    case 'parent':
+    case 'parent_tired':
+      return text.replace(/\.$/, '. (If I can stay awake.)')
+    case 'parent_proud':
       return text
     case 'old_school_nyc':
       return text.replace(/\.$/, ', ya know what I mean?')
-    case 'poet':
+    case 'old_school_brooklyn':
+      return text.replace(/\.$/, '. Thats how we do it around here.')
+    case 'poet_lyrical':
       return text.replace(/\./g, ' —')
+    case 'poet_haiku':
+      return text.replace(/\. /g, '.\n')
+    case 'immigrant_grateful':
+      return text.replace(/\.$/, '. This city is beautiful.')
+    case 'transplant_excited':
+      return text.replace(/\.$/, '. I love this neighborhood!')
+    case 'activist_passionate':
+      return text.replace(/\.$/, '. We need more of this.')
+    case 'local_historian':
+      return text.replace(/\.$/, '. Been here long enough to know.')
     default:
       return text
   }
 }
 
 // ─── Hourly weights for staggering timestamps ───
-// Late-night hours (1-4) now have low weights for realistic NYC night-owl activity
 
 const HOURLY_WEIGHTS: Record<number, number> = {
   0: 2, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1,
@@ -108,7 +165,6 @@ const HOURLY_WEIGHTS: Record<number, number> = {
   21: 7, 22: 4, 23: 3,
 }
 
-/** Pick a random hour weighted by NYC activity patterns */
 function pickHour(): number {
   const entries = Object.entries(HOURLY_WEIGHTS)
   const total = entries.reduce((sum, [, w]) => sum + w, 0)
@@ -120,7 +176,6 @@ function pickHour(): number {
   return 12
 }
 
-/** Generate a staggered timestamp for today */
 function staggeredTimestamp(): string {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -130,7 +185,7 @@ function staggeredTimestamp(): string {
   return new Date(today.getTime() + hour * 3600000 + min * 60000 + sec * 1000).toISOString()
 }
 
-// ─── Growth multiplier — scales up over time ───
+// ─── Growth multiplier ───
 
 function getGrowthMultiplier(startDate: string): number {
   const start = new Date(startDate)
@@ -139,19 +194,17 @@ function getGrowthMultiplier(startDate: string): number {
   return Math.min(1.0 + (daysSinceLaunch * 0.015), 3.0)
 }
 
-// ─── Daily target — 20-50 Porch actions/day ───
+// ─── Daily target — 80-200 Porch actions/day ───
 
 function getDailyTarget(growthMultiplier: number): number {
   const day = new Date().getDay()
   const isWeekend = day === 0 || day === 6
-
-  // Base: 20-35 weekday, 30-50 weekend (before growth multiplier)
-  const min = isWeekend ? 30 : 20
-  const max = isWeekend ? 50 : 35
+  const min = isWeekend ? 120 : 80
+  const max = isWeekend ? 200 : 140
   return Math.round(rb(min, max) * growthMultiplier)
 }
 
-// ─── ET Time Helpers ───
+// ─── ET Time ───
 
 function getETDate(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
@@ -159,12 +212,7 @@ function getETDate(): string {
 
 // ─── Kill Switch ───
 
-interface KillSwitchResult {
-  multiplier: number
-  level: string
-}
-
-async function computeKillSwitch(db: SupabaseClient): Promise<KillSwitchResult> {
+async function computeKillSwitch(db: SupabaseClient): Promise<{ multiplier: number; level: string }> {
   const todayStart = getETDate() + 'T00:00:00'
   const { count } = await db
     .from('porch_posts')
@@ -173,34 +221,22 @@ async function computeKillSwitch(db: SupabaseClient): Promise<KillSwitchResult> 
     .not('user_id', 'in', `(SELECT id FROM users WHERE email LIKE '%@example.com')`)
 
   const realPosts = count || 0
-
   if (realPosts >= 200) return { multiplier: 0, level: 'off (200+ real posts)' }
   if (realPosts >= 100) return { multiplier: 0.25, level: '25% (100+ real posts)' }
-  if (realPosts >= 50)  return { multiplier: 0.50, level: '50% (50+ real posts)' }
+  if (realPosts >= 50) return { multiplier: 0.50, level: '50% (50+ real posts)' }
   return { multiplier: 1.0, level: 'full' }
 }
 
 // ─── State Management ───
 
 async function getState(db: SupabaseClient): Promise<CronState> {
-  const { data } = await db
-    .from('cron_seed_state')
-    .select('*')
-    .eq('id', 1)
-    .single()
-
+  const { data } = await db.from('cron_seed_state').select('*').eq('id', 1).single()
   if (data) return data as CronState
 
   const now = getETDate()
   const initial: CronState = {
-    id: 1,
-    date: now,
-    posts_today: 0,
-    replies_today: 0,
-    last_post_at: null,
-    posts_by_user: {},
-    start_date: now,
-    enabled: true,
+    id: 1, date: now, posts_today: 0, replies_today: 0,
+    last_post_at: null, posts_by_user: {}, start_date: now, enabled: true,
   }
   await db.from('cron_seed_state').upsert(initial)
   return initial
@@ -220,7 +256,7 @@ function makeAvatar(name: string, id: number): string {
   return `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}&size=200`
 }
 
-// ─── Fix seed user profiles (pics + verified) ───
+// ─── Fix seed user profiles ───
 
 async function fixSeedProfiles(db: SupabaseClient): Promise<number> {
   const { data: incomplete } = await db
@@ -287,7 +323,7 @@ function generateTemplateVars(user: SeedUser): Record<string, string> {
   }
 }
 
-/** Round-robin post type selection — guarantees all 12 types before repeating */
+/** Round-robin type selection — guarantees all types before repeating */
 function createTypeRotation() {
   let remaining: string[] = []
   return function nextType(): string {
@@ -298,37 +334,43 @@ function createTypeRotation() {
   }
 }
 
-/** Borough coverage tracker — prioritizes under-represented boroughs */
-function createBoroughTracker() {
-  const boroughKeys = Object.keys(BOROUGHS)
-  const counts: Record<string, number> = {}
-  for (const b of boroughKeys) counts[b] = 0
+/** Neighborhood coverage tracker — cycles through ALL neighborhoods systematically */
+function createNeighborhoodTracker() {
+  // Build flat list of all borough:nh pairs
+  const allNhs: { borough: string; nh: string }[] = []
+  for (const [borough, data] of Object.entries(BOROUGHS)) {
+    for (const nh of data.nhs) {
+      allNhs.push({ borough, nh })
+    }
+  }
+
+  let remaining = [...allNhs].sort(() => Math.random() - 0.5)
 
   return {
-    pick(candidates: SeedUser[]): SeedUser {
-      // Find the borough with lowest count among candidates
-      const candidateBoroughs = [...new Set(candidates.map(u => u._borough))]
-      const minCount = Math.min(...candidateBoroughs.map(b => counts[b] || 0))
-      const underRep = candidateBoroughs.filter(b => (counts[b] || 0) === minCount)
-      const targetBorough = pick(underRep)
-
-      const boroughCandidates = candidates.filter(u => u._borough === targetBorough)
-      const chosen = boroughCandidates.length > 0 ? pick(boroughCandidates) : pick(candidates)
-      counts[chosen._borough] = (counts[chosen._borough] || 0) + 1
-      return chosen
+    next(): { borough: string; nh: string } {
+      if (remaining.length === 0) {
+        remaining = [...allNhs].sort(() => Math.random() - 0.5)
+      }
+      return remaining.pop()!
     },
   }
 }
 
-function generatePorchPost(user: SeedUser, created_at: string, postType: string) {
-  const tmpl = pick(PORCH[postType])
+function generatePorchPost(user: SeedUser, created_at: string, postType: string, usedTemplates: Set<string>) {
+  const templates = PORCH[postType]
+  if (!templates) return null
+  const available = templates.filter(t => !usedTemplates.has(`${postType}:${t.t}`))
+  if (available.length === 0) return null
+
+  const tmpl = pick(available)
+  usedTemplates.add(`${postType}:${tmpl.t}`)
+
   const vars = generateTemplateVars(user)
   const tone = getToneProfile(user.id)
 
   const title = applyTone(fill(tmpl.t, vars).slice(0, 100), tone)
   const body = applyTone(fill(tmpl.b, vars).slice(0, 500), tone)
 
-  // Only ~10% of lost-and-found/pet-sighting get pinned — keeps feed natural
   const pinned = (postType === 'lost-and-found' || postType === 'pet-sighting') && Math.random() < 0.10
   const expH = postType === 'alert' ? 48 : (postType === 'lost-and-found' || postType === 'pet-sighting') ? 72 : 720
 
@@ -345,27 +387,20 @@ function generatePorchPost(user: SeedUser, created_at: string, postType: string)
   }
 }
 
-/** Pick a reply from short (30%), medium (50%), or long (20%) pool */
 function generateReply(user: SeedUser) {
   const roll = Math.random()
   let body: string
-  if (roll < 0.30) {
-    body = pick(REPLIES_SHORT)
-  } else if (roll < 0.80) {
-    body = pick(REPLIES_MEDIUM)
-  } else {
-    body = pick(REPLIES_LONG)
-  }
+  if (roll < 0.30) body = pick(REPLIES_SHORT)
+  else if (roll < 0.80) body = pick(REPLIES_MEDIUM)
+  else body = pick(REPLIES_LONG)
   body = body.replace('{first}', user.name.split(' ')[0] || 'Friend')
   return applyTone(body, getToneProfile(user.id))
 }
 
-// ─── Main Engine ───
+// ─── Main Engine — Incremental (runs every 2 hours) ───
 
 export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
-  // Fix seed user profiles first (pics + verified)
   const profilesFixed = await fixSeedProfiles(db)
-
   const state = await getState(db)
 
   if (!state.enabled) {
@@ -376,22 +411,16 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
     }
   }
 
-  // Prevent double-run on same day
   const today = getETDate()
-  if (state.date === today && state.posts_today > 0) {
-    return {
-      posts_created: 0, replies_created: 0, profiles_fixed: profilesFixed,
-      skipped_moderation: 0, kill_switch_level: 'already ran today', growth_multiplier: 1,
-      daily_total: state.posts_today, enabled: true,
-    }
-  }
 
-  // Reset for new day
-  state.date = today
-  state.posts_today = 0
-  state.replies_today = 0
-  state.posts_by_user = {}
-  state.last_post_at = null
+  // Reset for new day, but DON'T block on "already ran today"
+  if (state.date !== today) {
+    state.date = today
+    state.posts_today = 0
+    state.replies_today = 0
+    state.posts_by_user = {}
+    state.last_post_at = null
+  }
 
   // Kill switch
   const killSwitch = await computeKillSwitch(db)
@@ -400,11 +429,10 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
     return {
       posts_created: 0, replies_created: 0, profiles_fixed: profilesFixed,
       skipped_moderation: 0, kill_switch_level: killSwitch.level, growth_multiplier: 1,
-      daily_total: 0, enabled: true,
+      daily_total: state.posts_today, enabled: true,
     }
   }
 
-  // Get seed users
   const seedUsers = await getSeedUsers(db)
   if (seedUsers.length === 0) {
     return {
@@ -414,37 +442,67 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
     }
   }
 
-  // Daily target: 20-50 Porch actions, scaled by growth + kill switch
+  // Calculate daily target and how many to create THIS run
   const growthMult = getGrowthMultiplier(state.start_date)
-  const rawTarget = getDailyTarget(growthMult)
-  const totalTarget = Math.round(rawTarget * killSwitch.multiplier)
+  const fullDayTarget = getDailyTarget(growthMult)
+  const scaledTarget = Math.round(fullDayTarget * killSwitch.multiplier)
 
-  // Split: ~60% porch posts, ~40% replies
-  const porchTarget = Math.round(totalTarget * 0.60)
-  const replyTarget = totalTarget - porchTarget
+  // How many left to create today?
+  const alreadyDone = state.posts_today + state.replies_today
+  const remaining = Math.max(0, scaledTarget - alreadyDone)
+  // Each run creates ~1/12 of daily target (runs every 2 hours, 12 runs/day)
+  // But also catch up if behind schedule
+  const etHour = parseInt(new Date().toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric', hour12: false }))
+  const expectedFraction = Math.min(1.0, (etHour + 2) / 24)
+  const expectedDone = Math.round(scaledTarget * expectedFraction)
+  const runTarget = Math.max(Math.round(scaledTarget / 12), expectedDone - alreadyDone)
+  const thisRunTarget = Math.min(runTarget, remaining)
+
+  if (thisRunTarget <= 0) {
+    return {
+      posts_created: 0, replies_created: 0, profiles_fixed: profilesFixed,
+      skipped_moderation: 0, kill_switch_level: 'daily target reached', growth_multiplier: growthMult,
+      daily_total: alreadyDone, enabled: true,
+    }
+  }
+
+  // Split: ~60% posts, ~40% replies
+  const porchTarget = Math.round(thisRunTarget * 0.60)
+  const replyTarget = thisRunTarget - porchTarget
 
   let postsCreated = 0
   let repliesCreated = 0
   let skippedModeration = 0
 
-  // Round-robin type selection + borough coverage
   const nextType = createTypeRotation()
-  const boroughTracker = createBoroughTracker()
-
-  // Track titles to avoid duplicates within same day
+  const nhTracker = createNeighborhoodTracker()
   const usedTitles = new Set<string>()
+  const usedTemplates = new Set<string>()
 
-  // Select users (max 3 per user per day to spread across many users)
+  // Select users (max 5 per user per day)
   function selectUser(): SeedUser | null {
     const candidates = seedUsers.filter(u => {
       const dailyCount = state.posts_by_user[String(u.id)] || 0
-      return dailyCount < 3
+      return dailyCount < 5
     })
     if (candidates.length === 0) return null
-    return boroughTracker.pick(candidates)
+
+    // Assign user to next neighborhood in rotation
+    const target = nhTracker.next()
+    const nhCandidates = candidates.filter(u => u._borough === target.borough)
+    if (nhCandidates.length > 0) {
+      const user = pick(nhCandidates)
+      user._nh = target.nh // Override to ensure coverage
+      return user
+    }
+    // Fallback
+    const user = pick(candidates)
+    user._borough = target.borough
+    user._nh = target.nh
+    return user
   }
 
-  // Create porch posts with staggered timestamps
+  // Create porch posts
   for (let i = 0; i < porchTarget; i++) {
     const user = selectUser()
     if (!user) break
@@ -452,21 +510,17 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
     const ts = staggeredTimestamp()
     const postType = nextType()
 
-    // Try up to 3 times to avoid duplicate titles
-    let post = generatePorchPost(user, ts, postType)
+    let post = generatePorchPost(user, ts, postType, usedTemplates)
     let attempts = 0
-    while (usedTitles.has(post.title.toLowerCase()) && attempts < 3) {
-      post = generatePorchPost(user, ts, postType)
+    while (post && usedTitles.has(post.title.toLowerCase()) && attempts < 3) {
+      post = generatePorchPost(user, ts, postType, usedTemplates)
       attempts++
     }
-    if (usedTitles.has(post.title.toLowerCase())) continue
+    if (!post || usedTitles.has(post.title.toLowerCase())) continue
     usedTitles.add(post.title.toLowerCase())
 
     const modResult = moderateFields(post.title, post.body)
-    if (modResult.blocked) {
-      skippedModeration++
-      continue
-    }
+    if (modResult.blocked) { skippedModeration++; continue }
 
     const { error } = await db.from('porch_posts').insert(post)
     if (!error) {
@@ -477,7 +531,7 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
     }
   }
 
-  // Create replies to recent porch posts
+  // Create replies
   if (replyTarget > 0) {
     const cutoff = new Date(Date.now() - 48 * 3600000).toISOString()
     const { data: recentPosts } = await db
@@ -493,10 +547,7 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
         const replyBody = generateReply(replyUser)
 
         const modResult = moderateFields(replyBody)
-        if (modResult.blocked) {
-          skippedModeration++
-          continue
-        }
+        if (modResult.blocked) { skippedModeration++; continue }
 
         const { error } = await db.from('porch_replies').insert({
           post_id: targetPost.id,
@@ -513,7 +564,6 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
     }
   }
 
-  // Save state
   await saveState(db, state)
 
   return {

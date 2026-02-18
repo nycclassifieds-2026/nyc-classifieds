@@ -484,20 +484,50 @@ export interface DailyDigestStats {
   totalListings: number
   expiringNotified: number
   expiredNotified: number
+  // Seed engine metrics
+  seedListingsToday: number
+  seedRepliesToday: number
+  seedNewUsers: number
+  // Totals including seed
+  totalSeedUsers: number
+  totalPorchPosts: number
+  totalSeedListings: number
+  // Yesterday comparisons for growth %
+  yesterdayListings: number
+  yesterdayPorchPosts: number
+  yesterdaySeedUsers: number
+  // Category breakdown for seed listings
+  seedListingsByCategory: Record<string, number>
 }
 
 export function adminDailyDigestEmail(stats: DailyDigestStats): { subject: string; html: string } {
   const row = (label: string, val: number | string) =>
     `<tr><td style="padding: 4px 12px 4px 0; color: #475569; font-size: 0.875rem;">${label}</td><td style="padding: 4px 0; font-weight: 600; color: #0f172a; font-size: 0.875rem;">${val}</td></tr>`
 
+  const growthRow = (label: string, today: number, yesterday: number) => {
+    if (yesterday === 0) return row(label, `${today} (new)`)
+    const pct = ((today - yesterday) / yesterday * 100).toFixed(1)
+    const arrow = today >= yesterday ? '↑' : '↓'
+    const color = today >= yesterday ? '#059669' : '#dc2626'
+    return `<tr><td style="padding: 4px 12px 4px 0; color: #475569; font-size: 0.875rem;">${label}</td><td style="padding: 4px 0; font-weight: 600; color: #0f172a; font-size: 0.875rem;">${today} <span style="color: ${color}; font-size: 0.75rem;">${arrow} ${pct}%</span></td></tr>`
+  }
+
+  // Seed listing category breakdown
+  const catRows = Object.entries(stats.seedListingsByCategory || {})
+    .sort(([, a], [, b]) => b - a)
+    .map(([cat, count]) => row(`  ${cat}`, count))
+    .join('')
+
+  const totalSeedToday = stats.seedPostsToday + stats.seedListingsToday + stats.seedRepliesToday
+
   return {
-    subject: `Daily Digest: ${stats.newUsers} new users, ${stats.newListings} listings, ${stats.newPorchPosts} porch posts`,
+    subject: `Daily Digest: ${totalSeedToday} seed actions | ${stats.newUsers} real users | ${stats.totalListings} active listings`,
     html: `
       ${WRAPPER_START}
         ${HEADER}
         <p style="color: #475569; font-size: 0.875rem; margin-bottom: 1rem;">Here's today's activity on The NYC Classifieds.</p>
 
-        <h3 style="font-size: 0.875rem; font-weight: 700; color: #0f172a; margin: 1rem 0 0.5rem;">Today's Activity (Real Users)</h3>
+        <h3 style="font-size: 0.875rem; font-weight: 700; color: #0f172a; margin: 1rem 0 0.5rem;">Real User Activity</h3>
         <table style="border-collapse: collapse;">
           ${row('New verified users', stats.newUsers)}
           ${row('New listings', stats.newListings)}
@@ -506,22 +536,42 @@ export function adminDailyDigestEmail(stats: DailyDigestStats): { subject: strin
           ${row('New messages', stats.newMessages)}
         </table>
 
+        <h3 style="font-size: 0.875rem; font-weight: 700; color: #059669; margin: 1rem 0 0.5rem;">Seed Engine — Today</h3>
+        <table style="border-collapse: collapse;">
+          ${row('New seed users', stats.seedNewUsers)}
+          ${row('Seed porch posts', stats.seedPostsToday)}
+          ${row('Seed porch replies', stats.seedRepliesToday)}
+          ${row('Seed listings', stats.seedListingsToday)}
+          ${row('Total seed actions', totalSeedToday)}
+        </table>
+
+        ${catRows ? `
+        <h3 style="font-size: 0.875rem; font-weight: 700; color: #059669; margin: 1rem 0 0.5rem;">Seed Listings by Category</h3>
+        <table style="border-collapse: collapse;">
+          ${catRows}
+        </table>` : ''}
+
+        <h3 style="font-size: 0.875rem; font-weight: 700; color: #2563eb; margin: 1rem 0 0.5rem;">Growth (vs Yesterday)</h3>
+        <table style="border-collapse: collapse;">
+          ${growthRow('Listings (all)', stats.seedListingsToday + stats.newListings, stats.yesterdayListings)}
+          ${growthRow('Porch posts (all)', stats.seedPostsToday + stats.newPorchPosts, stats.yesterdayPorchPosts)}
+          ${growthRow('Users (seed)', stats.seedNewUsers, stats.yesterdaySeedUsers)}
+        </table>
+
+        <h3 style="font-size: 0.875rem; font-weight: 700; color: #0f172a; margin: 1rem 0 0.5rem;">Platform Totals</h3>
+        <table style="border-collapse: collapse;">
+          ${row('Total real users', stats.totalUsers)}
+          ${row('Total seed users', stats.totalSeedUsers)}
+          ${row('Total active listings', stats.totalListings)}
+          ${row('Total seed listings', stats.totalSeedListings)}
+          ${row('Total porch posts', stats.totalPorchPosts)}
+        </table>
+
         <h3 style="font-size: 0.875rem; font-weight: 700; color: #0f172a; margin: 1rem 0 0.5rem;">Moderation</h3>
         <table style="border-collapse: collapse;">
           ${row('Pending flags', stats.pendingFlags)}
-        </table>
-
-        <h3 style="font-size: 0.875rem; font-weight: 700; color: #0f172a; margin: 1rem 0 0.5rem;">Automated</h3>
-        <table style="border-collapse: collapse;">
-          ${row('Seed posts today', stats.seedPostsToday)}
           ${row('Expiring reminders sent', stats.expiringNotified)}
           ${row('Expired notices sent', stats.expiredNotified)}
-        </table>
-
-        <h3 style="font-size: 0.875rem; font-weight: 700; color: #0f172a; margin: 1rem 0 0.5rem;">Totals</h3>
-        <table style="border-collapse: collapse;">
-          ${row('Total users', stats.totalUsers)}
-          ${row('Total active listings', stats.totalListings)}
         </table>
 
         ${BUTTON(`${BASE_URL}/admin`, 'Open Admin Dashboard')}

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin()
   let query = db
     .from('listings')
-    .select('id, title, price, images, location, category_slug, subcategory_slug, created_at, user_id, users!inner(name, verified, selfie_url)', { count: 'exact' })
+    .select('id, title, price, images, location, category_slug, subcategory_slug, posting_as, created_at, user_id, users!inner(name, verified, selfie_url, business_name)', { count: 'exact' })
 
   // When filtering by user, show all their listings (any status); otherwise only active
   if (userId) {
@@ -75,44 +75,11 @@ export async function POST(request: NextRequest) {
 
   const db = getSupabaseAdmin()
 
-  // Check verified + account type + posting gates
-  const { data: user } = await db
-    .from('users')
-    .select('verified, account_type, business_name, email')
-    .eq('id', userId)
-    .single()
-
-  if (!user?.verified) {
-    return NextResponse.json({ error: 'Account must be verified to post listings' }, { status: 403 })
-  }
-
   const body = await request.json()
-  const { title, description, price, category_slug, subcategory_slug, images, location } = body
+  const { title, description, price, category_slug, subcategory_slug, images, location, posting_as } = body
 
   if (!title?.trim() || !category_slug) {
     return NextResponse.json({ error: 'Title and category required' }, { status: 400 })
-  }
-
-  // Posting gates: certain categories require a business profile or specific verification
-  const requiresBusiness = ['services', 'jobs'].includes(category_slug)
-  const requiresBusinessEmail = category_slug === 'jobs'
-  const freeEmailDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'mail.com', 'protonmail.com', 'ymail.com', 'live.com']
-
-  if (requiresBusiness && (user.account_type !== 'business' || !user.business_name)) {
-    return NextResponse.json({
-      error: category_slug === 'services'
-        ? 'A business profile is required to offer services. Go to your account to set one up.'
-        : 'A business profile is required to post jobs. Go to your account to set one up.',
-    }, { status: 403 })
-  }
-
-  if (requiresBusinessEmail && user.email) {
-    const domain = user.email.split('@')[1]?.toLowerCase()
-    if (freeEmailDomains.includes(domain)) {
-      return NextResponse.json({
-        error: 'Job postings require a business email address. Update your email in account settings.',
-      }, { status: 403 })
-    }
   }
 
   if (title.length > 200) {
@@ -130,6 +97,7 @@ export async function POST(request: NextRequest) {
       subcategory_slug: subcategory_slug || null,
       images: images || [],
       location: location || null,
+      posting_as: posting_as === 'business' ? 'business' : 'personal',
       expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
     })
     .select('id')
