@@ -147,6 +147,7 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
   const [reviewCount, setReviewCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [isOwner, setIsOwner] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   // Lightbox
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null)
@@ -184,8 +185,11 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
     fetch('/api/auth')
       .then(r => r.json())
       .then(d => {
-        if (d.authenticated && d.user?.business_slug === slug) {
-          setIsOwner(true)
+        if (d.authenticated) {
+          setIsLoggedIn(true)
+          if (d.user?.business_slug === slug) {
+            setIsOwner(true)
+          }
         }
       })
       .catch(() => {})
@@ -636,8 +640,8 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
                 </div>
               )}
 
-              {/* Write a Review button */}
-              {!showReviewForm && (
+              {/* Write a Review button — logged-in non-owners only */}
+              {!showReviewForm && isLoggedIn && !isOwner && (
                 <button
                   onClick={() => setShowReviewForm(true)}
                   style={{
@@ -651,7 +655,7 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
               )}
 
               {/* Review form */}
-              {showReviewForm && (
+              {showReviewForm && isLoggedIn && !isOwner && (
                 <div style={{ padding: '20px', border: '1px solid #e5e7eb', borderRadius: '12px', marginBottom: '20px', background: '#fafafa' }}>
                   <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '12px' }}>Write a Review</h3>
                   <div style={{ marginBottom: '12px' }}>
@@ -757,7 +761,15 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
                   ))}
                 </div>
               ) : (
-                !showReviewForm && <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>No reviews yet. Be the first to review!</p>
+                !showReviewForm && (
+                  <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                    No reviews yet.{' '}
+                    {isLoggedIn && !isOwner ? 'Be the first to review!' : (
+                      <Link href="/login" style={{ color: '#2563eb', fontWeight: 500 }}>Log in</Link>
+                    )}
+                    {!isLoggedIn && ' to leave a review.'}
+                  </p>
+                )
               )}
             </section>
 
