@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import VerifiedBadge from '@/app/components/VerifiedBadge'
-import { porchPostTypeBySlug, slugify, businessCategories } from '@/lib/data'
+import { porchPostTypeBySlug, slugify, businessCategories, boroughs } from '@/lib/data'
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 10)
@@ -12,6 +12,8 @@ function formatPhone(value: string): string {
   if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
 }
+
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 interface User {
   id: number
@@ -26,33 +28,28 @@ interface User {
   website: string | null
   phone: string | null
   business_description: string | null
-  hours: Record<string, string> | null
+  hours: Record<string, { open: string; close: string; closed: boolean }> | null
   service_area: string[] | null
   selfie_url: string | null
   business_photo: string | null
   business_address: string | null
   address: string | null
+  photo_gallery: string[] | null
+  social_links: Record<string, string> | null
 }
 
 interface Listing {
-  id: number
-  title: string
-  price: number | null
-  images: string[]
-  status: string
-  category_slug: string
-  created_at: string
+  id: number; title: string; price: number | null; images: string[]
+  status: string; category_slug: string; created_at: string
 }
-
 interface PorchPost {
-  id: number
-  post_type: string
-  title: string
-  body: string
-  borough_slug: string
-  neighborhood_slug: string
-  created_at: string
-  reply_count: number
+  id: number; post_type: string; title: string; body: string
+  borough_slug: string; neighborhood_slug: string; created_at: string; reply_count: number
+}
+interface Review {
+  id: number; rating: number; body: string | null; reply: string | null
+  replied_at: string | null; reported: boolean; created_at: string
+  reviewer: { name: string; selfie_url: string | null; verified: boolean } | null
 }
 
 export default function AccountClient() {
@@ -62,22 +59,53 @@ export default function AccountClient() {
   const [porchPosts, setPorchPosts] = useState<PorchPost[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [tab, setTab] = useState<'personal' | 'business'>('personal')
+
+  // Business creation modal
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
-  const [bizPhotoUploading, setBizPhotoUploading] = useState(false)
   const [bizPhotoFile, setBizPhotoFile] = useState<File | null>(null)
   const [bizPhotoPreview, setBizPhotoPreview] = useState<string | null>(null)
+  const [upgradeForm, setUpgradeForm] = useState({
+    business_name: '', business_category: '', business_description: '',
+    website: '', phone: '', business_address: '',
+  })
+
+  // Business edit state
+  const [editing, setEditing] = useState(false)
+  const [editForm, setEditForm] = useState({
+    business_name: '', business_category: '', business_description: '',
+    website: '', phone: '', business_address: '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [bizPhotoUploading, setBizPhotoUploading] = useState(false)
+
+  // Hours editor
+  const [editingHours, setEditingHours] = useState(false)
+  const [hoursForm, setHoursForm] = useState<Record<string, { open: string; close: string; closed: boolean }>>({})
+
+  // Service area
+  const [editingArea, setEditingArea] = useState(false)
+  const [areaForm, setAreaForm] = useState<string[]>([])
+
+  // Photo gallery
+  const [galleryUploading, setGalleryUploading] = useState(false)
+
+  // Social links
+  const [editingSocials, setEditingSocials] = useState(false)
+  const [socialsForm, setSocialsForm] = useState<Record<string, string>>({})
+
+  // Reviews
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [reviewAvg, setReviewAvg] = useState(0)
+  const [reviewCount, setReviewCount] = useState(0)
+  const [replyingTo, setReplyingTo] = useState<number | null>(null)
+  const [replyText, setReplyText] = useState('')
+
+  // Address autocomplete
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const addressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [upgradeForm, setUpgradeForm] = useState({
-    business_name: '',
-    business_category: '',
-    business_description: '',
-    website: '',
-    phone: '',
-    business_address: '',
-  })
 
   const searchAddress = useCallback((q: string) => {
     if (addressTimerRef.current) clearTimeout(addressTimerRef.current)
@@ -87,127 +115,212 @@ export default function AccountClient() {
         const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`)
         const data = await res.json()
         if (Array.isArray(data)) {
-          setAddressSuggestions(data.map((r: { display_name?: string; formatted?: string }) => r.display_name || r.formatted || ''))
+          setAddressSuggestions(data.map((r: { display_name?: string }) => r.display_name || ''))
           setShowSuggestions(true)
         }
       } catch { /* ignore */ }
     }, 300)
   }, [])
 
+  const refreshUser = useCallback(async () => {
+    const res = await fetch('/api/auth')
+    const d = await res.json()
+    if (d.authenticated) setUser(d.user)
+  }, [])
+
   useEffect(() => {
     fetch('/api/auth')
       .then(r => r.json())
       .then(d => {
-        if (!d.authenticated) {
-          router.push('/login')
-          return
-        }
+        if (!d.authenticated) { router.push('/login'); return }
         setUser(d.user)
         setUnreadCount(d.unreadMessages || 0)
-        // Fetch listings and porch posts in parallel
+        if (d.user.account_type === 'business') setTab('business')
         return Promise.all([
           fetch(`/api/listings?user=${d.user.id}`).then(r => r.json()),
           fetch(`/api/porch?user=${d.user.id}`).then(r => r.json()),
-        ]).then(([listingsData, porchData]) => {
-          if (listingsData?.listings) setListings(listingsData.listings)
-          if (porchData?.posts) setPorchPosts(porchData.posts)
+        ]).then(([ld, pd]) => {
+          if (ld?.listings) setListings(ld.listings)
+          if (pd?.posts) setPorchPosts(pd.posts)
         })
       })
       .catch(() => router.push('/login'))
       .finally(() => setLoading(false))
   }, [router])
 
+  // Load reviews when user has business profile
+  useEffect(() => {
+    if (!user || user.account_type !== 'business') return
+    fetch(`/api/reviews?business_user_id=${user.id}`)
+      .then(r => r.json())
+      .then(d => {
+        setReviews(d.reviews || [])
+        setReviewAvg(d.average || 0)
+        setReviewCount(d.count || 0)
+      })
+      .catch(() => {})
+  }, [user])
+
   const handleLogout = async () => {
-    await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'logout' }),
-    })
+    await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) })
     router.push('/')
   }
 
-  const handleDelete = async (listingId: number) => {
+  const handleDelete = async (id: number) => {
     if (!confirm('Remove this listing?')) return
-    await fetch(`/api/listings/${listingId}`, { method: 'DELETE' })
-    setListings(prev => prev.filter(l => l.id !== listingId))
+    await fetch(`/api/listings/${id}`, { method: 'DELETE' })
+    setListings(prev => prev.filter(l => l.id !== id))
   }
 
-  const handleMarkSold = async (listingId: number) => {
-    await fetch(`/api/listings/${listingId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'sold' }),
-    })
-    setListings(prev => prev.map(l => l.id === listingId ? { ...l, status: 'sold' } : l))
+  const handleMarkSold = async (id: number) => {
+    await fetch(`/api/listings/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'sold' }) })
+    setListings(prev => prev.map(l => l.id === id ? { ...l, status: 'sold' } : l))
   }
 
   const handleUpgrade = async () => {
     if (!upgradeForm.business_name.trim() || !upgradeForm.business_category) return
     setUpgrading(true)
     try {
-      const res = await fetch('/api/account/upgrade-business', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(upgradeForm),
-      })
+      const res = await fetch('/api/account/upgrade-business', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(upgradeForm) })
       const data = await res.json()
       if (data.ok) {
-        // Upload business photo if one was selected
         if (bizPhotoFile) {
           try {
-            const formData = new FormData()
-            formData.append('file', bizPhotoFile)
-            const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData })
-            const uploadData = await uploadRes.json()
-            if (uploadRes.ok) {
-              await fetch('/api/account/photo', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: uploadData.url, type: 'business' }),
-              })
-            }
-          } catch { /* photo upload is best-effort */ }
+            const fd = new FormData(); fd.append('file', bizPhotoFile)
+            const ur = await fetch('/api/upload', { method: 'POST', body: fd })
+            const ud = await ur.json()
+            if (ur.ok) await fetch('/api/account/photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: ud.url, type: 'business' }) })
+          } catch {}
         }
-        // Refresh user data
-        const authRes = await fetch('/api/auth')
-        const authData = await authRes.json()
-        if (authData.authenticated) setUser(authData.user)
+        await refreshUser()
         setShowUpgrade(false)
-        setBizPhotoFile(null)
-        setBizPhotoPreview(null)
-      } else {
-        alert(data.error || 'Failed to upgrade')
-      }
-    } catch {
-      alert('Failed to upgrade')
-    } finally {
-      setUpgrading(false)
-    }
+        setBizPhotoFile(null); setBizPhotoPreview(null)
+        setTab('business')
+      } else { alert(data.error || 'Failed') }
+    } catch { alert('Failed') }
+    finally { setUpgrading(false) }
+  }
+
+  const startEditing = () => {
+    if (!user) return
+    setEditForm({
+      business_name: user.business_name || '',
+      business_category: user.business_category || '',
+      business_description: user.business_description || '',
+      website: user.website || '',
+      phone: user.phone || '',
+      business_address: user.business_address || '',
+    })
+    setEditing(true)
+  }
+
+  const saveProfile = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/account/edit-business', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editForm) })
+      const data = await res.json()
+      if (data.ok) { await refreshUser(); setEditing(false) }
+      else alert(data.error || 'Failed')
+    } catch { alert('Failed to save') }
+    finally { setSaving(false) }
   }
 
   const handleBusinessPhotoUpload = async (file: File) => {
     setBizPhotoUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData })
-      const uploadData = await uploadRes.json()
-      if (!uploadRes.ok) throw new Error(uploadData.error)
+      const fd = new FormData(); fd.append('file', file)
+      const ur = await fetch('/api/upload', { method: 'POST', body: fd })
+      const ud = await ur.json()
+      if (!ur.ok) throw new Error(ud.error)
+      const sr = await fetch('/api/account/photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: ud.url, type: 'business' }) })
+      if (!sr.ok) throw new Error((await sr.json()).error)
+      setUser(prev => prev ? { ...prev, business_photo: ud.url } : prev)
+    } catch (e) { alert(e instanceof Error ? e.message : 'Upload failed') }
+    finally { setBizPhotoUploading(false) }
+  }
 
-      const saveRes = await fetch('/api/account/photo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: uploadData.url, type: 'business' }),
-      })
-      const saveData = await saveRes.json()
-      if (!saveRes.ok) throw new Error(saveData.error)
+  const startEditingHours = () => {
+    const h = user?.hours || {}
+    const form: Record<string, { open: string; close: string; closed: boolean }> = {}
+    DAYS.forEach(d => { form[d] = h[d] || { open: '09:00', close: '17:00', closed: false } })
+    setHoursForm(form)
+    setEditingHours(true)
+  }
 
-      setUser(prev => prev ? { ...prev, business_photo: uploadData.url } : prev)
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Upload failed')
-    } finally {
-      setBizPhotoUploading(false)
+  const saveHours = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/account/edit-business', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ hours: hoursForm }) })
+      if ((await res.json()).ok) { await refreshUser(); setEditingHours(false) }
+    } catch {}
+    finally { setSaving(false) }
+  }
+
+  const startEditingArea = () => {
+    setAreaForm(user?.service_area || [])
+    setEditingArea(true)
+  }
+
+  const saveArea = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/account/edit-business', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ service_area: areaForm }) })
+      if ((await res.json()).ok) { await refreshUser(); setEditingArea(false) }
+    } catch {}
+    finally { setSaving(false) }
+  }
+
+  const handleGalleryUpload = async (file: File) => {
+    if ((user?.photo_gallery?.length || 0) >= 8) { alert('Maximum 8 photos'); return }
+    setGalleryUploading(true)
+    try {
+      const fd = new FormData(); fd.append('file', file)
+      const ur = await fetch('/api/upload', { method: 'POST', body: fd })
+      const ud = await ur.json()
+      if (!ur.ok) throw new Error(ud.error)
+      const newGallery = [...(user?.photo_gallery || []), ud.url]
+      const res = await fetch('/api/account/edit-business', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ photo_gallery: newGallery }) })
+      if ((await res.json()).ok) await refreshUser()
+    } catch (e) { alert(e instanceof Error ? e.message : 'Upload failed') }
+    finally { setGalleryUploading(false) }
+  }
+
+  const removeGalleryPhoto = async (url: string) => {
+    const newGallery = (user?.photo_gallery || []).filter(u => u !== url)
+    const res = await fetch('/api/account/edit-business', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ photo_gallery: newGallery }) })
+    if ((await res.json()).ok) await refreshUser()
+  }
+
+  const startEditingSocials = () => {
+    setSocialsForm(user?.social_links || {})
+    setEditingSocials(true)
+  }
+
+  const saveSocials = async () => {
+    setSaving(true)
+    try {
+      const clean: Record<string, string> = {}
+      Object.entries(socialsForm).forEach(([k, v]) => { if (v.trim()) clean[k] = v.trim() })
+      const res = await fetch('/api/account/edit-business', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ social_links: clean }) })
+      if ((await res.json()).ok) { await refreshUser(); setEditingSocials(false) }
+    } catch {}
+    finally { setSaving(false) }
+  }
+
+  const handleReply = async (reviewId: number) => {
+    if (!replyText.trim()) return
+    const res = await fetch('/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reply', review_id: reviewId, reply: replyText }) })
+    if ((await res.json()).ok) {
+      setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, reply: replyText, replied_at: new Date().toISOString() } : r))
+      setReplyingTo(null); setReplyText('')
     }
+  }
+
+  const handleReport = async (reviewId: number) => {
+    const reason = prompt('Why are you reporting this review?')
+    if (reason === null) return
+    await fetch('/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'report', review_id: reviewId, reason }) })
+    setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, reported: true } : r))
   }
 
   if (loading) return <main style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Loading...</main>
@@ -215,622 +328,451 @@ export default function AccountClient() {
 
   const neighborhood = user.address?.split(',')[0]?.trim() || null
   const isBusiness = user.account_type === 'business'
+  const allNeighborhoods = boroughs.flatMap(b => b.neighborhoods)
 
   return (
     <main style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       {/* Profile Header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: '1rem',
-        marginBottom: '2rem',
-        paddingBottom: '2rem',
-        borderBottom: '1px solid #e2e8f0',
-      }}>
-        {/* Avatar — locked to verification selfie */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0' }}>
         {user.selfie_url ? (
-          <img
-            src={user.selfie_url}
-            alt={user.name}
-            style={{
-              width: '72px',
-              height: '72px',
-              borderRadius: '50%',
-              objectFit: 'cover',
-              flexShrink: 0,
-            }}
-          />
+          <img src={user.selfie_url} alt={user.name} style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
         ) : (
-          <div style={{
-            width: '72px',
-            height: '72px',
-            borderRadius: '50%',
-            backgroundColor: '#e2e8f0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.75rem',
-            fontWeight: 700,
-            color: '#475569',
-            flexShrink: 0,
-          }}>
+          <div style={{ width: '72px', height: '72px', borderRadius: '50%', backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem', fontWeight: 700, color: '#475569', flexShrink: 0 }}>
             {user.name?.[0]?.toUpperCase() || '?'}
           </div>
         )}
-
         <div style={{ flex: 1 }}>
-          {/* Name + verified */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
             <h1 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>{user.name}</h1>
             {user.verified && <VerifiedBadge size="md" />}
           </div>
-
-          {/* Neighborhood */}
-          {neighborhood && (
-            <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>
-              {neighborhood}
-            </div>
-          )}
-
-          {/* Email */}
-          <div style={{ color: '#64748b', fontSize: '0.8125rem', marginBottom: '0.5rem' }}>{user.email}</div>
-
-          {/* Account type badges */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{
-              display: 'inline-block',
-              fontSize: '0.7rem',
-              fontWeight: 600,
-              padding: '0.2rem 0.6rem',
-              borderRadius: '9999px',
-              backgroundColor: '#f0fdf4',
-              color: '#16a34a',
-              textTransform: 'uppercase',
-              letterSpacing: '0.03em',
-            }}>
-              Personal
-            </span>
-            {isBusiness && (
-              <span style={{
-                display: 'inline-block',
-                fontSize: '0.7rem',
-                fontWeight: 600,
-                padding: '0.2rem 0.6rem',
-                borderRadius: '9999px',
-                backgroundColor: '#eff6ff',
-                color: '#1d4ed8',
-                textTransform: 'uppercase',
-                letterSpacing: '0.03em',
-              }}>
-                + Business
-              </span>
-            )}
-            {!isBusiness && (
-              <button
-                onClick={() => setShowUpgrade(true)}
-                style={{
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
-                  padding: '0.2rem 0.6rem',
-                  borderRadius: '9999px',
-                  border: '1px solid #2563eb',
-                  backgroundColor: '#fff',
-                  color: '#2563eb',
-                  cursor: 'pointer',
-                }}
-              >
-                + Add Business Profile
-              </button>
-            )}
-          </div>
+          {neighborhood && <div style={{ fontSize: '0.875rem', color: '#475569', marginBottom: '0.25rem' }}>{neighborhood}</div>}
+          <div style={{ color: '#64748b', fontSize: '0.8125rem' }}>{user.email}</div>
         </div>
-
-        <button onClick={handleLogout} style={{
-          padding: '0.5rem 1rem',
-          borderRadius: '0.5rem',
-          border: '1px solid #e2e8f0',
-          backgroundColor: '#fff',
-          color: '#64748b',
-          fontSize: '0.875rem',
-          cursor: 'pointer',
-          flexShrink: 0,
-        }}>
+        <button onClick={handleLogout} style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', backgroundColor: '#fff', color: '#64748b', fontSize: '0.875rem', cursor: 'pointer', flexShrink: 0 }}>
           Log out
         </button>
       </div>
 
-      {/* My Messages */}
-      <Link href="/messages" style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '1rem',
-        marginBottom: '2rem',
-        border: '1px solid #e2e8f0',
-        borderRadius: '0.75rem',
-        textDecoration: 'none',
-        color: 'inherit',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-          <span style={{ fontWeight: 600, fontSize: '0.9375rem' }}>My Messages</span>
-        </div>
-        {unreadCount > 0 ? (
-          <span style={{
-            backgroundColor: '#dc2626',
-            color: '#fff',
-            borderRadius: '9999px',
-            padding: '0.125rem 0.5rem',
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            minWidth: '20px',
-            textAlign: 'center',
-          }}>
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        ) : (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        )}
-      </Link>
-
-      {/* Business Info Section */}
-      {isBusiness && user.business_name && (
-        <div style={{
-          marginBottom: '2rem',
-          paddingBottom: '2rem',
-          borderBottom: '1px solid #e2e8f0',
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: '0', marginBottom: '1.5rem', borderBottom: '2px solid #e2e8f0' }}>
+        <button onClick={() => setTab('personal')} style={{
+          padding: '0.75rem 1.5rem', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer',
+          border: 'none', backgroundColor: 'transparent',
+          borderBottom: tab === 'personal' ? '2px solid #2563eb' : '2px solid transparent',
+          color: tab === 'personal' ? '#2563eb' : '#64748b',
+          marginBottom: '-2px',
         }}>
-          <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.75rem' }}>Business Profile</h2>
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem' }}>
-            {/* Business photo */}
-            <label style={{ cursor: 'pointer', position: 'relative', flexShrink: 0 }}>
-              <input
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={e => {
-                  const file = e.target.files?.[0]
-                  if (file) handleBusinessPhotoUpload(file)
-                  e.target.value = ''
-                }}
-              />
+          Personal
+        </button>
+        <button onClick={() => isBusiness ? setTab('business') : setShowUpgrade(true)} style={{
+          padding: '0.75rem 1.5rem', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer',
+          border: 'none', backgroundColor: 'transparent',
+          borderBottom: tab === 'business' ? '2px solid #2563eb' : '2px solid transparent',
+          color: tab === 'business' ? '#2563eb' : '#64748b',
+          marginBottom: '-2px',
+        }}>
+          Business {!isBusiness && '(Add Free)'}
+        </button>
+      </div>
+
+      {/* ==================== PERSONAL TAB ==================== */}
+      {tab === 'personal' && (
+        <>
+          {/* Messages */}
+          <Link href="/messages" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', marginBottom: '1.5rem', border: '1px solid #e2e8f0', borderRadius: '0.75rem', textDecoration: 'none', color: 'inherit' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+              <span style={{ fontWeight: 600, fontSize: '0.9375rem' }}>My Messages</span>
+            </div>
+            {unreadCount > 0 ? (
+              <span style={{ backgroundColor: '#dc2626', color: '#fff', borderRadius: '9999px', padding: '0.125rem 0.5rem', fontSize: '0.75rem', fontWeight: 700 }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+            )}
+          </Link>
+
+          {/* Listings */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 700 }}>My Listings</h2>
+            <Link href="/listings/new" style={{ padding: '0.5rem 1rem', backgroundColor: '#2563eb', color: '#fff', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Post New</Link>
+          </div>
+          {listings.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8', border: '1px dashed #e2e8f0', borderRadius: '0.75rem', marginBottom: '2rem' }}>No listings yet.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
+              {listings.map(listing => (
+                <div key={listing.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '0.75rem' }}>
+                  <div style={{ width: '64px', height: '64px', borderRadius: '0.5rem', backgroundColor: '#f1f5f9', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {listing.images[0] ? <img src={listing.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ color: '#94a3b8' }}>&#128247;</span>}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <Link href={`/listings/${listing.category_slug}/${listing.id}`} style={{ fontWeight: 600, fontSize: '0.875rem' }}>{listing.title}</Link>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#16a34a' }}>{listing.price != null ? `$${(listing.price / 100).toLocaleString()}` : 'Free'}</span>
+                      <span style={{ fontSize: '0.7rem', padding: '0.125rem 0.5rem', borderRadius: '9999px', backgroundColor: listing.status === 'active' ? '#f0fdf4' : '#fef3c7', color: listing.status === 'active' ? '#16a34a' : '#d97706', fontWeight: 600 }}>{listing.status}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                      <Link href={`/listings/${listing.category_slug}/${listing.id}`} style={smallLinkStyle}>View</Link>
+                      <Link href={`/listings/edit/${listing.id}`} style={smallLinkStyle}>Edit</Link>
+                      <button onClick={() => { const url = `${window.location.origin}/listings/${listing.category_slug}/${listing.id}`; navigator.share ? navigator.share({ title: listing.title, url }) : (navigator.clipboard.writeText(url), alert('Link copied!')) }} style={smallLinkStyle}>Share</button>
+                      {listing.status === 'active' && <button onClick={() => handleMarkSold(listing.id)} style={smallLinkStyle}>Mark sold</button>}
+                      <button onClick={() => handleDelete(listing.id)} style={{ ...smallLinkStyle, color: '#dc2626' }}>Remove</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Porch Posts */}
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '1rem' }}>My Porch Posts</h2>
+          {porchPosts.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8', border: '1px dashed #e2e8f0', borderRadius: '0.75rem' }}>No porch posts yet.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {porchPosts.map(post => {
+                const typeInfo = porchPostTypeBySlug[post.post_type]
+                return (
+                  <Link key={post.id} href={`/porch/post/${post.id}/${slugify(post.title)}`} style={{ display: 'block', padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '0.75rem', textDecoration: 'none', color: 'inherit' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                      {typeInfo && <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '0.125rem 0.5rem', borderRadius: '9999px', backgroundColor: `${typeInfo.color}15`, color: typeInfo.color }}>{typeInfo.icon} {typeInfo.name}</span>}
+                      {post.reply_count > 0 && <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{post.reply_count} {post.reply_count === 1 ? 'reply' : 'replies'}</span>}
+                    </div>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{post.title}</div>
+                    <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.25rem' }}>{post.body.length > 120 ? post.body.slice(0, 120) + '...' : post.body}</div>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ==================== BUSINESS TAB ==================== */}
+      {tab === 'business' && isBusiness && user.business_name && (
+        <>
+          {/* Business Header */}
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'center' }}>
+            <label style={{ cursor: 'pointer', flexShrink: 0 }}>
+              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleBusinessPhotoUpload(f); e.target.value = '' }} />
               {user.business_photo ? (
-                <img
-                  src={user.business_photo}
-                  alt={user.business_name || 'Business'}
-                  style={{
-                    width: '56px', height: '56px', borderRadius: '0.5rem',
-                    objectFit: 'cover', opacity: bizPhotoUploading ? 0.5 : 1,
-                  }}
-                />
+                <img src={user.business_photo} alt={user.business_name || ''} style={{ width: '80px', height: '80px', borderRadius: '0.75rem', objectFit: 'cover', opacity: bizPhotoUploading ? 0.5 : 1 }} />
               ) : (
-                <div style={{
-                  width: '56px', height: '56px', borderRadius: '0.5rem',
-                  backgroundColor: '#eff6ff', border: '1px dashed #93c5fd',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexDirection: 'column', gap: '2px',
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                    <circle cx="12" cy="13" r="4" />
-                  </svg>
-                  <span style={{ fontSize: '0.5rem', color: '#2563eb', fontWeight: 600 }}>Add logo</span>
+                <div style={{ width: '80px', height: '80px', borderRadius: '0.75rem', backgroundColor: '#eff6ff', border: '2px dashed #93c5fd', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '2px' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                  <span style={{ fontSize: '0.5rem', color: '#2563eb', fontWeight: 600 }}>Add photo</span>
                 </div>
               )}
             </label>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '1rem' }}>{user.business_name}</div>
-              {user.business_category && (
-                <div style={{ fontSize: '0.8125rem', color: '#64748b' }}>{user.business_category}</div>
+            <div style={{ flex: 1 }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>{user.business_name}</h2>
+              {user.business_category && <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{user.business_category}</div>}
+              {reviewCount > 0 && <div style={{ fontSize: '0.8125rem', color: '#f59e0b', marginTop: '2px' }}>{'★'.repeat(Math.round(reviewAvg))}{'☆'.repeat(5 - Math.round(reviewAvg))} {reviewAvg} ({reviewCount})</div>}
+            </div>
+            <Link href={`/business/${user.business_slug}`} style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid #2563eb', color: '#2563eb', fontSize: '0.8125rem', fontWeight: 600, textDecoration: 'none' }}>
+              View Public Profile
+            </Link>
+          </div>
+
+          {/* Profile Info — View/Edit */}
+          <section style={{ ...cardStyle, marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Profile Info</h3>
+              {!editing ? (
+                <button onClick={startEditing} style={editBtnStyle}>Edit</button>
+              ) : (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => setEditing(false)} style={editBtnStyle}>Cancel</button>
+                  <button onClick={saveProfile} disabled={saving} style={{ ...editBtnStyle, backgroundColor: '#2563eb', color: '#fff', border: 'none' }}>{saving ? 'Saving...' : 'Save'}</button>
+                </div>
               )}
             </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
-            <div>
-              <span style={{ color: '#64748b' }}>Name: </span>
-              <span style={{ fontWeight: 600 }}>{user.business_name}</span>
+            {!editing ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
+                <Row label="Name" value={user.business_name} />
+                <Row label="Category" value={user.business_category} />
+                <Row label="Description" value={user.business_description} />
+                <Row label="Website" value={user.website} link />
+                <Row label="Phone" value={user.phone} />
+                <Row label="Address" value={user.business_address} />
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <Field label="Business Name" value={editForm.business_name} onChange={v => setEditForm(f => ({ ...f, business_name: v }))} />
+                <div>
+                  <label style={labelStyle}>Category</label>
+                  <select value={editForm.business_category} onChange={e => setEditForm(f => ({ ...f, business_category: e.target.value }))} style={inputStyle}>
+                    <option value="">Select</option>
+                    {businessCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Description</label>
+                  <textarea value={editForm.business_description} onChange={e => setEditForm(f => ({ ...f, business_description: e.target.value }))} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+                </div>
+                <Field label="Website" value={editForm.website} onChange={v => setEditForm(f => ({ ...f, website: v }))} placeholder="https://yourbusiness.com" />
+                <Field label="Phone" value={editForm.phone} onChange={v => setEditForm(f => ({ ...f, phone: formatPhone(v) }))} placeholder="(212) 555-1234" type="tel" />
+                <div style={{ position: 'relative' }}>
+                  <label style={labelStyle}>Address</label>
+                  <input value={editForm.business_address} onChange={e => { setEditForm(f => ({ ...f, business_address: e.target.value })); searchAddress(e.target.value) }} onFocus={() => { if (addressSuggestions.length > 0) setShowSuggestions(true) }} onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} placeholder="123 Main St, Brooklyn, NY" style={inputStyle} />
+                  {showSuggestions && addressSuggestions.length > 0 && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '0.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: '180px', overflowY: 'auto' }}>
+                      {addressSuggestions.map((addr, i) => (
+                        <button key={i} onMouseDown={() => { setEditForm(f => ({ ...f, business_address: addr })); setShowSuggestions(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 0.75rem', border: 'none', backgroundColor: 'transparent', fontSize: '0.8125rem', cursor: 'pointer', color: '#334155' }}>{addr}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Hours */}
+          <section style={{ ...cardStyle, marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Business Hours</h3>
+              {!editingHours ? (
+                <button onClick={startEditingHours} style={editBtnStyle}>{user.hours ? 'Edit' : 'Add'}</button>
+              ) : (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => setEditingHours(false)} style={editBtnStyle}>Cancel</button>
+                  <button onClick={saveHours} disabled={saving} style={{ ...editBtnStyle, backgroundColor: '#2563eb', color: '#fff', border: 'none' }}>{saving ? 'Saving...' : 'Save'}</button>
+                </div>
+              )}
             </div>
-            {user.business_category && (
-              <div>
-                <span style={{ color: '#64748b' }}>Category: </span>
-                <span>{user.business_category}</span>
-              </div>
-            )}
-            {user.website && (
-              <div>
-                <span style={{ color: '#64748b' }}>Website: </span>
-                <a href={user.website.startsWith('http') ? user.website : `https://${user.website}`} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb' }}>
-                  {user.website}
-                </a>
-              </div>
-            )}
-            {user.phone && (
-              <div>
-                <span style={{ color: '#64748b' }}>Phone: </span>
-                <span>{user.phone}</span>
-              </div>
-            )}
-            {user.business_address && (
-              <div>
-                <span style={{ color: '#64748b' }}>Address: </span>
-                <span>{user.business_address}</span>
-              </div>
-            )}
-            {user.business_description && (
-              <div>
-                <span style={{ color: '#64748b' }}>About: </span>
-                <span>{user.business_description}</span>
-              </div>
-            )}
-            {user.hours && Object.keys(user.hours).length > 0 && (
-              <div>
-                <span style={{ color: '#64748b' }}>Hours: </span>
-                <span>{Object.entries(user.hours).map(([day, hrs]) => `${day}: ${hrs}`).join(' · ')}</span>
-              </div>
-            )}
-            {user.service_area && user.service_area.length > 0 && (
-              <div>
-                <span style={{ color: '#64748b' }}>Service Area: </span>
-                <span>{user.service_area.join(', ')}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* My Listings */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 700 }}>My Listings</h2>
-        <Link href="/listings/new" style={{
-          padding: '0.5rem 1rem',
-          backgroundColor: '#2563eb',
-          color: '#fff',
-          borderRadius: '0.5rem',
-          fontSize: '0.875rem',
-          fontWeight: 600,
-        }}>
-          Post New
-        </Link>
-      </div>
-
-      {listings.length === 0 ? (
-        <div style={{
-          padding: '2rem',
-          textAlign: 'center',
-          color: '#94a3b8',
-          border: '1px dashed #e2e8f0',
-          borderRadius: '0.75rem',
-          marginBottom: '2rem',
-        }}>
-          You haven&apos;t posted any listings yet.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
-          {listings.map(listing => (
-            <div key={listing.id} style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              padding: '1rem',
-              border: '1px solid #e2e8f0',
-              borderRadius: '0.75rem',
-            }}>
-              <div style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: '0.5rem',
-                backgroundColor: '#f1f5f9',
-                flexShrink: 0,
-                overflow: 'hidden',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                {listing.images[0] ? (
-                  <img src={listing.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <span style={{ color: '#94a3b8' }}>&#128247;</span>
-                )}
-              </div>
-              <div style={{ flex: 1 }}>
-                <Link href={`/listings/${listing.category_slug}/${listing.id}`} style={{ fontWeight: 600, fontSize: '0.875rem' }}>
-                  {listing.title}
-                </Link>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#16a34a' }}>
-                    {listing.price != null ? `$${(listing.price / 100).toLocaleString()}` : 'Free'}
-                  </span>
-                  <span style={{
-                    fontSize: '0.7rem',
-                    padding: '0.125rem 0.5rem',
-                    borderRadius: '9999px',
-                    backgroundColor: listing.status === 'active' ? '#f0fdf4' : listing.status === 'sold' ? '#fef3c7' : '#fee2e2',
-                    color: listing.status === 'active' ? '#16a34a' : listing.status === 'sold' ? '#d97706' : '#dc2626',
-                    fontWeight: 600,
-                  }}>
-                    {listing.status}
-                  </span>
+            {!editingHours ? (
+              user.hours ? (
+                <div style={{ fontSize: '0.875rem' }}>
+                  {DAYS.map(d => {
+                    const h = user.hours?.[d]
+                    if (!h) return null
+                    return <div key={d} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0' }}><span style={{ color: '#64748b' }}>{d}</span><span style={{ color: h.closed ? '#dc2626' : '#334155' }}>{h.closed ? 'Closed' : `${h.open} – ${h.close}`}</span></div>
+                  })}
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-                  <Link href={`/listings/${listing.category_slug}/${listing.id}`} style={smallLinkStyle}>
-                    View
-                  </Link>
-                  <Link href={`/listings/edit/${listing.id}`} style={smallLinkStyle}>
-                    Edit
-                  </Link>
-                  <button onClick={() => {
-                    const url = `${window.location.origin}/listings/${listing.category_slug}/${listing.id}`
-                    if (navigator.share) {
-                      navigator.share({ title: listing.title, url })
-                    } else {
-                      navigator.clipboard.writeText(url)
-                      alert('Link copied!')
-                    }
-                  }} style={smallLinkStyle}>
-                    Share
-                  </button>
-                  {listing.status === 'active' && (
-                    <button onClick={() => handleMarkSold(listing.id)} style={smallLinkStyle}>
-                      Mark sold
-                    </button>
-                  )}
-                  <button onClick={() => handleDelete(listing.id)} style={{ ...smallLinkStyle, color: '#dc2626' }}>
-                    Remove
-                  </button>
-                </div>
+              ) : <p style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>No hours set yet.</p>
+            ) : (
+              <div style={{ fontSize: '0.875rem' }}>
+                {DAYS.map(d => (
+                  <div key={d} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '4px 0' }}>
+                    <span style={{ width: '36px', color: '#64748b', fontWeight: 500 }}>{d}</span>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#64748b', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={hoursForm[d]?.closed || false} onChange={e => setHoursForm(h => ({ ...h, [d]: { ...h[d], closed: e.target.checked } }))} />
+                      Closed
+                    </label>
+                    {!hoursForm[d]?.closed && (
+                      <>
+                        <input type="time" value={hoursForm[d]?.open || '09:00'} onChange={e => setHoursForm(h => ({ ...h, [d]: { ...h[d], open: e.target.value } }))} style={{ ...inputStyle, width: 'auto', padding: '4px 8px', fontSize: '0.8125rem' }} />
+                        <span>–</span>
+                        <input type="time" value={hoursForm[d]?.close || '17:00'} onChange={e => setHoursForm(h => ({ ...h, [d]: { ...h[d], close: e.target.value } }))} style={{ ...inputStyle, width: 'auto', padding: '4px 8px', fontSize: '0.8125rem' }} />
+                      </>
+                    )}
+                  </div>
+                ))}
               </div>
+            )}
+          </section>
+
+          {/* Service Area */}
+          <section style={{ ...cardStyle, marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Service Area</h3>
+              {!editingArea ? (
+                <button onClick={startEditingArea} style={editBtnStyle}>{user.service_area?.length ? 'Edit' : 'Add'}</button>
+              ) : (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => setEditingArea(false)} style={editBtnStyle}>Cancel</button>
+                  <button onClick={saveArea} disabled={saving} style={{ ...editBtnStyle, backgroundColor: '#2563eb', color: '#fff', border: 'none' }}>{saving ? 'Saving...' : 'Save'}</button>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* Porch Posts */}
-      <div style={{ marginBottom: '1rem' }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 700 }}>My Porch Posts</h2>
-      </div>
-
-      {porchPosts.length === 0 ? (
-        <div style={{
-          padding: '2rem',
-          textAlign: 'center',
-          color: '#94a3b8',
-          border: '1px dashed #e2e8f0',
-          borderRadius: '0.75rem',
-        }}>
-          You haven&apos;t posted on the Porch yet.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {porchPosts.map(post => {
-            const typeInfo = porchPostTypeBySlug[post.post_type]
-            return (
-              <Link key={post.id} href={`/porch/post/${post.id}/${slugify(post.title)}`} style={{
-                display: 'block',
-                padding: '1rem',
-                border: '1px solid #e2e8f0',
-                borderRadius: '0.75rem',
-                textDecoration: 'none',
-                color: 'inherit',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                  {typeInfo && (
-                    <span style={{
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      padding: '0.125rem 0.5rem',
-                      borderRadius: '9999px',
-                      backgroundColor: `${typeInfo.color}15`,
-                      color: typeInfo.color,
-                    }}>
-                      {typeInfo.icon} {typeInfo.name}
-                    </span>
-                  )}
-                  {post.reply_count > 0 && (
-                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                      {post.reply_count} {post.reply_count === 1 ? 'reply' : 'replies'}
-                    </span>
-                  )}
+            {!editingArea ? (
+              user.service_area?.length ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {user.service_area.map(n => <span key={n} style={{ padding: '3px 10px', borderRadius: '1rem', fontSize: '0.75rem', backgroundColor: '#f1f5f9', color: '#334155', fontWeight: 500 }}>{n}</span>)}
                 </div>
-                <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{post.title}</div>
-                <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.25rem' }}>
-                  {post.body.length > 120 ? post.body.slice(0, 120) + '...' : post.body}
+              ) : <p style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>No service areas set.</p>
+            ) : (
+              <div>
+                {boroughs.map(boro => (
+                  <div key={boro.slug} style={{ marginBottom: '0.75rem' }}>
+                    <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>{boro.name}</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {boro.neighborhoods.map(n => {
+                        const sel = areaForm.includes(n)
+                        return <button key={n} onClick={() => setAreaForm(prev => sel ? prev.filter(x => x !== n) : [...prev, n])} style={{ padding: '3px 10px', borderRadius: '1rem', fontSize: '0.7rem', fontWeight: 500, border: sel ? '1px solid #2563eb' : '1px solid #e2e8f0', backgroundColor: sel ? '#eff6ff' : '#fff', color: sel ? '#2563eb' : '#64748b', cursor: 'pointer' }}>{n}</button>
+                      })}
+                    </div>
+                  </div>
+                ))}
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>{areaForm.length} neighborhood{areaForm.length !== 1 ? 's' : ''} selected</div>
+              </div>
+            )}
+          </section>
+
+          {/* Photo Gallery */}
+          <section style={{ ...cardStyle, marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.75rem' }}>
+              Photos <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: '0.8125rem' }}>({user.photo_gallery?.length || 0}/8)</span>
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '8px' }}>
+              {(user.photo_gallery || []).map((url, i) => (
+                <div key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#f1f5f9' }}>
+                  <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <button onClick={() => removeGalleryPhoto(url)} style={{ position: 'absolute', top: '4px', right: '4px', width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>x</button>
                 </div>
+              ))}
+              {(user.photo_gallery?.length || 0) < 8 && (
+                <label style={{ aspectRatio: '1', borderRadius: '8px', border: '2px dashed #93c5fd', backgroundColor: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: galleryUploading ? 'wait' : 'pointer', opacity: galleryUploading ? 0.5 : 1 }}>
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleGalleryUpload(f); e.target.value = '' }} disabled={galleryUploading} />
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                </label>
+              )}
+            </div>
+          </section>
+
+          {/* Social Links */}
+          <section style={{ ...cardStyle, marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Social Links</h3>
+              {!editingSocials ? (
+                <button onClick={startEditingSocials} style={editBtnStyle}>{Object.keys(user.social_links || {}).length ? 'Edit' : 'Add'}</button>
+              ) : (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => setEditingSocials(false)} style={editBtnStyle}>Cancel</button>
+                  <button onClick={saveSocials} disabled={saving} style={{ ...editBtnStyle, backgroundColor: '#2563eb', color: '#fff', border: 'none' }}>{saving ? 'Saving...' : 'Save'}</button>
+                </div>
+              )}
+            </div>
+            {!editingSocials ? (
+              Object.keys(user.social_links || {}).length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', fontSize: '0.875rem' }}>
+                  {Object.entries(user.social_links || {}).map(([platform, url]) => (
+                    <div key={platform}>
+                      <span style={{ color: '#64748b', textTransform: 'capitalize' }}>{platform}: </span>
+                      <a href={url.startsWith('http') ? url : `https://${url}`} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb' }}>{url}</a>
+                    </div>
+                  ))}
+                </div>
+              ) : <p style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>No social links added.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {['instagram', 'tiktok', 'facebook', 'yelp', 'google', 'linkedin'].map(platform => (
+                  <div key={platform} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ width: '80px', fontSize: '0.8125rem', fontWeight: 500, color: '#64748b', textTransform: 'capitalize' }}>{platform}</span>
+                    <input value={socialsForm[platform] || ''} onChange={e => setSocialsForm(f => ({ ...f, [platform]: e.target.value }))} placeholder={`${platform}.com/yourbusiness`} style={{ ...inputStyle, flex: 1 }} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Reviews */}
+          <section style={{ ...cardStyle, marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.75rem' }}>
+              Reviews {reviewCount > 0 && <span style={{ fontWeight: 400, color: '#64748b' }}>({reviewCount})</span>}
+            </h3>
+            {reviews.length === 0 ? (
+              <p style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>No reviews yet. Reviews will appear here when customers leave feedback.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {reviews.map(r => (
+                  <div key={r.id} style={{ paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '4px' }}>
+                      {r.reviewer?.selfie_url && <img src={r.reviewer.selfie_url} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />}
+                      <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{r.reviewer?.name || 'Anonymous'}</span>
+                      <span style={{ color: '#f59e0b', fontSize: '0.8125rem' }}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                      <span style={{ color: '#94a3b8', fontSize: '0.75rem', marginLeft: 'auto' }}>{new Date(r.created_at).toLocaleDateString()}</span>
+                    </div>
+                    {r.body && <p style={{ fontSize: '0.875rem', color: '#334155', margin: '4px 0' }}>{r.body}</p>}
+                    {r.reply && (
+                      <div style={{ marginTop: '8px', padding: '8px 12px', backgroundColor: '#f8fafc', borderRadius: '6px', borderLeft: '3px solid #2563eb' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#2563eb', marginBottom: '2px' }}>Your reply</div>
+                        <p style={{ fontSize: '0.8125rem', color: '#334155', margin: 0 }}>{r.reply}</p>
+                      </div>
+                    )}
+                    {replyingTo === r.id && (
+                      <div style={{ marginTop: '8px', display: 'flex', gap: '0.5rem' }}>
+                        <input value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Write your reply..." style={{ ...inputStyle, flex: 1 }} />
+                        <button onClick={() => handleReply(r.id)} style={{ ...editBtnStyle, backgroundColor: '#2563eb', color: '#fff', border: 'none' }}>Reply</button>
+                        <button onClick={() => { setReplyingTo(null); setReplyText('') }} style={editBtnStyle}>Cancel</button>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '6px' }}>
+                      {!r.reply && replyingTo !== r.id && <button onClick={() => { setReplyingTo(r.id); setReplyText('') }} style={{ fontSize: '0.75rem', color: '#2563eb', fontWeight: 500, border: 'none', backgroundColor: 'transparent', cursor: 'pointer', padding: 0 }}>Reply</button>}
+                      {!r.reported ? <button onClick={() => handleReport(r.id)} style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 500, border: 'none', backgroundColor: 'transparent', cursor: 'pointer', padding: 0 }}>Report</button> : <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Reported</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Quick Links */}
+          <section style={{ ...cardStyle }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.75rem' }}>Quick Actions</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <Link href="/listings/new" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', textDecoration: 'none', color: '#334155', fontSize: '0.875rem', fontWeight: 500 }}>
+                Post a Listing
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
               </Link>
-            )
-          })}
-        </div>
+              <Link href="/messages" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', textDecoration: 'none', color: '#334155', fontSize: '0.875rem', fontWeight: 500 }}>
+                Messages {unreadCount > 0 && `(${unreadCount} new)`}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+              </Link>
+              <Link href={`/business/${user.business_slug}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', textDecoration: 'none', color: '#334155', fontSize: '0.875rem', fontWeight: 500 }}>
+                View Public Profile
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+              </Link>
+            </div>
+          </section>
+        </>
       )}
 
-      {/* Upgrade to Business Modal */}
+      {/* ==================== UPGRADE MODAL ==================== */}
       {showUpgrade && (
-        <div style={{
-          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000, padding: '1rem',
-        }} onClick={() => setShowUpgrade(false)}>
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              backgroundColor: '#fff', borderRadius: '1rem', padding: '2rem',
-              maxWidth: '480px', width: '100%', maxHeight: '90vh', overflowY: 'auto',
-            }}
-          >
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }} onClick={() => setShowUpgrade(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ backgroundColor: '#fff', borderRadius: '1rem', padding: '2rem', maxWidth: '480px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Add Business Profile</h2>
             <p style={{ fontSize: '0.8125rem', color: '#64748b', marginBottom: '1.5rem' }}>
-              Add a business profile to your account. Your personal profile stays as your main identity — you&apos;ll choose which to post as. Since you&apos;re already verified, this is instant.
+              Free business profile. Your personal identity stays — you choose which to post as.
             </p>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {/* Business Photo Upload */}
+              {/* Photo */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <label style={{ cursor: 'pointer', flexShrink: 0 }}>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={e => {
-                      const file = e.target.files?.[0]
-                      if (file) {
-                        setBizPhotoFile(file)
-                        setBizPhotoPreview(URL.createObjectURL(file))
-                      }
-                      e.target.value = ''
-                    }}
-                  />
-                  {bizPhotoPreview ? (
-                    <img
-                      src={bizPhotoPreview}
-                      alt="Business photo"
-                      style={{
-                        width: '64px', height: '64px', borderRadius: '0.75rem',
-                        objectFit: 'cover',
-                      }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: '64px', height: '64px', borderRadius: '0.75rem',
-                      backgroundColor: '#eff6ff', border: '2px dashed #93c5fd',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexDirection: 'column', gap: '2px',
-                    }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                        <circle cx="12" cy="13" r="4" />
-                      </svg>
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) { setBizPhotoFile(f); setBizPhotoPreview(URL.createObjectURL(f)) }; e.target.value = '' }} />
+                  {bizPhotoPreview ? <img src={bizPhotoPreview} alt="" style={{ width: '64px', height: '64px', borderRadius: '0.75rem', objectFit: 'cover' }} /> : (
+                    <div style={{ width: '64px', height: '64px', borderRadius: '0.75rem', backgroundColor: '#eff6ff', border: '2px dashed #93c5fd', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
                     </div>
                   )}
                 </label>
-                <div>
-                  <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#334155' }}>Business Photo</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Logo, storefront, or headshot</div>
-                </div>
+                <div><div style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Business Photo</div><div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Logo, storefront, or headshot</div></div>
               </div>
-
-              <div>
-                <label style={labelStyle}>Business Name *</label>
-                <input
-                  value={upgradeForm.business_name}
-                  onChange={e => setUpgradeForm(f => ({ ...f, business_name: e.target.value }))}
-                  placeholder="e.g. Maria's Cleaning Service"
-                  style={inputStyle}
-                />
-              </div>
-
+              <Field label="Business Name *" value={upgradeForm.business_name} onChange={v => setUpgradeForm(f => ({ ...f, business_name: v }))} placeholder="e.g. Maria's Cleaning Service" />
               <div>
                 <label style={labelStyle}>Category *</label>
-                <select
-                  value={upgradeForm.business_category}
-                  onChange={e => setUpgradeForm(f => ({ ...f, business_category: e.target.value }))}
-                  style={inputStyle}
-                >
+                <select value={upgradeForm.business_category} onChange={e => setUpgradeForm(f => ({ ...f, business_category: e.target.value }))} style={inputStyle}>
                   <option value="">Select a category</option>
-                  {businessCategories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
+                  {businessCategories.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
-
-              <div>
-                <label style={labelStyle}>Description</label>
-                <textarea
-                  value={upgradeForm.business_description}
-                  onChange={e => setUpgradeForm(f => ({ ...f, business_description: e.target.value }))}
-                  placeholder="Tell NYC about your business"
-                  rows={3}
-                  style={{ ...inputStyle, resize: 'vertical' }}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Website</label>
-                <input
-                  value={upgradeForm.website}
-                  onChange={e => setUpgradeForm(f => ({ ...f, website: e.target.value }))}
-                  placeholder="https://yourbusiness.com"
-                  style={inputStyle}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Phone</label>
-                <input
-                  value={upgradeForm.phone}
-                  onChange={e => setUpgradeForm(f => ({ ...f, phone: formatPhone(e.target.value) }))}
-                  placeholder="(212) 555-1234"
-                  type="tel"
-                  style={inputStyle}
-                />
-              </div>
-
+              <div><label style={labelStyle}>Description</label><textarea value={upgradeForm.business_description} onChange={e => setUpgradeForm(f => ({ ...f, business_description: e.target.value }))} placeholder="Tell NYC about your business" rows={3} style={{ ...inputStyle, resize: 'vertical' }} /></div>
+              <Field label="Website" value={upgradeForm.website} onChange={v => setUpgradeForm(f => ({ ...f, website: v }))} placeholder="https://yourbusiness.com" />
+              <Field label="Phone" value={upgradeForm.phone} onChange={v => setUpgradeForm(f => ({ ...f, phone: formatPhone(v) }))} placeholder="(212) 555-1234" type="tel" />
               <div style={{ position: 'relative' }}>
                 <label style={labelStyle}>Business Address</label>
-                <input
-                  value={upgradeForm.business_address}
-                  onChange={e => {
-                    setUpgradeForm(f => ({ ...f, business_address: e.target.value }))
-                    searchAddress(e.target.value)
-                  }}
-                  onFocus={() => { if (addressSuggestions.length > 0) setShowSuggestions(true) }}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  placeholder="123 Main St, Brooklyn, NY"
-                  style={inputStyle}
-                />
+                <input value={upgradeForm.business_address} onChange={e => { setUpgradeForm(f => ({ ...f, business_address: e.target.value })); searchAddress(e.target.value) }} onFocus={() => { if (addressSuggestions.length > 0) setShowSuggestions(true) }} onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} placeholder="123 Main St, Brooklyn, NY" style={inputStyle} />
                 {showSuggestions && addressSuggestions.length > 0 && (
-                  <div style={{
-                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
-                    backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '0.5rem',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: '200px', overflowY: 'auto',
-                  }}>
-                    {addressSuggestions.map((addr, i) => (
-                      <button
-                        key={i}
-                        onMouseDown={() => {
-                          setUpgradeForm(f => ({ ...f, business_address: addr }))
-                          setShowSuggestions(false)
-                        }}
-                        style={{
-                          display: 'block', width: '100%', textAlign: 'left',
-                          padding: '0.5rem 0.75rem', border: 'none', backgroundColor: 'transparent',
-                          fontSize: '0.8125rem', cursor: 'pointer', color: '#334155',
-                          borderBottom: i < addressSuggestions.length - 1 ? '1px solid #f1f5f9' : 'none',
-                        }}
-                        onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f8fafc')}
-                        onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-                      >
-                        {addr}
-                      </button>
-                    ))}
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '0.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: '180px', overflowY: 'auto' }}>
+                    {addressSuggestions.map((a, i) => <button key={i} onMouseDown={() => { setUpgradeForm(f => ({ ...f, business_address: a })); setShowSuggestions(false) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 0.75rem', border: 'none', backgroundColor: 'transparent', fontSize: '0.8125rem', cursor: 'pointer', color: '#334155' }}>{a}</button>)}
                   </div>
                 )}
               </div>
-
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                <button
-                  onClick={() => setShowUpgrade(false)}
-                  style={{
-                    flex: 1, padding: '0.75rem', borderRadius: '0.5rem',
-                    border: '1px solid #e2e8f0', backgroundColor: '#fff',
-                    color: '#475569', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer',
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleUpgrade}
-                  disabled={upgrading || !upgradeForm.business_name.trim() || !upgradeForm.business_category}
-                  style={{
-                    flex: 1, padding: '0.75rem', borderRadius: '0.5rem',
-                    border: 'none', backgroundColor: '#2563eb', color: '#fff',
-                    fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer',
-                    opacity: (upgrading || !upgradeForm.business_name.trim() || !upgradeForm.business_category) ? 0.5 : 1,
-                  }}
-                >
-                  {upgrading ? 'Adding...' : 'Add Business Profile'}
-                </button>
+                <button onClick={() => setShowUpgrade(false)} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', backgroundColor: '#fff', color: '#475569', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={handleUpgrade} disabled={upgrading || !upgradeForm.business_name.trim() || !upgradeForm.business_category} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', opacity: (upgrading || !upgradeForm.business_name.trim() || !upgradeForm.business_category) ? 0.5 : 1 }}>{upgrading ? 'Adding...' : 'Add Business Profile'}</button>
               </div>
             </div>
           </div>
@@ -840,33 +782,31 @@ export default function AccountClient() {
   )
 }
 
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: '0.8125rem',
-  fontWeight: 600,
-  color: '#334155',
-  marginBottom: '0.375rem',
+// ==================== Helper Components ====================
+
+function Row({ label, value, link }: { label: string; value: string | null | undefined; link?: boolean }) {
+  if (!value) return <div><span style={{ color: '#94a3b8' }}>{label}: </span><span style={{ color: '#cbd5e1', fontStyle: 'italic' }}>Not set</span></div>
+  return (
+    <div>
+      <span style={{ color: '#64748b' }}>{label}: </span>
+      {link ? <a href={value.startsWith('http') ? value : `https://${value}`} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb' }}>{value}</a> : <span style={{ fontWeight: 500 }}>{value}</span>}
+    </div>
+  )
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.625rem 0.75rem',
-  borderRadius: '0.5rem',
-  border: '1px solid #e2e8f0',
-  fontSize: '0.875rem',
-  outline: 'none',
-  boxSizing: 'border-box',
+function Field({ label, value, onChange, placeholder, type }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
+  return (
+    <div>
+      <label style={labelStyle}>{label}</label>
+      <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} type={type} style={inputStyle} />
+    </div>
+  )
 }
 
-const smallLinkStyle: React.CSSProperties = {
-  padding: '0.25rem 0.625rem',
-  borderRadius: '0.375rem',
-  border: '1px solid #e2e8f0',
-  backgroundColor: '#fff',
-  fontSize: '0.75rem',
-  cursor: 'pointer',
-  color: '#2563eb',
-  fontWeight: 500,
-  textDecoration: 'none',
-  display: 'inline-block',
-}
+// ==================== Styles ====================
+
+const labelStyle: React.CSSProperties = { display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#334155', marginBottom: '0.375rem' }
+const inputStyle: React.CSSProperties = { width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', fontSize: '0.875rem', outline: 'none', boxSizing: 'border-box' }
+const smallLinkStyle: React.CSSProperties = { padding: '0.25rem 0.625rem', borderRadius: '0.375rem', border: '1px solid #e2e8f0', backgroundColor: '#fff', fontSize: '0.75rem', cursor: 'pointer', color: '#2563eb', fontWeight: 500, textDecoration: 'none', display: 'inline-block' }
+const cardStyle: React.CSSProperties = { padding: '1rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0' }
+const editBtnStyle: React.CSSProperties = { padding: '0.375rem 0.75rem', borderRadius: '0.375rem', border: '1px solid #e2e8f0', backgroundColor: '#fff', fontSize: '0.8125rem', fontWeight: 500, cursor: 'pointer', color: '#2563eb' }
