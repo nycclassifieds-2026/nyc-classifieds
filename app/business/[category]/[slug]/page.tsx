@@ -4,17 +4,18 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { slugify } from '@/lib/data'
 import { redirect } from 'next/navigation'
 import BusinessProfileClient from './BusinessProfileClient'
+import { cache } from 'react'
 
-async function getBusiness(slug: string) {
+const getBusiness = cache(async (slug: string) => {
   const db = getSupabaseAdmin()
   const { data } = await db
     .from('users')
-    .select('id, name, business_name, business_slug, business_category, business_description, business_photo, selfie_url, business_address, phone, website, verified, created_at')
+    .select('id, business_name, business_slug, business_category, business_description, business_photo, selfie_url, business_address, phone, website, verified')
     .eq('business_slug', slug)
     .eq('account_type', 'business')
     .single()
   return data
-}
+})
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string; slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -48,7 +49,6 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
   const { category, slug } = await params
   const biz = await getBusiness(slug)
 
-  // If business not found, render 404-style
   if (!biz) {
     return (
       <main style={{ maxWidth: '1050px', margin: '0 auto', padding: '48px 24px', textAlign: 'center' }}>
@@ -60,36 +60,16 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
     )
   }
 
-  // If category in URL doesn't match actual category, redirect to correct URL
+  // Redirect if category slug doesn't match
   const correctCatSlug = biz.business_category ? slugify(biz.business_category) : 'other'
   if (category !== correctCatSlug) {
     redirect(`/business/${correctCatSlug}/${slug}`)
   }
 
-  // Fetch reviews for aggregate rating in schema
-  const db = getSupabaseAdmin()
-  const { data: reviews } = await db
-    .from('reviews')
-    .select('rating')
-    .eq('business_user_id', biz.id)
-
-  const ratings = (reviews || []).map(r => r.rating)
-  const reviewCount = ratings.length
-  const reviewAvg = reviewCount > 0
-    ? Math.round(ratings.reduce((a, b) => a + b, 0) / reviewCount * 10) / 10
-    : 0
-
-  // Build JSON-LD
-  const dayMap: Record<string, string> = {
-    Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday',
-    Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday',
-  }
-
+  // Lightweight JSON-LD — reviews/hours come from client-side API call
   const bizAvatar = biz.business_photo || biz.selfie_url
-  const hours = biz.created_at ? undefined : undefined // placeholder — hours come from API
-  // Note: hours aren't fetched in the lightweight server query; JSON-LD will be enhanced client-side
 
-  const localBusinessSchema: Record<string, unknown> = {
+  const localBusinessSchema = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: biz.business_name,
@@ -106,15 +86,6 @@ export default async function BusinessProfilePage({ params }: { params: Promise<
     ...(biz.phone && { telephone: biz.phone }),
     ...(biz.website && { url: biz.website.startsWith('http') ? biz.website : `https://${biz.website}` }),
     ...(bizAvatar && { image: bizAvatar }),
-    ...(reviewCount > 0 && {
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: reviewAvg,
-        reviewCount,
-        bestRating: 5,
-        worstRating: 1,
-      },
-    }),
   }
 
   const breadcrumbSchema = {
