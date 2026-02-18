@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
 
   // Verify auth
   const jar = await cookies()
-  const token = jar.get('nyc_auth')?.value
+  const token = jar.get('nyc_classifieds_user')?.value
   if (!token) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
   // Parse body
   const body = await request.json()
-  const { business_name, business_category, business_description, website, phone, hours, service_area } = body
+  const { business_name, business_category, business_description, website, phone, hours, service_area, business_address } = body
 
   if (!business_name || !business_name.trim()) {
     return NextResponse.json({ error: 'Business name is required' }, { status: 400 })
@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
   if (phone) updates.phone = phone.trim()
   if (hours) updates.hours = hours
   if (service_area && Array.isArray(service_area)) updates.service_area = service_area
+  if (business_address) updates.business_address = business_address.trim()
 
   const { error } = await db
     .from('users')

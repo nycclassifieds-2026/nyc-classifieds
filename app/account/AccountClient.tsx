@@ -1,10 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import VerifiedBadge from '@/app/components/VerifiedBadge'
 import { porchPostTypeBySlug, slugify, businessCategories } from '@/lib/data'
+
+function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 10)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+}
 
 interface User {
   id: number
@@ -23,6 +30,7 @@ interface User {
   service_area: string[] | null
   selfie_url: string | null
   business_photo: string | null
+  business_address: string | null
   address: string | null
 }
 
@@ -59,13 +67,32 @@ export default function AccountClient() {
   const [bizPhotoUploading, setBizPhotoUploading] = useState(false)
   const [bizPhotoFile, setBizPhotoFile] = useState<File | null>(null)
   const [bizPhotoPreview, setBizPhotoPreview] = useState<string | null>(null)
+  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const addressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [upgradeForm, setUpgradeForm] = useState({
     business_name: '',
     business_category: '',
     business_description: '',
     website: '',
     phone: '',
+    business_address: '',
   })
+
+  const searchAddress = useCallback((q: string) => {
+    if (addressTimerRef.current) clearTimeout(addressTimerRef.current)
+    if (q.length < 3) { setAddressSuggestions([]); setShowSuggestions(false); return }
+    addressTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`)
+        const data = await res.json()
+        if (Array.isArray(data)) {
+          setAddressSuggestions(data.map((r: { display_name?: string; formatted?: string }) => r.display_name || r.formatted || ''))
+          setShowSuggestions(true)
+        }
+      } catch { /* ignore */ }
+    }, 300)
+  }, [])
 
   useEffect(() => {
     fetch('/api/auth')
@@ -427,6 +454,12 @@ export default function AccountClient() {
                 <span>{user.phone}</span>
               </div>
             )}
+            {user.business_address && (
+              <div>
+                <span style={{ color: '#64748b' }}>Address: </span>
+                <span>{user.business_address}</span>
+              </div>
+            )}
             {user.business_description && (
               <div>
                 <span style={{ color: '#64748b' }}>About: </span>
@@ -726,10 +759,53 @@ export default function AccountClient() {
                 <label style={labelStyle}>Phone</label>
                 <input
                   value={upgradeForm.phone}
-                  onChange={e => setUpgradeForm(f => ({ ...f, phone: e.target.value }))}
+                  onChange={e => setUpgradeForm(f => ({ ...f, phone: formatPhone(e.target.value) }))}
                   placeholder="(212) 555-1234"
+                  type="tel"
                   style={inputStyle}
                 />
+              </div>
+
+              <div style={{ position: 'relative' }}>
+                <label style={labelStyle}>Business Address</label>
+                <input
+                  value={upgradeForm.business_address}
+                  onChange={e => {
+                    setUpgradeForm(f => ({ ...f, business_address: e.target.value }))
+                    searchAddress(e.target.value)
+                  }}
+                  onFocus={() => { if (addressSuggestions.length > 0) setShowSuggestions(true) }}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  placeholder="123 Main St, Brooklyn, NY"
+                  style={inputStyle}
+                />
+                {showSuggestions && addressSuggestions.length > 0 && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
+                    backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '0.5rem',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: '200px', overflowY: 'auto',
+                  }}>
+                    {addressSuggestions.map((addr, i) => (
+                      <button
+                        key={i}
+                        onMouseDown={() => {
+                          setUpgradeForm(f => ({ ...f, business_address: addr }))
+                          setShowSuggestions(false)
+                        }}
+                        style={{
+                          display: 'block', width: '100%', textAlign: 'left',
+                          padding: '0.5rem 0.75rem', border: 'none', backgroundColor: 'transparent',
+                          fontSize: '0.8125rem', cursor: 'pointer', color: '#334155',
+                          borderBottom: i < addressSuggestions.length - 1 ? '1px solid #f1f5f9' : 'none',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+                        onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                      >
+                        {addr}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>

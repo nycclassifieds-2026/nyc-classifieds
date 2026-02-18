@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 
 export async function POST(request: NextRequest) {
   const jar = await cookies()
-  const token = jar.get('nyc_auth')?.value
+  const token = jar.get('nyc_classifieds_user')?.value
   if (!token) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }

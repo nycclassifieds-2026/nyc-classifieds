@@ -19,6 +19,7 @@ interface Business {
   photo_gallery: string[]
   selfie_url: string | null
   business_photo: string | null
+  business_address: string | null
   verified: boolean
   created_at: string
 }
@@ -108,6 +109,7 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
     ...(business.business_description && { description: business.business_description }),
     address: {
       '@type': 'PostalAddress',
+      ...(business.business_address && { streetAddress: business.business_address }),
       addressLocality: 'New York',
       addressRegion: 'NY',
       addressCountry: 'US',
@@ -182,6 +184,11 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
 
           {/* Contact row */}
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {business.business_address && (
+              <span style={{ fontSize: '0.875rem', color: '#374151' }}>
+                {business.business_address}
+              </span>
+            )}
             {business.phone && (
               <a href={`tel:${business.phone}`} style={{ color: '#2563eb', fontSize: '0.875rem', fontWeight: 500 }}>
                 {business.phone}
@@ -194,7 +201,6 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
                 Website
               </a>
             )}
-            {/* Message via listing — users can message through any listing below */}
           </div>
         </div>
       </div>
@@ -296,6 +302,11 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
             <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '4px' }}>
               {business.name}
             </p>
+            {business.business_address && (
+              <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '4px' }}>
+                {business.business_address}
+              </p>
+            )}
             {business.phone && (
               <a href={`tel:${business.phone}`} style={{ display: 'block', color: '#2563eb', fontSize: '0.875rem', marginBottom: '4px' }}>
                 {business.phone}
@@ -308,7 +319,6 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
                 {business.website.replace(/^https?:\/\//, '')}
               </a>
             )}
-            {/* Messaging requires listing context — users message through listings */}
           </div>
 
           {/* Member since */}

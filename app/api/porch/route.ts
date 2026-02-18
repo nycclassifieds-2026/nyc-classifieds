@@ -128,17 +128,6 @@ export async function POST(request: NextRequest) {
   const ip = getClientIp(request.headers)
   const db = getSupabaseAdmin()
 
-  // Verify user
-  const { data: user } = await db
-    .from('users')
-    .select('verified')
-    .eq('id', userId)
-    .single()
-
-  if (!user?.verified) {
-    return NextResponse.json({ error: 'Account must be verified to post on the Porch' }, { status: 403 })
-  }
-
   const body = await request.json()
   const { title, body: postBody, post_type, borough_slug, neighborhood_slug } = body
 

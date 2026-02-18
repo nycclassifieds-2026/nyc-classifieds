@@ -35,17 +35,6 @@ export async function POST(
   const ip = getClientIp(request.headers)
   const db = getSupabaseAdmin()
 
-  // Verify user
-  const { data: user } = await db
-    .from('users')
-    .select('verified')
-    .eq('id', userId)
-    .single()
-
-  if (!user?.verified) {
-    return NextResponse.json({ error: 'Account must be verified to reply on the Porch' }, { status: 403 })
-  }
-
   // Check the post exists
   const { data: post } = await db
     .from('porch_posts')

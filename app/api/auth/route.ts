@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const db = getSupabaseAdmin()
   const { data: user } = await db
     .from('users')
-    .select('id, email, name, verified, role, banned, account_type, business_name, business_slug, business_category, website, phone, business_description, hours, service_area, photo_gallery, selfie_url, business_photo, address')
+    .select('id, email, name, verified, role, banned, account_type, business_name, business_slug, business_category, website, phone, business_description, hours, service_area, photo_gallery, selfie_url, business_photo, business_address, address')
     .eq('id', userId)
     .single()
 

@@ -10,7 +10,7 @@ export async function GET(
 
   const { data: business } = await db
     .from('users')
-    .select('id, name, business_name, business_slug, business_category, business_description, website, phone, hours, service_area, photo_gallery, selfie_url, business_photo, verified, created_at')
+    .select('id, name, business_name, business_slug, business_category, business_description, website, phone, hours, service_area, photo_gallery, selfie_url, business_photo, business_address, verified, created_at')
     .eq('business_slug', slug)
     .eq('account_type', 'business')
     .single()
