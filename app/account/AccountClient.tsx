@@ -57,6 +57,8 @@ export default function AccountClient() {
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
   const [bizPhotoUploading, setBizPhotoUploading] = useState(false)
+  const [bizPhotoFile, setBizPhotoFile] = useState<File | null>(null)
+  const [bizPhotoPreview, setBizPhotoPreview] = useState<string | null>(null)
   const [upgradeForm, setUpgradeForm] = useState({
     business_name: '',
     business_category: '',
@@ -123,11 +125,29 @@ export default function AccountClient() {
       })
       const data = await res.json()
       if (data.ok) {
+        // Upload business photo if one was selected
+        if (bizPhotoFile) {
+          try {
+            const formData = new FormData()
+            formData.append('file', bizPhotoFile)
+            const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData })
+            const uploadData = await uploadRes.json()
+            if (uploadRes.ok) {
+              await fetch('/api/account/photo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: uploadData.url, type: 'business' }),
+              })
+            }
+          } catch { /* photo upload is best-effort */ }
+        }
         // Refresh user data
         const authRes = await fetch('/api/auth')
         const authData = await authRes.json()
         if (authData.authenticated) setUser(authData.user)
         setShowUpgrade(false)
+        setBizPhotoFile(null)
+        setBizPhotoPreview(null)
       } else {
         alert(data.error || 'Failed to upgrade')
       }
@@ -612,6 +632,51 @@ export default function AccountClient() {
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Business Photo Upload */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <label style={{ cursor: 'pointer', flexShrink: 0 }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={e => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        setBizPhotoFile(file)
+                        setBizPhotoPreview(URL.createObjectURL(file))
+                      }
+                      e.target.value = ''
+                    }}
+                  />
+                  {bizPhotoPreview ? (
+                    <img
+                      src={bizPhotoPreview}
+                      alt="Business photo"
+                      style={{
+                        width: '64px', height: '64px', borderRadius: '0.75rem',
+                        objectFit: 'cover',
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '64px', height: '64px', borderRadius: '0.75rem',
+                      backgroundColor: '#eff6ff', border: '2px dashed #93c5fd',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexDirection: 'column', gap: '2px',
+                    }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                      </svg>
+                    </div>
+                  )}
+                </label>
+                <div>
+                  <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#334155' }}>Business Photo</div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Logo, storefront, or headshot</div>
+                </div>
+              </div>
+
               <div>
                 <label style={labelStyle}>Business Name *</label>
                 <input

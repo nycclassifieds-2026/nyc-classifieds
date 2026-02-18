@@ -29,6 +29,8 @@ export default function PostListingClient() {
   const [showBizForm, setShowBizForm] = useState(false)
   const [bizLoading, setBizLoading] = useState(false)
   const [bizForm, setBizForm] = useState({ business_name: '', business_category: '', business_description: '' })
+  const [bizPhotoFile, setBizPhotoFile] = useState<File | null>(null)
+  const [bizPhotoPreview, setBizPhotoPreview] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/auth')
@@ -68,6 +70,22 @@ export default function PostListingClient() {
       })
       const data = await res.json()
       if (data.ok) {
+        // Upload business photo if selected
+        if (bizPhotoFile) {
+          try {
+            const formData = new FormData()
+            formData.append('file', bizPhotoFile)
+            const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData })
+            const uploadData = await uploadRes.json()
+            if (uploadRes.ok) {
+              await fetch('/api/account/photo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: uploadData.url, type: 'business' }),
+              })
+            }
+          } catch { /* best-effort */ }
+        }
         setAccountType('business')
         setBusinessName(bizForm.business_name.trim())
         setPostingAs('business')
@@ -260,6 +278,47 @@ export default function PostListingClient() {
             Your personal profile stays as your main identity. This just adds a business side.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {/* Business Photo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <label style={{ cursor: 'pointer', flexShrink: 0 }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={e => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      setBizPhotoFile(file)
+                      setBizPhotoPreview(URL.createObjectURL(file))
+                    }
+                    e.target.value = ''
+                  }}
+                />
+                {bizPhotoPreview ? (
+                  <img
+                    src={bizPhotoPreview}
+                    alt="Business photo"
+                    style={{ width: '52px', height: '52px', borderRadius: '0.5rem', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '52px', height: '52px', borderRadius: '0.5rem',
+                    backgroundColor: '#eff6ff', border: '2px dashed #93c5fd',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexDirection: 'column', gap: '1px',
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                      <circle cx="12" cy="13" r="4" />
+                    </svg>
+                  </div>
+                )}
+              </label>
+              <div>
+                <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#334155' }}>Photo</div>
+                <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Logo or storefront</div>
+              </div>
+            </div>
             <div>
               <label style={labelStyle}>Business Name *</label>
               <input
