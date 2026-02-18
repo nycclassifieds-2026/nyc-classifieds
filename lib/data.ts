@@ -102,6 +102,13 @@ export const businessCategories = [
   'Other',
 ]
 
+// ─── Business Profile URL Helper ───
+
+export function businessProfileUrl(businessSlug: string, category: string | null): string {
+  const catSlug = category ? slugify(category) : 'other'
+  return `/business/${catSlug}/${businessSlug}`
+}
+
 // Lookup helpers
 export const categoryBySlug = Object.fromEntries(categories.map(c => [c.slug, c]))
 export const allCategorySlugs = categories.map(c => c.slug)

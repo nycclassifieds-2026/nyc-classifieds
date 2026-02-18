@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import VerifiedBadge from '@/app/components/VerifiedBadge'
-import { porchPostTypeBySlug, slugify, businessCategories, boroughs } from '@/lib/data'
+import { porchPostTypeBySlug, slugify, businessCategories, boroughs, businessProfileUrl } from '@/lib/data'
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 10)
@@ -470,7 +470,7 @@ export default function AccountClient() {
               {user.business_category && <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{user.business_category}</div>}
               {reviewCount > 0 && <div style={{ fontSize: '0.8125rem', color: '#f59e0b', marginTop: '2px' }}>{'★'.repeat(Math.round(reviewAvg))}{'☆'.repeat(5 - Math.round(reviewAvg))} {reviewAvg} ({reviewCount})</div>}
             </div>
-            <Link href={`/business/${user.business_slug}`} style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid #2563eb', color: '#2563eb', fontSize: '0.8125rem', fontWeight: 600, textDecoration: 'none' }}>
+            <Link href={businessProfileUrl(user.business_slug!, user.business_category)} style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid #2563eb', color: '#2563eb', fontSize: '0.8125rem', fontWeight: 600, textDecoration: 'none' }}>
               View Public Profile
             </Link>
           </div>
@@ -720,7 +720,7 @@ export default function AccountClient() {
                 Messages {unreadCount > 0 && `(${unreadCount} new)`}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
               </Link>
-              <Link href={`/business/${user.business_slug}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', textDecoration: 'none', color: '#334155', fontSize: '0.875rem', fontWeight: 500 }}>
+              <Link href={businessProfileUrl(user.business_slug!, user.business_category)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0', textDecoration: 'none', color: '#334155', fontSize: '0.875rem', fontWeight: 500 }}>
                 View Public Profile
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
               </Link>

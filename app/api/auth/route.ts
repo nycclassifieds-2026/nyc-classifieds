@@ -248,7 +248,7 @@ export async function POST(request: NextRequest) {
     // Send business profile live email (async)
     const { data: bizUser } = await db.from('users').select('email, name').eq('id', userId).single()
     if (bizUser?.email && !bizUser.email.endsWith('@example.com')) {
-      sendEmail(bizUser.email, businessProfileLiveEmail(bizUser.name || 'there', business_name.trim(), slug)).catch(() => {})
+      sendEmail(bizUser.email, businessProfileLiveEmail(bizUser.name || 'there', business_name.trim(), slug, business_category?.trim() || null)).catch(() => {})
     }
 
     return NextResponse.json({ businessSet: true, slug })

@@ -683,8 +683,11 @@ export function businessProfileLiveEmail(
   name: string,
   businessName: string,
   slug: string,
+  category?: string | null,
 ): { subject: string; html: string } {
-  const n = esc(name), bn = esc(businessName), s = esc(slug)
+  const n = esc(name), bn = esc(businessName)
+  const catSlug = category ? slugify(category) : 'other'
+  const profileUrl = `${BASE_URL}/business/${catSlug}/${esc(slug)}`
   return {
     subject: `Your business page for ${bn} is live!`,
     html: `
@@ -695,9 +698,9 @@ export function businessProfileLiveEmail(
           Your business page for <strong>${bn}</strong> is now live on The NYC Classifieds. Share your page with customers:
         </p>
         <div style="background: #f1f5f9; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem; text-align: center;">
-          <a href="${BASE_URL}/business/${s}" style="color: #2563eb; font-size: 0.875rem; word-break: break-all;">${BASE_URL}/business/${s}</a>
+          <a href="${profileUrl}" style="color: #2563eb; font-size: 0.875rem; word-break: break-all;">${profileUrl}</a>
         </div>
-        ${BUTTON(`${BASE_URL}/business/${s}`, 'View Your Page')}
+        ${BUTTON(profileUrl, 'View Your Page')}
         ${FOOTER}
       ${WRAPPER_END}
     `,

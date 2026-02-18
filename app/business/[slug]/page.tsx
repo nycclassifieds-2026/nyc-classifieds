@@ -1,42 +1,22 @@
-import type { Metadata } from 'next'
-import { Suspense } from 'react'
-import BusinessProfileClient from './BusinessProfileClient'
+import { redirect } from 'next/navigation'
+import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { slugify } from '@/lib/data'
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export default async function OldBusinessProfileRedirect({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const name = slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-  return {
-    title: `${name} | NYC Classifieds`,
-    description: `${name} — verified NYC business on NYC Classifieds. View services, hours, photos, and contact info.`,
-  }
-}
+  const db = getSupabaseAdmin()
 
-function localBusinessSchema(slug: string) {
-  const name = slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name,
-    description: `${name} — verified NYC business on NYC Classifieds. View services, hours, photos, and contact info.`,
-    url: `https://thenycclassifieds.com/business/${slug}`,
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: 'New York',
-      addressRegion: 'NY',
-      addressCountry: 'US',
-    },
-  }
-}
+  const { data: business } = await db
+    .from('users')
+    .select('business_slug, business_category')
+    .eq('business_slug', slug)
+    .eq('account_type', 'business')
+    .single()
 
-export default async function BusinessProfilePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
-  const schema = localBusinessSchema(slug)
-  return (
-    <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
-      <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
-        <BusinessProfileClient slug={slug} />
-      </Suspense>
-    </>
-  )
+  if (!business) {
+    redirect('/business')
+  }
+
+  const catSlug = business.business_category ? slugify(business.business_category) : 'other'
+  redirect(`/business/${catSlug}/${business.business_slug}`)
 }

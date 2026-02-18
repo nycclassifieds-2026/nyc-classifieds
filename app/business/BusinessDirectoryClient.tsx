@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import SearchAutocomplete from '@/app/components/SearchAutocomplete'
-import { businessCategories, boroughs } from '@/lib/data'
+import { businessCategories, boroughs, businessProfileUrl } from '@/lib/data'
 import PreLaunchGate from '@/app/components/PreLaunchGate'
 
 interface Business {
@@ -147,7 +147,7 @@ export default function BusinessDirectoryClient() {
           {businesses.map(biz => (
             <Link
               key={biz.id}
-              href={`/business/${biz.business_slug}`}
+              href={businessProfileUrl(biz.business_slug, biz.business_category)}
               style={{
                 display: 'block',
                 border: '1px solid #e2e8f0',
