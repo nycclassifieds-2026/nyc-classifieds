@@ -18,6 +18,7 @@ interface Business {
   service_area: string[]
   photo_gallery: string[]
   selfie_url: string | null
+  business_photo: string | null
   verified: boolean
   created_at: string
 }
@@ -76,8 +77,9 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
     )
   }
 
+  const bizAvatar = business.business_photo || business.selfie_url
   const allPhotos = [
-    ...(business.selfie_url ? [business.selfie_url] : []),
+    ...(business.business_photo ? [business.business_photo] : []),
     ...business.photo_gallery,
   ]
 
@@ -113,7 +115,7 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
     ...(business.phone && { telephone: business.phone }),
     ...(business.website && { url: business.website.startsWith('http') ? business.website : `https://${business.website}` }),
     ...(openingHours && openingHours.length > 0 && { openingHoursSpecification: openingHours }),
-    ...(business.selfie_url && { image: business.selfie_url }),
+    ...(bizAvatar && { image: bizAvatar }),
     ...(business.service_area.length > 0 && {
       areaServed: business.service_area.map(n => ({
         '@type': 'Place',
@@ -147,8 +149,8 @@ export default function BusinessProfileClient({ slug }: { slug: string }) {
           width: '120px', height: '120px', borderRadius: '12px', overflow: 'hidden',
           backgroundColor: '#f3f4f6', flexShrink: 0,
         }}>
-          {business.selfie_url ? (
-            <img src={business.selfie_url} alt={business.business_name}
+          {bizAvatar ? (
+            <img src={bizAvatar} alt={business.business_name}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: '2rem', fontWeight: 700 }}>

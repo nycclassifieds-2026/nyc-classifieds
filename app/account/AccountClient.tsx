@@ -22,6 +22,7 @@ interface User {
   hours: Record<string, string> | null
   service_area: string[] | null
   selfie_url: string | null
+  business_photo: string | null
   address: string | null
 }
 
@@ -55,6 +56,7 @@ export default function AccountClient() {
   const [loading, setLoading] = useState(true)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
+  const [bizPhotoUploading, setBizPhotoUploading] = useState(false)
   const [upgradeForm, setUpgradeForm] = useState({
     business_name: '',
     business_category: '',
@@ -136,6 +138,31 @@ export default function AccountClient() {
     }
   }
 
+  const handleBusinessPhotoUpload = async (file: File) => {
+    setBizPhotoUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData })
+      const uploadData = await uploadRes.json()
+      if (!uploadRes.ok) throw new Error(uploadData.error)
+
+      const saveRes = await fetch('/api/account/photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: uploadData.url, type: 'business' }),
+      })
+      const saveData = await saveRes.json()
+      if (!saveRes.ok) throw new Error(saveData.error)
+
+      setUser(prev => prev ? { ...prev, business_photo: uploadData.url } : prev)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Upload failed')
+    } finally {
+      setBizPhotoUploading(false)
+    }
+  }
+
   if (loading) return <main style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Loading...</main>
   if (!user) return null
 
@@ -153,7 +180,7 @@ export default function AccountClient() {
         paddingBottom: '2rem',
         borderBottom: '1px solid #e2e8f0',
       }}>
-        {/* Avatar */}
+        {/* Avatar — locked to verification selfie */}
         {user.selfie_url ? (
           <img
             src={user.selfie_url}
@@ -311,6 +338,50 @@ export default function AccountClient() {
           borderBottom: '1px solid #e2e8f0',
         }}>
           <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.75rem' }}>Business Profile</h2>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem' }}>
+            {/* Business photo */}
+            <label style={{ cursor: 'pointer', position: 'relative', flexShrink: 0 }}>
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={e => {
+                  const file = e.target.files?.[0]
+                  if (file) handleBusinessPhotoUpload(file)
+                  e.target.value = ''
+                }}
+              />
+              {user.business_photo ? (
+                <img
+                  src={user.business_photo}
+                  alt={user.business_name || 'Business'}
+                  style={{
+                    width: '56px', height: '56px', borderRadius: '0.5rem',
+                    objectFit: 'cover', opacity: bizPhotoUploading ? 0.5 : 1,
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: '56px', height: '56px', borderRadius: '0.5rem',
+                  backgroundColor: '#eff6ff', border: '1px dashed #93c5fd',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexDirection: 'column', gap: '2px',
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                  <span style={{ fontSize: '0.5rem', color: '#2563eb', fontWeight: 600 }}>Add logo</span>
+                </div>
+              )}
+            </label>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '1rem' }}>{user.business_name}</div>
+              {user.business_category && (
+                <div style={{ fontSize: '0.8125rem', color: '#64748b' }}>{user.business_category}</div>
+              )}
+            </div>
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
             <div>
               <span style={{ color: '#64748b' }}>Name: </span>
