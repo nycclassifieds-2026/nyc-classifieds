@@ -1,24 +1,10 @@
-import type { Metadata } from 'next'
-import { Suspense } from 'react'
+'use client'
+
+import { use } from 'react'
 import BusinessProfileClient from './BusinessProfileClient'
 
-export async function generateMetadata({ params }: { params: Promise<{ category: string; slug: string }> }): Promise<Metadata> {
-  const { category, slug } = await params
-  const name = slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-  const catName = category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+export default function BusinessProfilePage({ params }: { params: Promise<{ category: string; slug: string }> }) {
+  const { category, slug } = use(params)
 
-  return {
-    title: `${name} | ${catName} | NYC Classifieds`,
-    description: `${name} — verified NYC business on NYC Classifieds. View services, hours, photos, and contact info.`,
-  }
-}
-
-export default async function BusinessProfilePage({ params }: { params: Promise<{ category: string; slug: string }> }) {
-  const { category, slug } = await params
-
-  return (
-    <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
-      <BusinessProfileClient slug={slug} category={category} />
-    </Suspense>
-  )
+  return <BusinessProfileClient slug={slug} category={category} />
 }
