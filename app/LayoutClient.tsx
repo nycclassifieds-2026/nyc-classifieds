@@ -10,7 +10,7 @@ import HomepageAd from './components/HomepageAd'
 import FeedbackWidget from './components/FeedbackWidget'
 import PushPrompt from './components/PushPrompt'
 
-const IS_PRELAUNCH = true // flip to false at launch
+const IS_PRELAUNCH = false // disabled — site is open
 
 function useIsMobile(breakpoint = 640) {
   const [mobile, setMobile] = useState(false)

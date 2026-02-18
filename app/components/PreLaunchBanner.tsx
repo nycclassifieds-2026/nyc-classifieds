@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-const PRELAUNCH = true // flip to false at launch
+const PRELAUNCH = false // disabled — site is open
 const TARGET = 10000
 
 export default function PreLaunchBanner() {
