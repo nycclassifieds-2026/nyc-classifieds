@@ -17,6 +17,26 @@ export default function SelfieVerification({ onVerified, onSubmit }: Props) {
   const [error, setError] = useState('')
   const [geoCoords, setGeoCoords] = useState<{ lat: number; lon: number } | null>(null)
 
+  const requestLocation = useCallback(() => {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        setGeoCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude })
+        setError('')
+      },
+      err => {
+        console.error('Geolocation error:', err.code, err.message)
+        if (err.code === 1) {
+          setError('Location access denied. Please enable location services.')
+        } else if (err.code === 3) {
+          setError('Location request timed out. Please try again.')
+        } else {
+          setError('Could not get your location. Please try again.')
+        }
+      },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 }
+    )
+  }, [])
+
   const startCamera = useCallback(async () => {
     setError('')
     try {
@@ -30,15 +50,11 @@ export default function SelfieVerification({ onVerified, onSubmit }: Props) {
       }
 
       // Get geolocation simultaneously
-      navigator.geolocation.getCurrentPosition(
-        pos => setGeoCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-        () => setError('Location access denied. Please enable location services.'),
-        { enableHighAccuracy: true, timeout: 15000 }
-      )
+      requestLocation()
     } catch {
       setError('Camera access denied. Please enable camera permissions.')
     }
-  }, [])
+  }, [requestLocation])
 
   const capture = () => {
     if (!videoRef.current || !canvasRef.current) return
@@ -62,8 +78,10 @@ export default function SelfieVerification({ onVerified, onSubmit }: Props) {
   }
 
   const submit = async () => {
-    if (!canvasRef.current || !geoCoords) {
-      setError('Waiting for location...')
+    if (!canvasRef.current) return
+    if (!geoCoords) {
+      setError('Getting your location... Please wait and try again.')
+      requestLocation()
       return
     }
 
@@ -178,7 +196,7 @@ export default function SelfieVerification({ onVerified, onSubmit }: Props) {
           }}>
             Retake
           </button>
-          <button onClick={submit} disabled={uploading || !geoCoords} style={{
+          <button onClick={submit} disabled={uploading} style={{
             flex: 2,
             padding: '0.75rem',
             borderRadius: '0.5rem',
@@ -189,7 +207,7 @@ export default function SelfieVerification({ onVerified, onSubmit }: Props) {
             fontWeight: 600,
             cursor: 'pointer',
           }}>
-            {uploading ? 'Verifying...' : !geoCoords ? 'Getting location...' : 'Verify & Submit'}
+            {uploading ? 'Verifying...' : !geoCoords ? 'Retry Location' : 'Verify & Submit'}
           </button>
         </div>
       )}
