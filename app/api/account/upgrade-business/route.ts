@@ -2,21 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { cookies } from 'next/headers'
 import { logEvent } from '@/lib/events'
+import { verifySession } from '@/lib/auth-utils'
 
 export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin()
 
   // Verify auth
   const jar = await cookies()
-  const token = jar.get('nyc_classifieds_user')?.value
-  if (!token) {
+  const userId = verifySession(jar.get('nyc_classifieds_user')?.value)
+  if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
   const { data: session } = await db
     .from('users')
     .select('id, account_type, verified')
-    .eq('id', parseInt(token))
+    .eq('id', parseInt(userId))
     .single()
 
   if (!session) {

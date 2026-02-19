@@ -1,28 +1,31 @@
-const rateMap = new Map<string, { count: number; resetAt: number }>()
+import { getSupabaseAdmin } from '@/lib/supabase-server'
 
 /**
- * Simple in-memory rate limiter.
+ * Supabase-backed rate limiter.
  * Returns true if the request is allowed, false if rate limited.
+ * Fails open on DB error (returns true).
  */
-export function rateLimit(
+export async function rateLimit(
   key: string,
   maxRequests: number = 10,
   windowMs: number = 60_000
-): boolean {
-  const now = Date.now()
-  const entry = rateMap.get(key)
-
-  if (!entry || now > entry.resetAt) {
-    rateMap.set(key, { count: 1, resetAt: now + windowMs })
-    return true
+): Promise<boolean> {
+  try {
+    const db = getSupabaseAdmin()
+    const { data, error } = await db.rpc('check_rate_limit', {
+      p_key: key,
+      p_max: maxRequests,
+      p_window_ms: windowMs,
+    })
+    if (error) {
+      console.error('Rate limit DB error:', error.message)
+      return true // fail open
+    }
+    return data as boolean
+  } catch (err) {
+    console.error('Rate limit error:', err)
+    return true // fail open
   }
-
-  if (entry.count >= maxRequests) {
-    return false
-  }
-
-  entry.count++
-  return true
 }
 
 /**

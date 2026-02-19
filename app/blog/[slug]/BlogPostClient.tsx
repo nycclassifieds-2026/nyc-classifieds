@@ -47,11 +47,24 @@ export default function BlogPostClient({
     }
   }
 
-  // Inline markdown: bold + links
+  // Escape HTML to prevent XSS
+  const escHtml = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+  // Only allow safe URL protocols
+  const safeHref = (url: string) => {
+    const trimmed = url.trim()
+    if (trimmed.startsWith('https://') || trimmed.startsWith('http://') || trimmed.startsWith('/')) return trimmed
+    return '#'
+  }
+
+  // Inline markdown: bold + links (escape first, then apply formatting)
   const md = (s: string) =>
-    s
+    escHtml(s)
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#2563eb">$1</a>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, url) =>
+        `<a href="${safeHref(url)}" target="_blank" rel="noopener noreferrer" style="color:#2563eb">${text}</a>`
+      )
 
   // Parse content into paragraphs
   const paragraphs = post.content.split('\n\n')

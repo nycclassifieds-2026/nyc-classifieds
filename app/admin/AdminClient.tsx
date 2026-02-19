@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 
 // ─── Types ────────────────────────────────────────────────────
 interface AuthUser { id: number; email: string; name: string; role: string; verified: boolean }
-interface UserRow { id: number; email: string; name: string | null; verified: boolean; role: string; banned: boolean; created_at: string }
+interface UserRow { id: number; email: string; name: string | null; verified: boolean; role: string; banned: boolean; created_at: string; warning_count?: number }
+interface UserWarning { id: number; user_id: number; admin_id: number; reason: string; severity: string; created_at: string }
 interface FlaggedItem { id: number; reporter_id: number; content_type: string; content_id: number; reason: string; status: string; created_at: string; reporter: { id: number; email: string; name: string | null } | null; content: unknown }
 
 interface TodoItem {
@@ -793,6 +794,14 @@ function UsersTab({ isAdmin, currentUserId }: { isAdmin: boolean; currentUserId:
   const [roleFilter, setRoleFilter] = useState('')
   const [loading, setLoading] = useState(true)
 
+  // Warning state
+  const [warnUserId, setWarnUserId] = useState<number | null>(null)
+  const [warnReason, setWarnReason] = useState('')
+  const [warnSeverity, setWarnSeverity] = useState('medium')
+  const [warnLoading, setWarnLoading] = useState(false)
+  const [warningHistory, setWarningHistory] = useState<UserWarning[]>([])
+  const [showWarningsFor, setShowWarningsFor] = useState<number | null>(null)
+
   const load = useCallback(() => {
     setLoading(true)
     const params = new URLSearchParams({ page: String(page) })
@@ -816,7 +825,40 @@ function UsersTab({ isAdmin, currentUserId }: { isAdmin: boolean; currentUserId:
     load()
   }
 
+  const submitWarning = async () => {
+    if (!warnUserId || !warnReason.trim()) return
+    setWarnLoading(true)
+    const res = await api('/api/admin/warnings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: warnUserId, reason: warnReason, severity: warnSeverity }),
+    })
+    setWarnLoading(false)
+    setWarnUserId(null)
+    setWarnReason('')
+    setWarnSeverity('medium')
+    if (res.auto_banned) {
+      alert(`User auto-banned after ${res.warning_count} warnings.`)
+    }
+    load()
+  }
+
+  const loadWarnings = async (userId: number) => {
+    if (showWarningsFor === userId) {
+      setShowWarningsFor(null)
+      return
+    }
+    const res = await api(`/api/admin/warnings?user_id=${userId}`)
+    setWarningHistory(res.warnings || [])
+    setShowWarningsFor(userId)
+  }
+
   const totalPages = Math.ceil(total / 50)
+
+  const severityBadge = (s: string) => badge(
+    s === 'high' ? '#fff' : s === 'medium' ? '#fff' : colors.text,
+    s === 'high' ? colors.danger : s === 'medium' ? colors.warning : '#fef9c3'
+  )
 
   return (
     <div>
@@ -836,6 +878,43 @@ function UsersTab({ isAdmin, currentUserId }: { isAdmin: boolean; currentUserId:
         </select>
         <span style={{ fontSize: '0.75rem', color: colors.textLight }}>{total} total</span>
       </div>
+
+      {/* Warn user inline form */}
+      {warnUserId && (
+        <div style={{ ...cardStyle, marginBottom: '1rem', border: `2px solid ${colors.warning}` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <strong style={{ fontSize: '0.875rem' }}>Warn user #{warnUserId}</strong>
+            <button style={{ ...btnOutline, fontSize: '0.6875rem' }} onClick={() => setWarnUserId(null)}>Cancel</button>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <label style={{ fontSize: '0.75rem', color: colors.textMuted, display: 'block', marginBottom: '0.25rem' }}>Reason</label>
+              <input
+                style={{ ...inputStyle, width: '100%' }}
+                placeholder="Reason for warning..."
+                value={warnReason}
+                onChange={e => setWarnReason(e.target.value)}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.75rem', color: colors.textMuted, display: 'block', marginBottom: '0.25rem' }}>Severity</label>
+              <select style={selectStyle} value={warnSeverity} onChange={e => setWarnSeverity(e.target.value)}>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <button
+              style={{ ...btnPrimary, backgroundColor: colors.warning }}
+              disabled={warnLoading || !warnReason.trim()}
+              onClick={submitWarning}
+            >
+              {warnLoading ? 'Sending...' : 'Send Warning'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div style={{ padding: '2rem', color: colors.textLight, textAlign: 'center' }}>Loading...</div>
       ) : (
@@ -854,10 +933,26 @@ function UsersTab({ isAdmin, currentUserId }: { isAdmin: boolean; currentUserId:
             </thead>
             <tbody>
               {users.map(u => (
+                <>
                 <tr key={u.id}>
                   <td style={tdStyle}>{u.id}</td>
                   <td style={tdStyle}>{u.email}</td>
-                  <td style={tdStyle}>{u.name || '\u2014'}</td>
+                  <td style={tdStyle}>
+                    {u.name || '\u2014'}
+                    {(u.warning_count || 0) > 0 && (
+                      <span
+                        style={{
+                          ...badge('#fff', colors.warning),
+                          marginLeft: '0.375rem',
+                          cursor: 'pointer',
+                        }}
+                        title={`${u.warning_count} warning(s) — click to view`}
+                        onClick={() => loadWarnings(u.id)}
+                      >
+                        {u.warning_count}w
+                      </span>
+                    )}
+                  </td>
                   <td style={tdStyle}>
                     <span style={badge(
                       u.role === 'admin' ? colors.danger : u.role === 'moderator' ? colors.primary : colors.textMuted,
@@ -873,6 +968,14 @@ function UsersTab({ isAdmin, currentUserId }: { isAdmin: boolean; currentUserId:
                   <td style={tdStyle}>
                     {u.id !== currentUserId && (
                       <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
+                        {!u.banned && (
+                          <button
+                            style={{ ...btnOutline, borderColor: colors.warning, color: colors.warning }}
+                            onClick={() => { setWarnUserId(u.id); setWarnReason(''); setWarnSeverity('medium') }}
+                          >
+                            Warn
+                          </button>
+                        )}
                         <button style={btnOutline} onClick={() => patchUser(u.id, 'toggle_verified')}>
                           {u.verified ? 'Unverify' : 'Verify'}
                         </button>
@@ -892,10 +995,40 @@ function UsersTab({ isAdmin, currentUserId }: { isAdmin: boolean; currentUserId:
                             <option value="admin">Admin</option>
                           </select>
                         )}
+                        {(u.warning_count || 0) === 0 && (
+                          <button
+                            style={{ ...btnOutline, fontSize: '0.6875rem' }}
+                            onClick={() => loadWarnings(u.id)}
+                          >
+                            History
+                          </button>
+                        )}
                       </div>
                     )}
                   </td>
                 </tr>
+                {showWarningsFor === u.id && (
+                  <tr key={`warn-${u.id}`}>
+                    <td colSpan={7} style={{ padding: '0.75rem 1rem', backgroundColor: '#fffbeb', borderBottom: `1px solid ${colors.border}` }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.5rem', color: colors.warning }}>
+                        Warning History
+                        <button style={{ ...btnOutline, marginLeft: '0.5rem', fontSize: '0.625rem', padding: '0.125rem 0.375rem' }} onClick={() => setShowWarningsFor(null)}>Close</button>
+                      </div>
+                      {warningHistory.length === 0 ? (
+                        <p style={{ fontSize: '0.75rem', color: colors.textLight, margin: 0 }}>No warnings on record.</p>
+                      ) : (
+                        warningHistory.map(w => (
+                          <div key={w.id} style={{ fontSize: '0.75rem', color: colors.textMuted, marginBottom: '0.375rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <span style={severityBadge(w.severity)}>{w.severity}</span>
+                            <span>{w.reason}</span>
+                            <span style={{ color: colors.textLight }}>{formatDate(w.created_at)}</span>
+                          </div>
+                        ))
+                      )}
+                    </td>
+                  </tr>
+                )}
+                </>
               ))}
             </tbody>
           </table>

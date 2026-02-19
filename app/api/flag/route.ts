@@ -5,17 +5,18 @@ import { sendEmail } from '@/lib/email'
 import { flagConfirmationEmail, moderatorAlertEmail } from '@/lib/email-templates'
 import { sendPushToAdmins } from '@/lib/push'
 import { logEvent } from '@/lib/events'
+import { verifySession } from '@/lib/auth-utils'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
 export async function POST(request: NextRequest) {
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
   const ip = getClientIp(request.headers)
-  if (!rateLimit(`flag:${ip}`, 10, 300_000)) {
+  if (!await rateLimit(`flag:${ip}`, 10, 300_000)) {
     return NextResponse.json({ error: 'Too many reports' }, { status: 429 })
   }
 
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
   // Push notification to admins
   sendPushToAdmins({ title: 'New flag', body: `${content_type} flagged: ${reason.trim().slice(0, 100)}`, url: '/admin' }).catch(() => {})
 
-  logEvent('flag', { content_type, content_id }, { userId: parseInt(userId), ip })
+  logEvent('flag', { content_type, content_id }, { userId: parseInt(userId) })
 
   // Send confirmation to reporter + alert to moderators (async)
   ;(async () => {

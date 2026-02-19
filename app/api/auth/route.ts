@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { otpEmail, welcomeEmail, businessProfileLiveEmail } from '@/lib/email-templates'
 import { sendEmail } from '@/lib/email'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { signEmailToken, hashPin, verifyPin } from '@/lib/auth-utils'
+import { signEmailToken, hashPin, verifyPin, signSession, verifySession } from '@/lib/auth-utils'
 import { logEvent } from '@/lib/events'
 const COOKIE_NAME = 'nyc_classifieds_user'
 const isProd = process.env.NODE_ENV === 'production'
@@ -11,7 +11,7 @@ const isProd = process.env.NODE_ENV === 'production'
 
 // GET — check auth status
 export async function GET(request: NextRequest) {
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ authenticated: false })
   }
@@ -69,13 +69,18 @@ export async function POST(request: NextRequest) {
   const { action } = body
 
   if (action === 'send-otp') {
-    if (!rateLimit(`otp:${ip}`, 5, 300_000)) {
+    if (!await rateLimit(`otp:${ip}`, 5, 300_000)) {
       return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 })
     }
 
     const email = body.email?.trim().toLowerCase()
     if (!email || !email.includes('@')) {
       return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
+    }
+
+    // Per-email OTP rate limit
+    if (!await rateLimit(`otp-email:${email}`, 3, 600_000)) {
+      return NextResponse.json({ error: 'Too many codes sent to this email. Try again later.' }, { status: 429 })
     }
 
     const code = String(Math.floor(100000 + Math.random() * 900000))
@@ -91,7 +96,7 @@ export async function POST(request: NextRequest) {
     // Send email via shared helper
     await sendEmail(email, otpEmail(code))
 
-    logEvent('otp_requested', { email }, { ip })
+    logEvent('otp_requested', { email })
 
     return NextResponse.json({ sent: true })
   }
@@ -136,7 +141,7 @@ export async function POST(request: NextRequest) {
 
     // Existing user with PIN → log them in
     if (user?.pin) {
-      logEvent('otp_verified', { email, existing_user: true }, { userId: user.id, ip })
+      logEvent('otp_verified', { email, existing_user: true }, { userId: user.id })
 
       const res = NextResponse.json({
         verified: true,
@@ -144,7 +149,7 @@ export async function POST(request: NextRequest) {
         isVerified: user.verified,
         userId: user.id,
       })
-      res.cookies.set(COOKIE_NAME, String(user.id), {
+      res.cookies.set(COOKIE_NAME, signSession(String(user.id)), {
         httpOnly: true,
         secure: isProd,
         sameSite: 'strict',
@@ -156,7 +161,7 @@ export async function POST(request: NextRequest) {
 
     // New or incomplete user → return email token, don't create user yet
     // Everything gets created at once in /api/auth/complete-signup
-    logEvent('otp_verified', { email, existing_user: false }, { ip })
+    logEvent('otp_verified', { email, existing_user: false })
 
     return NextResponse.json({
       verified: true,
@@ -167,7 +172,7 @@ export async function POST(request: NextRequest) {
 
   if (action === 'set-pin') {
     // C2 fix: Use cookie for auth instead of body userId
-    const userId = request.cookies.get(COOKIE_NAME)?.value
+    const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
     const { pin } = body
     if (!userId || !pin || !/^\d{4,10}$/.test(pin)) {
       return NextResponse.json({ error: 'PIN must be 4–10 digits' }, { status: 400 })
@@ -180,7 +185,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'set-name') {
-    const userId = request.cookies.get(COOKIE_NAME)?.value
+    const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
     const name = body.name?.trim()
     if (!userId || !name) {
       return NextResponse.json({ error: 'Name required' }, { status: 400 })
@@ -192,7 +197,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'set-account-type') {
-    const userId = request.cookies.get(COOKIE_NAME)?.value
+    const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
     const accountType = body.account_type
     if (!userId || !['personal', 'business'].includes(accountType)) {
       return NextResponse.json({ error: 'Valid account type required' }, { status: 400 })
@@ -205,7 +210,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'set-business') {
-    const userId = request.cookies.get(COOKIE_NAME)?.value
+    const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
     if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
@@ -262,7 +267,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'set-address') {
-    const userId = request.cookies.get(COOKIE_NAME)?.value
+    const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
     const { address, lat, lng } = body
     if (!userId || !address || lat == null || lng == null) {
       return NextResponse.json({ error: 'Address with coordinates required' }, { status: 400 })
@@ -279,7 +284,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'login') {
-    if (!rateLimit(`login:${ip}`, 10, 300_000)) {
+    if (!await rateLimit(`login:${ip}`, 10, 300_000)) {
       return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 })
     }
 
@@ -313,7 +318,7 @@ export async function POST(request: NextRequest) {
     }
 
     logEvent('login', { email, name: user.name }, {
-      userId: user.id, ip,
+      userId: user.id,
       notify: true,
       notifyTitle: 'User login',
       notifyBody: `${user.name || email} logged in`,
@@ -323,7 +328,7 @@ export async function POST(request: NextRequest) {
       authenticated: true,
       user: { id: user.id, name: user.name, verified: user.verified },
     })
-    res.cookies.set(COOKIE_NAME, String(user.id), {
+    res.cookies.set(COOKIE_NAME, signSession(String(user.id)), {
       httpOnly: true,
       secure: isProd,
       sameSite: 'strict',

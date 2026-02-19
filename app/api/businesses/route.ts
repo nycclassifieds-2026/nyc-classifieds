@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { boroughs } from '@/lib/data'
 
 const PAGE_SIZE = 24
 
+/** Escape PostgREST LIKE wildcards */
+function escLike(s: string): string {
+  return s.replace(/[%_\\]/g, c => '\\' + c)
+}
+
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request.headers)
+  if (!await rateLimit(`businesses:${ip}`, 30, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
   const { searchParams } = request.nextUrl
   const q = searchParams.get('q')?.trim()
   const category = searchParams.get('category')
@@ -20,7 +31,7 @@ export async function GET(request: NextRequest) {
     .not('business_slug', 'is', null)
 
   if (q) {
-    const safeQ = q.replace(/[.,()\\]/g, ' ').trim()
+    const safeQ = escLike(q.replace(/[.,()\\]/g, ' ').trim())
     if (safeQ) {
       query = query.or(`business_name.ilike.%${safeQ}%,business_description.ilike.%${safeQ}%`)
     }

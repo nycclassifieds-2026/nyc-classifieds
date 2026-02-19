@@ -4,6 +4,7 @@ import { sendEmail } from '@/lib/email'
 import { helpfulVoteEmail } from '@/lib/email-templates'
 import { createNotification } from '@/lib/notifications'
 import { logEvent } from '@/lib/events'
+import { verifySession } from '@/lib/auth-utils'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
@@ -22,7 +23,7 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid IDs' }, { status: 400 })
   }
 
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }

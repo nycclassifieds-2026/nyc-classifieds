@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(50),
     // New flags
-    db.from('flags')
+    db.from('flagged_content')
       .select('id, content_type, reason, created_at')
       .eq('status', 'pending')
       .gte('created_at', since)

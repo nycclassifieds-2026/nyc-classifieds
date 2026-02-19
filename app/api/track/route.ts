@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   try {
     const ip = getClientIp(request.headers)
 
-    if (!rateLimit(`track:${ip}`, 30, 60_000)) {
+    if (!await rateLimit(`track:${ip}`, 30, 60_000)) {
       return new NextResponse(null, { status: 429 })
     }
 
@@ -69,7 +69,6 @@ export async function POST(request: NextRequest) {
         event_type: body.event,
         path,
         details: body.details || {},
-        ip,
         visitor_hash: visitorHash,
       })
 

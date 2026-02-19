@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { verifySession } from '@/lib/auth-utils'
 import { haversineDistance } from '@/lib/geocode'
 import { sendEmail } from '@/lib/email'
 import { verificationSuccessEmail, welcomeEmail, adminNewSignupEmail } from '@/lib/email-templates'
@@ -7,8 +8,17 @@ import { verificationSuccessEmail, welcomeEmail, adminNewSignupEmail } from '@/l
 const COOKIE_NAME = 'nyc_classifieds_user'
 const MAX_DISTANCE_MILES = 0.1
 
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
+const MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/heic': 'heic',
+  'image/heif': 'heif',
+}
+
 export async function POST(request: NextRequest) {
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
@@ -35,6 +45,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Selfie and geolocation required' }, { status: 400 })
   }
 
+  // Validate selfie MIME type
+  if (!ALLOWED_MIME_TYPES.includes(selfie.type)) {
+    return NextResponse.json({ error: 'Invalid image format. Use JPEG, PNG, or WebP.' }, { status: 400 })
+  }
+
   // Calculate distance between address and selfie geolocation
   const distance = haversineDistance(user.lat, user.lng, geoLat, geoLon)
 
@@ -45,8 +60,8 @@ export async function POST(request: NextRequest) {
     }, { status: 400 })
   }
 
-  // Upload selfie to Supabase Storage
-  const ext = selfie.name.split('.').pop() || 'jpg'
+  // Upload selfie to Supabase Storage — derive extension from MIME type
+  const ext = MIME_TO_EXT[selfie.type] || 'jpg'
   const filename = `${userId}_${Date.now()}.${ext}`
   const buffer = Buffer.from(await selfie.arrayBuffer())
 

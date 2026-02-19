@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { verifySession } from '@/lib/auth-utils'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 export async function POST(request: NextRequest) {
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
   const ip = getClientIp(request.headers)
-  if (!rateLimit(`upload:${ip}`, 20, 60_000)) {
+  if (!await rateLimit(`upload:${ip}`, 20, 60_000)) {
     return NextResponse.json({ error: 'Too many uploads' }, { status: 429 })
   }
 

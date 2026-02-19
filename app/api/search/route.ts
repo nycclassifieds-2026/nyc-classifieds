@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { logEvent } from '@/lib/events'
 
 const PAGE_SIZE = 24
 
+/** Escape PostgREST LIKE wildcards */
+function escLike(s: string): string {
+  return s.replace(/[%_\\]/g, c => '\\' + c)
+}
+
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request.headers)
+  if (!await rateLimit(`search:${ip}`, 30, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
   const { searchParams } = request.nextUrl
   const q = searchParams.get('q')?.trim()
   const category = searchParams.get('category')
@@ -17,8 +28,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ listings: [], total: 0, page, pageSize: PAGE_SIZE, totalPages: 0 })
   }
 
-  // Sanitize search input — strip chars that break PostgREST filter syntax
-  const safeQ = q.replace(/[.,()\\]/g, ' ').trim()
+  // Sanitize search input — strip chars that break PostgREST filter syntax, escape LIKE wildcards
+  const safeQ = escLike(q.replace(/[.,()\\]/g, ' ').trim())
   if (!safeQ) {
     return NextResponse.json({ listings: [], total: 0, page, pageSize: PAGE_SIZE, totalPages: 0 })
   }

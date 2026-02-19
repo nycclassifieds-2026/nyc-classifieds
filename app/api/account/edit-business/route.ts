@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { verifySession } from '@/lib/auth-utils'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
 export async function POST(request: NextRequest) {
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }

@@ -4,13 +4,14 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { sendEmail } from '@/lib/email'
 import { feedbackConfirmationEmail, feedbackAdminAlertEmail } from '@/lib/email-templates'
 import { logEvent } from '@/lib/events'
+import { verifySession } from '@/lib/auth-utils'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const VALID_CATEGORIES = ['bug', 'feature', 'general', 'other']
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request.headers)
-  if (!rateLimit(`feedback:${ip}`, 5, 600_000)) {
+  if (!await rateLimit(`feedback:${ip}`, 5, 600_000)) {
     return NextResponse.json({ error: 'Too many submissions. Please try again later.' }, { status: 429 })
   }
 
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Check for authenticated user (optional)
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   let parsedUserId: number | null = null
   let userName: string | null = null
   let userEmail: string | null = null
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
   })()
 
   logEvent('feedback', { category, message_preview: trimmedMessage.slice(0, 100) }, {
-    userId: parsedUserId ?? undefined, ip,
+    userId: parsedUserId ?? undefined,
     notify: true,
     notifyTitle: 'New feedback',
     notifyBody: `[${category}] ${trimmedMessage.slice(0, 80)}`,

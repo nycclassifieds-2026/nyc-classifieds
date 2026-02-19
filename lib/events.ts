@@ -3,7 +3,6 @@ import { sendPushToAdmins } from '@/lib/push'
 
 interface LogEventOpts {
   userId?: number
-  ip?: string
   path?: string
   visitorHash?: string
   notify?: boolean
@@ -28,7 +27,6 @@ export function logEvent(
     user_id: opts?.userId ?? null,
     path: opts?.path ?? null,
     details: details ?? {},
-    ip: opts?.ip ?? null,
     visitor_hash: opts?.visitorHash ?? null,
   }).then(() => {}, () => {})
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { logEvent } from '@/lib/events'
+import { verifySession } from '@/lib/auth-utils'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const cookieUserId = request.cookies.get(COOKIE_NAME)?.value
+  const cookieUserId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!cookieUserId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const cookieUserId = request.cookies.get(COOKIE_NAME)?.value
+  const cookieUserId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!cookieUserId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }

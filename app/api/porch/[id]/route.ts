@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { verifySession } from '@/lib/auth-utils'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
@@ -46,7 +47,7 @@ export async function GET(
 
   // If the user is logged in, check which replies they have voted helpful on
   let userVotes: number[] = []
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
 
   if (userId) {
     const replyIds = (replies || []).map((r) => r.id)

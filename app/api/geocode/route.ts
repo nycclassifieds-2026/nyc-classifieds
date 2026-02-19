@@ -4,7 +4,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request.headers)
-  if (!rateLimit(`geocode:${ip}`, 10, 60_000)) {
+  if (!await rateLimit(`geocode:${ip}`, 10, 60_000)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
 
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 /** Address autocomplete — returns up to 5 NYC suggestions */
 export async function GET(request: NextRequest) {
   const ip = getClientIp(request.headers)
-  if (!rateLimit(`geocode-ac:${ip}`, 30, 60_000)) {
+  if (!await rateLimit(`geocode-ac:${ip}`, 30, 60_000)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
 

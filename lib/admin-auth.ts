@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
-import { getClientIp } from '@/lib/rate-limit'
+import { verifySession } from '@/lib/auth-utils'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const ROLE_HIERARCHY: Record<string, number> = { user: 0, moderator: 1, admin: 2 }
@@ -21,7 +21,7 @@ export async function requireAdmin(
   request: NextRequest,
   minimumRole: 'moderator' | 'admin' = 'moderator'
 ): Promise<AdminUser | NextResponse> {
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
   }
@@ -53,7 +53,7 @@ export async function requireAdmin(
 
 /** Log an admin action to the audit_log table */
 export async function logAdminAction(
-  request: NextRequest,
+  _request: NextRequest,
   actor: string,
   action: string,
   entity: string,
@@ -67,6 +67,5 @@ export async function logAdminAction(
     entity,
     entity_id: Number(entityId),
     details: details || {},
-    ip: getClientIp(request.headers),
   })
 }

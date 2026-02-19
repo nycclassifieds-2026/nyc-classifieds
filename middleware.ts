@@ -18,6 +18,14 @@ export function middleware(request: NextRequest) {
     'Permissions-Policy',
     'camera=(self), microphone=(), geolocation=(self)'
   )
+  response.headers.set(
+    'Strict-Transport-Security',
+    'max-age=31536000; includeSubDomains'
+  )
+  response.headers.set(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' https:; connect-src 'self' https:; media-src 'self' https:; frame-src 'self' https:; object-src 'none'; base-uri 'self'"
+  )
 
   const corsHeaders = getCorsHeaders(request)
   for (const [key, value] of Object.entries(corsHeaders)) {

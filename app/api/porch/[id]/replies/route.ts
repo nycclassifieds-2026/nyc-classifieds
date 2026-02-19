@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
-import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { rateLimit } from '@/lib/rate-limit'
 import { moderateFields } from '@/lib/porch-moderation'
 import { sendEmail } from '@/lib/email'
 import { porchReplyEmail } from '@/lib/email-templates'
 import { createNotification } from '@/lib/notifications'
 import { logEvent } from '@/lib/events'
+import { verifySession } from '@/lib/auth-utils'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const MAX_REPLIES_PER_THREAD = 3
@@ -23,17 +24,17 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid post ID' }, { status: 400 })
   }
 
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
   // Rate limit: 10 replies per day per user
-  if (!rateLimit(`porch-reply:${userId}`, 10, 86_400_000)) {
+  if (!await rateLimit(`porch-reply:${userId}`, 10, 86_400_000)) {
     return NextResponse.json({ error: 'You can only post 10 replies per day' }, { status: 429 })
   }
 
-  const ip = getClientIp(request.headers)
+
   const db = getSupabaseAdmin()
 
   // Check the post exists
@@ -100,7 +101,6 @@ export async function POST(
     action: 'create_porch_reply',
     entity: 'porch_reply',
     entity_id: reply.id,
-    ip,
   })
 
   // Send email + in-app notification to post author (async, don't block response)
@@ -135,7 +135,7 @@ export async function POST(
     } catch {}
   })()
 
-  logEvent('porch_reply', { post_id: postId, reply_id: reply.id }, { userId: parseInt(userId), ip })
+  logEvent('porch_reply', { post_id: postId, reply_id: reply.id }, { userId: parseInt(userId) })
 
   return NextResponse.json({ id: reply.id, reply }, { status: 201 })
 }

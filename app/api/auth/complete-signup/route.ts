@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
-import { verifyEmailToken, hashPin } from '@/lib/auth-utils'
+import { verifyEmailToken, hashPin, signSession } from '@/lib/auth-utils'
 import { haversineDistance } from '@/lib/geocode'
 import { sendEmail } from '@/lib/email'
 import { verificationSuccessEmail, welcomeEmail, adminNewSignupEmail } from '@/lib/email-templates'
@@ -10,7 +10,16 @@ import { sendPushToAdmins } from '@/lib/push'
 const COOKIE_NAME = 'nyc_classifieds_user'
 const isProd = process.env.NODE_ENV === 'production'
 const MAX_DISTANCE_MILES = 0.1
-const ADMIN_EMAILS = ['jefftuckernyc@gmail.com']
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'jefftuckernyc@gmail.com').split(',').map(e => e.trim())
+
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
+const MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/heic': 'heic',
+  'image/heif': 'heif',
+}
 
 /**
  * Complete signup — creates user, uploads selfie, verifies location.
@@ -18,7 +27,7 @@ const ADMIN_EMAILS = ['jefftuckernyc@gmail.com']
  */
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request.headers)
-  if (!rateLimit(`signup:${ip}`, 5, 300_000)) {
+  if (!await rateLimit(`signup:${ip}`, 5, 300_000)) {
     return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 })
   }
 
@@ -56,6 +65,11 @@ export async function POST(request: NextRequest) {
 
   if (!selfie || isNaN(geoLat) || isNaN(geoLon)) {
     return NextResponse.json({ error: 'Selfie and location required' }, { status: 400 })
+  }
+
+  // Validate selfie MIME type
+  if (!ALLOWED_MIME_TYPES.includes(selfie.type)) {
+    return NextResponse.json({ error: 'Invalid image format. Use JPEG, PNG, or WebP.' }, { status: 400 })
   }
 
   // ── Verify distance ──
@@ -133,7 +147,7 @@ export async function POST(request: NextRequest) {
   }
 
   // ── Upload selfie ──
-  const ext = selfie.name?.split('.').pop() || 'jpg'
+  const ext = MIME_TO_EXT[selfie.type] || 'jpg'
   const filename = `${userId}_${Date.now()}.${ext}`
   const buffer = Buffer.from(await selfie.arrayBuffer())
 
@@ -177,7 +191,7 @@ export async function POST(request: NextRequest) {
 
   // ── Set cookie ──
   const res = NextResponse.json({ verified: true, userId })
-  res.cookies.set(COOKIE_NAME, String(userId), {
+  res.cookies.set(COOKIE_NAME, signSession(String(userId)), {
     httpOnly: true,
     secure: isProd,
     sameSite: 'strict',

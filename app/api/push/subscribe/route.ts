@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { verifySession } from '@/lib/auth-utils'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
 // POST — save push subscription
 export async function POST(request: NextRequest) {
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
   const ip = getClientIp(request.headers)
-  if (!rateLimit(`push-sub:${ip}`, 10, 60_000)) {
+  if (!await rateLimit(`push-sub:${ip}`, 10, 60_000)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
 
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
 
 // DELETE — remove push subscription
 export async function DELETE(request: NextRequest) {
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }

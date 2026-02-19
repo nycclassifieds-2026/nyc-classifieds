@@ -5,6 +5,11 @@ import { sendEmail } from '@/lib/email'
 import { accountBannedEmail, accountRestoredEmail, manuallyVerifiedEmail, roleChangedEmail } from '@/lib/email-templates'
 import { createNotification } from '@/lib/notifications'
 
+/** Escape PostgREST LIKE wildcards */
+function escLike(s: string): string {
+  return s.replace(/[%_\\]/g, c => '\\' + c)
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request, 'moderator')
   if (auth instanceof NextResponse) return auth
@@ -22,7 +27,7 @@ export async function GET(request: NextRequest) {
     .select('id, email, name, verified, role, banned, created_at', { count: 'exact' })
 
   if (search) {
-    const safeSearch = search.replace(/[.,()\\]/g, ' ').trim()
+    const safeSearch = escLike(search.replace(/[.,()\\]/g, ' ').trim())
     if (safeSearch) query = query.or(`email.ilike.%${safeSearch}%,name.ilike.%${safeSearch}%`)
   }
   if (role) {
@@ -37,7 +42,27 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
   }
 
-  return NextResponse.json({ users: data || [], total: count || 0, page, limit })
+  // Fetch warning counts
+  const userIds = (data || []).map(u => u.id)
+  let warningCounts: Record<number, number> = {}
+  if (userIds.length > 0) {
+    const { data: warnings } = await db
+      .from('user_warnings')
+      .select('user_id')
+      .in('user_id', userIds)
+    if (warnings) {
+      for (const w of warnings) {
+        warningCounts[w.user_id] = (warningCounts[w.user_id] || 0) + 1
+      }
+    }
+  }
+
+  const usersWithWarnings = (data || []).map(u => ({
+    ...u,
+    warning_count: warningCounts[u.id] || 0,
+  }))
+
+  return NextResponse.json({ users: usersWithWarnings, total: count || 0, page, limit })
 }
 
 export async function PATCH(request: NextRequest) {

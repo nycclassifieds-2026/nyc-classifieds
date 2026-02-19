@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { verifySession } from '@/lib/auth-utils'
 import { cookies } from 'next/headers'
+
+const SUPABASE_HOST = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+  : null
 
 export async function POST(request: NextRequest) {
   const jar = await cookies()
-  const token = jar.get('nyc_classifieds_user')?.value
-  if (!token) {
+  const userId = verifySession(jar.get('nyc_classifieds_user')?.value)
+  if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
@@ -20,14 +25,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Type must be personal or business' }, { status: 400 })
   }
 
+  // Validate URL hostname matches Supabase storage domain
+  try {
+    const urlHost = new URL(url).hostname
+    if (SUPABASE_HOST && urlHost !== SUPABASE_HOST) {
+      return NextResponse.json({ error: 'Invalid photo URL domain' }, { status: 400 })
+    }
+  } catch {
+    return NextResponse.json({ error: 'Invalid URL' }, { status: 400 })
+  }
+
   const db = getSupabaseAdmin()
-  const userId = parseInt(token)
 
   const field = type === 'business' ? 'business_photo' : 'selfie_url'
   const { error } = await db
     .from('users')
     .update({ [field]: url })
-    .eq('id', userId)
+    .eq('id', parseInt(userId))
 
   if (error) {
     return NextResponse.json({ error: 'Failed to update photo' }, { status: 500 })

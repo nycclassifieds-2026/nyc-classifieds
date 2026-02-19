@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
-import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { rateLimit } from '@/lib/rate-limit'
 import { moderateFields } from '@/lib/porch-moderation'
 import { sendEmail } from '@/lib/email'
 import { urgentPostLiveEmail } from '@/lib/email-templates'
 import { sendPushToAdmins } from '@/lib/push'
 import { logEvent } from '@/lib/events'
+import { verifySession } from '@/lib/auth-utils'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const PAGE_SIZE = 20
@@ -116,17 +117,17 @@ export async function GET(request: NextRequest) {
 // POST — Create a porch post (requires auth + verified)
 // ---------------------------------------------------------------------------
 export async function POST(request: NextRequest) {
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
   // Rate limit: 3 posts per day per user
-  if (!rateLimit(`porch-post:${userId}`, 3, 86_400_000)) {
+  if (!await rateLimit(`porch-post:${userId}`, 3, 86_400_000)) {
     return NextResponse.json({ error: 'You can only create 3 porch posts per day' }, { status: 429 })
   }
 
-  const ip = getClientIp(request.headers)
+
   const db = getSupabaseAdmin()
 
   const body = await request.json()
@@ -196,13 +197,12 @@ export async function POST(request: NextRequest) {
     action: 'create_porch_post',
     entity: 'porch_post',
     entity_id: post.id,
-    ip,
   })
 
   // Push notification to admins
   sendPushToAdmins({ title: 'New porch post', body: title.trim(), url: `/porch/${post.id}` }).catch(() => {})
 
-  logEvent('porch_post_created', { post_id: post.id, post_type, title: title.trim() }, { userId: parseInt(userId), ip })
+  logEvent('porch_post_created', { post_id: post.id, post_type, title: title.trim() }, { userId: parseInt(userId) })
 
   // Send confirmation email for urgent post types (async)
   const URGENT_TYPES = new Set(['lost-and-found', 'pet-sighting', 'alert'])

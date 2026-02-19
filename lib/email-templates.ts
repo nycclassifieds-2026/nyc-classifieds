@@ -706,3 +706,43 @@ export function businessProfileLiveEmail(
     `,
   }
 }
+
+export function userWarningEmail(
+  name: string,
+  reason: string,
+  severity: string,
+  warningCount: number,
+): { subject: string; html: string } {
+  const n = esc(name), r = esc(reason), s = esc(severity)
+  const isFinal = warningCount >= 3
+  const severityColor = s === 'high' ? '#dc2626' : s === 'medium' ? '#ea580c' : '#eab308'
+  return {
+    subject: isFinal ? 'Final warning — your account may be suspended' : 'You have received a warning',
+    html: `
+      ${WRAPPER_START}
+        ${HEADER}
+        <p style="color: #475569; font-size: 0.875rem;">Hi ${n},</p>
+        ${isFinal ? `
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+          <p style="color: #dc2626; font-size: 0.875rem; font-weight: 600; margin: 0 0 0.5rem;">Final Warning</p>
+          <p style="color: #dc2626; font-size: 0.875rem; margin: 0;">This is your ${warningCount}${warningCount === 2 ? 'nd' : warningCount === 3 ? 'rd' : 'th'} warning. Further violations will result in your account being suspended.</p>
+        </div>
+        ` : ''}
+        <p style="color: #475569; font-size: 0.875rem; margin-bottom: 1rem;">
+          You have received a warning for violating our community guidelines.
+        </p>
+        <div style="background: #f1f5f9; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+          <p style="color: #475569; font-size: 0.875rem; margin: 0 0 0.5rem;"><strong>Reason:</strong> ${r}</p>
+          <p style="color: #475569; font-size: 0.875rem; margin: 0;"><strong>Severity:</strong> <span style="color: ${severityColor}; font-weight: 600;">${s}</span></p>
+        </div>
+        <p style="color: #475569; font-size: 0.875rem;">
+          This is warning ${warningCount} on your account. Please review our community guidelines to avoid further action.
+        </p>
+        <p style="color: #475569; font-size: 0.875rem;">
+          If you believe this was a mistake, reply to this email.
+        </p>
+        ${FOOTER}
+      ${WRAPPER_END}
+    `,
+  }
+}

@@ -14,6 +14,7 @@ export type NotificationType =
   | 'account_restored'
   | 'admin_notice'
   | 'feedback_reply'
+  | 'admin_warning'
 
 export async function createNotification(
   userId: number,

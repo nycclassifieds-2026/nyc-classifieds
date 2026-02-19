@@ -9,7 +9,7 @@ const VALID_STATUSES = ['started', 'completed', 'failed']
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request.headers)
 
-  if (!rateLimit(`signup-events:${ip}`, 30, 60_000)) {
+  if (!await rateLimit(`signup-events:${ip}`, 30, 60_000)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
 
@@ -32,19 +32,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
   }
 
+  // Length limits
+  const safeSessionId = session_id.slice(0, 128)
+  const safeError = error ? error.slice(0, 500) : null
+  const safeMetadata = metadata ? JSON.parse(JSON.stringify(metadata).slice(0, 2000)) : null
+
   const db = getSupabaseAdmin()
   await db.from('signup_events').insert({
-    session_id,
+    session_id: safeSessionId,
     step,
     status,
-    error: error || null,
-    metadata: metadata || null,
-    ip,
+    error: safeError,
+    metadata: safeMetadata,
   })
 
   // Push notification to admins on signup failure
   if (status === 'failed') {
-    sendPushToAdmins({ title: 'Signup failed', body: `Failed at ${step}${error ? ': ' + error : ''}`, url: '/admin' }).catch(() => {})
+    sendPushToAdmins({ title: 'Signup failed', body: `Failed at ${step}${safeError ? ': ' + safeError : ''}`, url: '/admin' }).catch(() => {})
   }
 
   return NextResponse.json({ ok: true })

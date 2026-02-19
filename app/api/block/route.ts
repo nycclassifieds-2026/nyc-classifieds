@@ -2,18 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { logEvent } from '@/lib/events'
+import { verifySession } from '@/lib/auth-utils'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
 // POST — block a user
 export async function POST(request: NextRequest) {
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
   const ip = getClientIp(request.headers)
-  if (!rateLimit(`block:${ip}`, 20, 60_000)) {
+  if (!await rateLimit(`block:${ip}`, 20, 60_000)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
 
@@ -41,14 +42,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to block user' }, { status: 500 })
   }
 
-  logEvent('user_blocked', { blocker_id: uid, blocked_id: user_id }, { userId: uid, ip })
+  logEvent('user_blocked', { blocker_id: uid, blocked_id: user_id }, { userId: uid })
 
   return NextResponse.json({ blocked: true }, { status: 201 })
 }
 
 // DELETE — unblock a user
 export async function DELETE(request: NextRequest) {
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }

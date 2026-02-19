@@ -1,9 +1,13 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/admin-auth'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
 const SITEMAP_URL = `${SITE_URL}/sitemap.xml`
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const auth = await requireAdmin(request, 'admin')
+  if (auth instanceof NextResponse) return auth
+
   const results: Record<string, string> = {}
 
   // Ping Google

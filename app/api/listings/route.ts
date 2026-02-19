@@ -5,6 +5,7 @@ import { sendEmail } from '@/lib/email'
 import { listingLiveEmail } from '@/lib/email-templates'
 import { sendPushToAdmins } from '@/lib/push'
 import { logEvent } from '@/lib/events'
+import { verifySession } from '@/lib/auth-utils'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const PAGE_SIZE = 24
@@ -64,13 +65,13 @@ export async function GET(request: NextRequest) {
 
 // POST — create listing (requires auth + verified)
 export async function POST(request: NextRequest) {
-  const userId = request.cookies.get(COOKIE_NAME)?.value
+  const userId = verifySession(request.cookies.get(COOKIE_NAME)?.value)
   if (!userId) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
   const ip = getClientIp(request.headers)
-  if (!rateLimit(`listing:${ip}`, 10, 300_000)) {
+  if (!await rateLimit(`listing:${ip}`, 10, 300_000)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
 
@@ -114,13 +115,12 @@ export async function POST(request: NextRequest) {
     action: 'create_listing',
     entity: 'listing',
     entity_id: listing.id,
-    ip,
   })
 
   // Push notification to admins
   sendPushToAdmins({ title: 'New listing', body: title.trim(), url: `/listings/${listing.id}` }).catch(() => {})
 
-  logEvent('listing_created', { listing_id: listing.id, title: title.trim(), category: category_slug }, { userId: parseInt(userId), ip })
+  logEvent('listing_created', { listing_id: listing.id, title: title.trim(), category: category_slug }, { userId: parseInt(userId) })
 
   // Send listing live email (async)
   ;(async () => {
