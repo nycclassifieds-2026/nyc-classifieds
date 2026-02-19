@@ -10,15 +10,16 @@ export async function GET(request: NextRequest) {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString()
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
 
-  // Get seed user IDs upfront so we can exclude them
+  // Get seed user IDs upfront so we can exclude them everywhere
   const { data: seedUserRows } = await db
     .from('users')
     .select('id')
     .like('email', '%@example.com')
 
-  const seedUserIds = new Set((seedUserRows || []).map(u => u.id))
+  const seedIds = (seedUserRows || []).map(u => u.id)
+  const seedUserIds = new Set(seedIds)
 
-  // Run all queries in parallel
+  // Run all queries in parallel — filter out seed users on every query
   const [
     totalUsers,
     totalListings,
@@ -37,66 +38,70 @@ export async function GET(request: NextRequest) {
     signupEvents7d,
   ] = await Promise.all([
     db.from('users').select('id', { count: 'exact', head: true }).not('email', 'like', '%@example.com'),
-    db.from('listings').select('id', { count: 'exact', head: true }),
-    db.from('porch_posts').select('id', { count: 'exact', head: true }),
-    db.from('porch_replies').select('id', { count: 'exact', head: true }),
+    seedIds.length > 0
+      ? db.from('listings').select('id', { count: 'exact', head: true }).not('user_id', 'in', `(${seedIds.join(',')})`)
+      : db.from('listings').select('id', { count: 'exact', head: true }),
+    seedIds.length > 0
+      ? db.from('porch_posts').select('id', { count: 'exact', head: true }).not('user_id', 'in', `(${seedIds.join(',')})`)
+      : db.from('porch_posts').select('id', { count: 'exact', head: true }),
+    seedIds.length > 0
+      ? db.from('porch_replies').select('id', { count: 'exact', head: true }).not('user_id', 'in', `(${seedIds.join(',')})`)
+      : db.from('porch_replies').select('id', { count: 'exact', head: true }),
+    // Messages: exclude where BOTH sender and recipient are seed
     db.from('messages').select('id', { count: 'exact', head: true }),
     // Daily signups last 30 days (real only)
     db.from('users').select('created_at').not('email', 'like', '%@example.com').gte('created_at', thirtyDaysAgo).order('created_at', { ascending: true }),
-    // Daily porch posts last 30 days
+    // Daily porch posts last 30 days (all, filtered client-side)
     db.from('porch_posts').select('created_at, user_id').gte('created_at', thirtyDaysAgo).order('created_at', { ascending: true }),
-    // Daily listings last 30 days
+    // Daily listings last 30 days (all, filtered client-side)
     db.from('listings').select('created_at, user_id').gte('created_at', thirtyDaysAgo).order('created_at', { ascending: true }),
-    // Daily replies
-    db.from('porch_replies').select('created_at').gte('created_at', thirtyDaysAgo),
-    // Daily messages
-    db.from('messages').select('created_at').gte('created_at', thirtyDaysAgo),
-    // Porch posts by borough
-    db.from('porch_posts').select('borough_slug'),
-    // Porch posts by type
-    db.from('porch_posts').select('post_type'),
-    // Listings by category
-    db.from('listings').select('category_slug'),
+    // Daily replies (all, filtered client-side)
+    db.from('porch_replies').select('created_at, user_id').gte('created_at', thirtyDaysAgo),
+    // Daily messages (all, filtered client-side)
+    db.from('messages').select('created_at, sender_id').gte('created_at', thirtyDaysAgo),
+    // Porch posts by borough (all, filtered client-side)
+    db.from('porch_posts').select('borough_slug, user_id'),
+    // Porch posts by type (all, filtered client-side)
+    db.from('porch_posts').select('post_type, user_id'),
+    // Listings by category (all, filtered client-side)
+    db.from('listings').select('category_slug, user_id'),
     // Signup funnel events last 30 days
     db.from('signup_events').select('step, status, error').gte('created_at', thirtyDaysAgo),
     // Signup funnel events last 7 days
     db.from('signup_events').select('step, status, error').gte('created_at', sevenDaysAgo),
   ])
 
-  // Helper: group items by date
-  function groupByDate(items: { created_at: string }[]): Record<string, number> {
-    const groups: Record<string, number> = {}
-    for (const item of items || []) {
-      const date = item.created_at?.slice(0, 10)
-      if (date) groups[date] = (groups[date] || 0) + 1
-    }
-    return groups
-  }
-
   // Helper: group items by date, excluding seed users
-  function groupByDateReal(items: { created_at: string; user_id: number }[]): Record<string, number> {
+  function groupByDateReal(items: { created_at: string; user_id?: number; sender_id?: number }[]): Record<string, number> {
     const groups: Record<string, number> = {}
     for (const item of items || []) {
-      if (seedUserIds.has(item.user_id)) continue
+      const uid = item.user_id ?? item.sender_id
+      if (uid != null && seedUserIds.has(uid)) continue
       const date = item.created_at?.slice(0, 10)
       if (date) groups[date] = (groups[date] || 0) + 1
     }
     return groups
   }
 
-  // Helper: count by field
-  function countByField(items: Record<string, string>[], field: string): Record<string, number> {
+  // Helper: count by field, excluding seed users
+  function countByFieldReal(items: { user_id?: number; [key: string]: unknown }[], field: string): Record<string, number> {
     const counts: Record<string, number> = {}
     for (const item of items || []) {
-      const val = item[field]
+      if (item.user_id != null && seedUserIds.has(item.user_id as number)) continue
+      const val = item[field] as string
       if (val) counts[val] = (counts[val] || 0) + 1
     }
     return counts
   }
 
-  const userGrowth = groupByDate((recentUsers.data || []) as { created_at: string }[])
+  const userGrowth = groupByDateReal((recentUsers.data || []) as { created_at: string }[])
   const postVolume = groupByDateReal((recentPorchPosts.data || []) as { created_at: string; user_id: number }[])
   const listingVolume = groupByDateReal((recentListings.data || []) as { created_at: string; user_id: number }[])
+
+  // Count real messages (exclude where sender is a seed user)
+  const realMessages = ((recentMessages.data || []) as { created_at: string; sender_id: number }[])
+    .filter(m => !seedUserIds.has(m.sender_id))
+  const realMessageCount = realMessages.length
 
   // Build signup funnel data
   type SignupEvent = { step: string; status: string; error: string | null }
@@ -130,20 +135,20 @@ export async function GET(request: NextRequest) {
       listings: totalListings.count || 0,
       porch_posts: totalPorchPosts.count || 0,
       porch_replies: totalPorchReplies.count || 0,
-      messages: totalMessages.count || 0,
+      messages: realMessageCount,
       posts_today: postsToday,
     },
     daily: {
       user_growth: userGrowth,
       post_volume: postVolume,
       listing_volume: listingVolume,
-      replies: groupByDate((recentReplies.data || []) as { created_at: string }[]),
-      messages: groupByDate((recentMessages.data || []) as { created_at: string }[]),
+      replies: groupByDateReal((recentReplies.data || []) as { created_at: string; user_id: number }[]),
+      messages: groupByDateReal(realMessages as { created_at: string; sender_id: number }[]),
     },
     breakdowns: {
-      by_borough: countByField((porchByBorough.data || []) as Record<string, string>[], 'borough_slug'),
-      by_post_type: countByField((porchByType.data || []) as Record<string, string>[], 'post_type'),
-      by_category: countByField((listingsByCategory.data || []) as Record<string, string>[], 'category_slug'),
+      by_borough: countByFieldReal((porchByBorough.data || []) as { user_id: number; borough_slug: string }[], 'borough_slug'),
+      by_post_type: countByFieldReal((porchByType.data || []) as { user_id: number; post_type: string }[], 'post_type'),
+      by_category: countByFieldReal((listingsByCategory.data || []) as { user_id: number; category_slug: string }[], 'category_slug'),
     },
     signup_funnel: signupFunnel,
   })
