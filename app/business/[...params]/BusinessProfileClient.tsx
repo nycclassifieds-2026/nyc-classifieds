@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import ListingGrid from '@/app/components/ListingGrid'
 import PreLaunchGate from '@/app/components/PreLaunchGate'
+import { getCategorySeo, SITE_URL } from '@/lib/seo'
 
 // ─── Types ───
 
@@ -23,6 +24,7 @@ interface Business {
   business_photo: string | null
   business_address: string | null
   social_links: Record<string, string> | null
+  seo_keywords: string[]
   verified: boolean
   created_at: string
 }
@@ -50,6 +52,14 @@ interface Listing {
   users: { name: string; verified: boolean }
 }
 
+interface BusinessUpdate {
+  id: number
+  title: string
+  body: string | null
+  photos: string[]
+  created_at: string
+}
+
 // ─── Constants ───
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
@@ -58,7 +68,7 @@ const DAY_FULL: Record<string, string> = {
   Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday',
 }
 
-const SECTIONS = ['about', 'photos', 'reviews', 'listings'] as const
+const ALL_SECTIONS = ['about', 'updates', 'photos', 'reviews', 'listings'] as const
 
 // ─── Helpers ───
 
@@ -143,6 +153,7 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
   const [business, setBusiness] = useState<Business | null>(null)
   const [listings, setListings] = useState<Listing[]>([])
   const [reviews, setReviews] = useState<Review[]>([])
+  const [updates, setUpdates] = useState<BusinessUpdate[]>([])
   const [reviewAverage, setReviewAverage] = useState(0)
   const [reviewCount, setReviewCount] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -174,6 +185,7 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
           setBusiness(data.business)
           setListings(data.listings || [])
           setReviews(data.reviews || [])
+          setUpdates(data.updates || [])
           setReviewAverage(data.reviewAverage || 0)
           setReviewCount(data.reviewCount || 0)
         }
@@ -195,10 +207,13 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
       .catch(() => {})
   }, [slug])
 
+  // Dynamic sections (hide updates if none)
+  const sections = ALL_SECTIONS.filter(s => s !== 'updates' || updates.length > 0)
+
   // Scroll spy for sticky nav
   useEffect(() => {
     const handleScroll = () => {
-      for (const section of SECTIONS) {
+      for (const section of sections) {
         const el = sectionRefs.current[section]
         if (el) {
           const rect = el.getBoundingClientRect()
@@ -211,7 +226,7 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [sections])
 
   // Lightbox keyboard
   const allPhotos = business ? [
@@ -310,13 +325,52 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
   }))
 
   // JSON-LD for SEO
+  const categorySeo = getCategorySeo(business.business_category)
+  const canonicalUrl = `${SITE_URL}/business/${category}/${slug}`
+
+  // Build social URLs for sameAs
+  const sameAsUrls: string[] = []
+  if (business.social_links) {
+    const urlFns: Record<string, (v: string) => string> = {
+      instagram: v => `https://instagram.com/${v.replace(/^@/, '')}`,
+      tiktok: v => `https://tiktok.com/@${v.replace(/^@/, '')}`,
+      facebook: v => v.startsWith('http') ? v : `https://facebook.com/${v}`,
+      yelp: v => v.startsWith('http') ? v : `https://yelp.com/biz/${v}`,
+      google: v => v,
+      linkedin: v => v.startsWith('http') ? v : `https://linkedin.com/in/${v}`,
+    }
+    Object.entries(business.social_links).forEach(([platform, value]) => {
+      if (value && urlFns[platform]) sameAsUrls.push(urlFns[platform](value))
+    })
+  }
+
+  // Build openingHoursSpecification
+  const openingHours = business.hours ? DAYS.map(day => {
+    const h = business.hours?.[day]
+    if (!h || h.closed) return null
+    return {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: DAY_FULL[day],
+      opens: h.open,
+      closes: h.close,
+    }
+  }).filter(Boolean) : []
+
+  // Build individual review items
+  const reviewItems = reviews.slice(0, 20).map(r => ({
+    '@type': 'Review',
+    author: { '@type': 'Person', name: r.reviewer?.name || 'Anonymous' },
+    datePublished: r.created_at.split('T')[0],
+    reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5, worstRating: 1 },
+    ...(r.body && { reviewBody: r.body }),
+  }))
+
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
+    '@type': categorySeo.schemaType,
     name: business.business_name,
-    ...(business.business_category && { additionalType: business.business_category }),
     ...(business.business_description && { description: business.business_description }),
-    url: `${typeof window !== 'undefined' ? window.location.origin : ''}/business/${category}/${slug}`,
+    url: canonicalUrl,
     address: {
       '@type': 'PostalAddress',
       ...(business.business_address && { streetAddress: business.business_address }),
@@ -325,8 +379,12 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
       addressCountry: 'US',
     },
     ...(business.phone && { telephone: business.phone }),
-    ...(websiteUrl && { url: websiteUrl }),
     ...(bizAvatar && { image: bizAvatar }),
+    ...(openingHours.length > 0 && { openingHoursSpecification: openingHours }),
+    ...(sameAsUrls.length > 0 && { sameAs: sameAsUrls }),
+    ...(business.service_area.length > 0 && {
+      areaServed: business.service_area.map(n => ({ '@type': 'Place', name: `${n}, New York, NY` })),
+    }),
     ...(reviewCount > 0 && {
       aggregateRating: {
         '@type': 'AggregateRating',
@@ -336,11 +394,35 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
         worstRating: 1,
       },
     }),
+    ...(reviewItems.length > 0 && { review: reviewItems }),
+    ...(business.seo_keywords?.length > 0 && { keywords: business.seo_keywords.join(', ') }),
+    isPartOf: { '@type': 'WebSite', name: 'The NYC Classifieds', url: SITE_URL },
+  }
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Business Directory', item: `${SITE_URL}/business` },
+      ...(business.business_category ? [{
+        '@type': 'ListItem', position: 3,
+        name: business.business_category,
+        item: `${SITE_URL}/business?category=${encodeURIComponent(business.business_category)}`,
+      }] : []),
+      {
+        '@type': 'ListItem',
+        position: business.business_category ? 4 : 3,
+        name: business.business_name,
+        item: canonicalUrl,
+      },
+    ],
   }
 
   return (
     <PreLaunchGate>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <style>{`
         .bp-grid { display: grid; grid-template-columns: 1fr 340px; gap: 32px; }
         .bp-cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -496,7 +578,7 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
         {/* ═══ CTA ROW ═══ */}
         <div className="bp-cta-row" style={{ marginBottom: '20px' }}>
           {business.phone && (
-            <a href={`tel:${business.phone}`} className="bp-cta-btn bp-cta-primary">
+            <a href={`tel:${business.phone}`} className="bp-cta-btn bp-cta-primary" onClick={() => window.__track?.('business_link_click', { slug: business.business_slug, linkType: 'phone' })}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
               Call
             </a>
@@ -506,13 +588,13 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
             Message
           </Link>
           {websiteUrl && (
-            <a href={websiteUrl} target="_blank" rel="noopener noreferrer" className="bp-cta-btn">
+            <a href={websiteUrl} target="_blank" rel="noopener noreferrer" className="bp-cta-btn" onClick={() => window.__track?.('business_link_click', { slug: business.business_slug, linkType: 'website' })}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
               Website
             </a>
           )}
           {directionsUrl && (
-            <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="bp-cta-btn">
+            <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="bp-cta-btn" onClick={() => window.__track?.('business_link_click', { slug: business.business_slug, linkType: 'directions' })}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
               Directions
             </a>
@@ -525,13 +607,14 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
 
         {/* ═══ STICKY NAV ═══ */}
         <div className="bp-sticky-nav">
-          {SECTIONS.map(s => (
+          {sections.map(s => (
             <button
               key={s}
               className={`bp-nav-item ${activeSection === s ? 'bp-nav-active' : ''}`}
               onClick={() => scrollToSection(s)}
             >
               {s.charAt(0).toUpperCase() + s.slice(1)}
+              {s === 'updates' && updates.length > 0 ? ` (${updates.length})` : ''}
               {s === 'reviews' && reviewCount > 0 ? ` (${reviewCount})` : ''}
               {s === 'listings' && listings.length > 0 ? ` (${listings.length})` : ''}
             </button>
@@ -583,6 +666,33 @@ export default function BusinessProfileClient({ slug, category }: { slug: string
                 </div>
               )}
             </section>
+
+            {/* Updates */}
+            {updates.length > 0 && (
+              <section ref={el => { sectionRefs.current.updates = el }} style={{ marginBottom: '32px', scrollMarginTop: '60px' }}>
+                <h2 style={sectionHeading}>Updates <span style={{ color: '#6b7280', fontWeight: 400 }}>({updates.length})</span></h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {updates.map(update => (
+                    <div key={update.id} style={{ padding: '16px', borderLeft: '3px solid #2563eb', borderRadius: '0 10px 10px 0', backgroundColor: '#f8fafc' }}>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>{update.title}</h3>
+                      <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{timeAgo(update.created_at)}</span>
+                      {update.body && (
+                        <p style={{ color: '#374151', fontSize: '0.875rem', lineHeight: 1.6, margin: '8px 0 0' }}>{update.body}</p>
+                      )}
+                      {update.photos.length > 0 && (
+                        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(update.photos.length, 3)}, 1fr)`, gap: '6px', marginTop: '10px' }}>
+                          {update.photos.map((url, i) => (
+                            <div key={i} style={{ aspectRatio: '16/10', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#e5e7eb' }}>
+                              <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Photos */}
             <section ref={el => { sectionRefs.current.photos = el }} style={{ marginBottom: '32px', scrollMarginTop: '60px' }}>

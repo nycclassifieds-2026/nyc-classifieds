@@ -76,6 +76,7 @@ export default function SearchClient() {
   const handleSearch = useCallback((q: string) => {
     setQuery(q)
     setPage(1)
+    window.__track?.('search', { query: q })
     doSearch(q, category, sort, 1)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, sort])

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { logEvent } from '@/lib/events'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
@@ -68,6 +69,8 @@ export async function PATCH(
     return NextResponse.json({ error: 'Update failed' }, { status: 500 })
   }
 
+  logEvent('listing_edited', { listing_id: parseInt(id), changes: Object.keys(updates).filter(k => k !== 'updated_at') }, { userId: parseInt(userId) })
+
   return NextResponse.json({ updated: true })
 }
 
@@ -95,6 +98,8 @@ export async function DELETE(
   }
 
   await db.from('listings').update({ status: 'removed' }).eq('id', id)
+
+  logEvent('listing_deleted', { listing_id: parseInt(id) }, { userId: parseInt(userId) })
 
   return NextResponse.json({ deleted: true })
 }

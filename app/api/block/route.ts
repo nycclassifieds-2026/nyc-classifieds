@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { logEvent } from '@/lib/events'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
@@ -39,6 +40,8 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ error: 'Failed to block user' }, { status: 500 })
   }
+
+  logEvent('user_blocked', { blocker_id: uid, blocked_id: user_id }, { userId: uid, ip })
 
   return NextResponse.json({ blocked: true }, { status: 201 })
 }

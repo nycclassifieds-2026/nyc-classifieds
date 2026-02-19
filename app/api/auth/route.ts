@@ -4,6 +4,7 @@ import { otpEmail, welcomeEmail, businessProfileLiveEmail } from '@/lib/email-te
 import { sendEmail } from '@/lib/email'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { signEmailToken, hashPin, verifyPin } from '@/lib/auth-utils'
+import { logEvent } from '@/lib/events'
 const COOKIE_NAME = 'nyc_classifieds_user'
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -90,6 +91,8 @@ export async function POST(request: NextRequest) {
     // Send email via shared helper
     await sendEmail(email, otpEmail(code))
 
+    logEvent('otp_requested', { email }, { ip })
+
     return NextResponse.json({ sent: true })
   }
 
@@ -133,6 +136,8 @@ export async function POST(request: NextRequest) {
 
     // Existing user with PIN → log them in
     if (user?.pin) {
+      logEvent('otp_verified', { email, existing_user: true }, { userId: user.id, ip })
+
       const res = NextResponse.json({
         verified: true,
         hasPin: true,
@@ -151,6 +156,8 @@ export async function POST(request: NextRequest) {
 
     // New or incomplete user → return email token, don't create user yet
     // Everything gets created at once in /api/auth/complete-signup
+    logEvent('otp_verified', { email, existing_user: false }, { ip })
+
     return NextResponse.json({
       verified: true,
       hasPin: false,
@@ -304,6 +311,13 @@ export async function POST(request: NextRequest) {
     if (user.banned) {
       return NextResponse.json({ error: 'Account is banned' }, { status: 403 })
     }
+
+    logEvent('login', { email, name: user.name }, {
+      userId: user.id, ip,
+      notify: true,
+      notifyTitle: 'User login',
+      notifyBody: `${user.name || email} logged in`,
+    })
 
     const res = NextResponse.json({
       authenticated: true,

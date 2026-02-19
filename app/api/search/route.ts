@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { logEvent } from '@/lib/events'
 
 const PAGE_SIZE = 24
 
@@ -47,6 +48,8 @@ export async function GET(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: 'Search failed' }, { status: 500 })
   }
+
+  logEvent('search', { query: q, results_count: count || 0 })
 
   return NextResponse.json({
     listings: data || [],

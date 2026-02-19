@@ -23,6 +23,13 @@ export async function GET(request: NextRequest) {
     // Create new seed users first (5-15/day)
     const newUsers = await createDailySeedUsers(db)
 
+    // Clean up old page_views and user_events (>90 days)
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 86400000).toISOString()
+    await Promise.all([
+      db.from('page_views').delete().lt('created_at', ninetyDaysAgo),
+      db.from('user_events').delete().lt('created_at', ninetyDaysAgo),
+    ])
+
     // Run both engines in parallel
     const [porchResult, listingResult] = await Promise.all([
       runSeedCron(db),

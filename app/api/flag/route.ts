@@ -4,6 +4,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { sendEmail } from '@/lib/email'
 import { flagConfirmationEmail, moderatorAlertEmail } from '@/lib/email-templates'
 import { sendPushToAdmins } from '@/lib/push'
+import { logEvent } from '@/lib/events'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
@@ -55,6 +56,8 @@ export async function POST(request: NextRequest) {
 
   // Push notification to admins
   sendPushToAdmins({ title: 'New flag', body: `${content_type} flagged: ${reason.trim().slice(0, 100)}`, url: '/admin' }).catch(() => {})
+
+  logEvent('flag', { content_type, content_id }, { userId: parseInt(userId), ip })
 
   // Send confirmation to reporter + alert to moderators (async)
   ;(async () => {

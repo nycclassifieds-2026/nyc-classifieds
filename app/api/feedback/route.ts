@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { sendEmail } from '@/lib/email'
 import { feedbackConfirmationEmail, feedbackAdminAlertEmail } from '@/lib/email-templates'
+import { logEvent } from '@/lib/events'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const VALID_CATEGORIES = ['bug', 'feature', 'general', 'other']
@@ -72,6 +73,13 @@ export async function POST(request: NextRequest) {
       }
     } catch {}
   })()
+
+  logEvent('feedback', { category, message_preview: trimmedMessage.slice(0, 100) }, {
+    userId: parsedUserId ?? undefined, ip,
+    notify: true,
+    notifyTitle: 'New feedback',
+    notifyBody: `[${category}] ${trimmedMessage.slice(0, 80)}`,
+  })
 
   return NextResponse.json({ submitted: true }, { status: 201 })
 }

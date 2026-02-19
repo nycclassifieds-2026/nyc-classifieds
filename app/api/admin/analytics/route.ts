@@ -10,6 +10,14 @@ export async function GET(request: NextRequest) {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString()
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
 
+  // Get seed user IDs upfront so we can exclude them
+  const { data: seedUserRows } = await db
+    .from('users')
+    .select('id')
+    .like('email', '%@example.com')
+
+  const seedUserIds = new Set((seedUserRows || []).map(u => u.id))
+
   // Run all queries in parallel
   const [
     totalUsers,
@@ -25,17 +33,16 @@ export async function GET(request: NextRequest) {
     porchByBorough,
     porchByType,
     listingsByCategory,
-    cronState,
     signupEvents30d,
     signupEvents7d,
   ] = await Promise.all([
-    db.from('users').select('id', { count: 'exact', head: true }),
+    db.from('users').select('id', { count: 'exact', head: true }).not('email', 'like', '%@example.com'),
     db.from('listings').select('id', { count: 'exact', head: true }),
     db.from('porch_posts').select('id', { count: 'exact', head: true }),
     db.from('porch_replies').select('id', { count: 'exact', head: true }),
     db.from('messages').select('id', { count: 'exact', head: true }),
-    // Daily signups last 30 days
-    db.from('users').select('created_at, email').gte('created_at', thirtyDaysAgo).order('created_at', { ascending: true }),
+    // Daily signups last 30 days (real only)
+    db.from('users').select('created_at').not('email', 'like', '%@example.com').gte('created_at', thirtyDaysAgo).order('created_at', { ascending: true }),
     // Daily porch posts last 30 days
     db.from('porch_posts').select('created_at, user_id').gte('created_at', thirtyDaysAgo).order('created_at', { ascending: true }),
     // Daily listings last 30 days
@@ -50,8 +57,6 @@ export async function GET(request: NextRequest) {
     db.from('porch_posts').select('post_type'),
     // Listings by category
     db.from('listings').select('category_slug'),
-    // Cron state
-    db.from('cron_seed_state').select('*').eq('id', 1).single(),
     // Signup funnel events last 30 days
     db.from('signup_events').select('step, status, error').gte('created_at', thirtyDaysAgo),
     // Signup funnel events last 7 days
@@ -68,20 +73,15 @@ export async function GET(request: NextRequest) {
     return groups
   }
 
-  // Helper: count real vs seed for items with user info
-  function splitRealSeed(items: { created_at: string; email?: string }[]): { real: Record<string, number>; seed: Record<string, number> } {
-    const real: Record<string, number> = {}
-    const seed: Record<string, number> = {}
+  // Helper: group items by date, excluding seed users
+  function groupByDateReal(items: { created_at: string; user_id: number }[]): Record<string, number> {
+    const groups: Record<string, number> = {}
     for (const item of items || []) {
+      if (seedUserIds.has(item.user_id)) continue
       const date = item.created_at?.slice(0, 10)
-      if (!date) continue
-      if (item.email?.endsWith('@example.com')) {
-        seed[date] = (seed[date] || 0) + 1
-      } else {
-        real[date] = (real[date] || 0) + 1
-      }
+      if (date) groups[date] = (groups[date] || 0) + 1
     }
-    return { real, seed }
+    return groups
   }
 
   // Helper: count by field
@@ -94,35 +94,9 @@ export async function GET(request: NextRequest) {
     return counts
   }
 
-  // Build user growth with real/seed split
-  const userGrowth = splitRealSeed((recentUsers.data || []) as { created_at: string; email: string }[])
-
-  // For posts, we need to look up which user_ids are seed users
-  // Get all seed user IDs
-  const { data: seedUserRows } = await db
-    .from('users')
-    .select('id')
-    .like('email', '%@example.com')
-
-  const seedUserIds = new Set((seedUserRows || []).map(u => u.id))
-
-  function splitPostsRealSeed(items: { created_at: string; user_id: number }[]): { real: Record<string, number>; seed: Record<string, number> } {
-    const real: Record<string, number> = {}
-    const seed: Record<string, number> = {}
-    for (const item of items || []) {
-      const date = item.created_at?.slice(0, 10)
-      if (!date) continue
-      if (seedUserIds.has(item.user_id)) {
-        seed[date] = (seed[date] || 0) + 1
-      } else {
-        real[date] = (real[date] || 0) + 1
-      }
-    }
-    return { real, seed }
-  }
-
-  const postVolume = splitPostsRealSeed((recentPorchPosts.data || []) as { created_at: string; user_id: number }[])
-  const listingVolume = splitPostsRealSeed((recentListings.data || []) as { created_at: string; user_id: number }[])
+  const userGrowth = groupByDate((recentUsers.data || []) as { created_at: string }[])
+  const postVolume = groupByDateReal((recentPorchPosts.data || []) as { created_at: string; user_id: number }[])
+  const listingVolume = groupByDateReal((recentListings.data || []) as { created_at: string; user_id: number }[])
 
   // Build signup funnel data
   type SignupEvent = { step: string; status: string; error: string | null }
@@ -146,10 +120,9 @@ export async function GET(request: NextRequest) {
     last_30_days: buildFunnelData((signupEvents30d.data || []) as SignupEvent[]),
   }
 
-  // Today's stats
+  // Today's stats (real users only)
   const todayStr = new Date().toISOString().slice(0, 10)
-  const postsToday = (postVolume.real[todayStr] || 0) + (postVolume.seed[todayStr] || 0) +
-                     (listingVolume.real[todayStr] || 0) + (listingVolume.seed[todayStr] || 0)
+  const postsToday = (postVolume[todayStr] || 0) + (listingVolume[todayStr] || 0)
 
   return NextResponse.json({
     totals: {
@@ -172,7 +145,6 @@ export async function GET(request: NextRequest) {
       by_post_type: countByField((porchByType.data || []) as Record<string, string>[], 'post_type'),
       by_category: countByField((listingsByCategory.data || []) as Record<string, string>[], 'category_slug'),
     },
-    cron: cronState.data || null,
     signup_funnel: signupFunnel,
   })
 }

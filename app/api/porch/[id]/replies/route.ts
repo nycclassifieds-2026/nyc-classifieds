@@ -5,6 +5,7 @@ import { moderateFields } from '@/lib/porch-moderation'
 import { sendEmail } from '@/lib/email'
 import { porchReplyEmail } from '@/lib/email-templates'
 import { createNotification } from '@/lib/notifications'
+import { logEvent } from '@/lib/events'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const MAX_REPLIES_PER_THREAD = 3
@@ -133,6 +134,8 @@ export async function POST(
       }
     } catch {}
   })()
+
+  logEvent('porch_reply', { post_id: postId, reply_id: reply.id }, { userId: parseInt(userId), ip })
 
   return NextResponse.json({ id: reply.id, reply }, { status: 201 })
 }

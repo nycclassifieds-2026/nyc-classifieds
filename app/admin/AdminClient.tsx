@@ -1334,12 +1334,286 @@ function PorchTab() {
 interface FunnelStep { started: number; completed: number; failed: number; errors: Record<string, number> }
 type FunnelData = Record<string, FunnelStep>
 
+// ─── Traffic Analytics ─────────────────────────────────────────
+// ─── Live Activity Feed ──────────────────────────────────────
+
+interface LiveEvent {
+  id: number
+  event_type: string
+  user_id: number | null
+  path: string | null
+  details: Record<string, unknown>
+  created_at: string
+  user: { name: string | null; email: string } | null
+}
+
+const EVENT_COLORS: Record<string, string> = {
+  login: '#2563eb',
+  otp_requested: '#6366f1',
+  otp_verified: '#6366f1',
+  listing_created: '#16a34a',
+  listing_edited: '#059669',
+  listing_deleted: '#dc2626',
+  porch_post_created: '#16a34a',
+  porch_reply: '#059669',
+  helpful_vote: '#8b5cf6',
+  message_sent: '#ea580c',
+  search: '#64748b',
+  feedback: '#d97706',
+  review_created: '#eab308',
+  review_reply: '#ca8a04',
+  flag: '#dc2626',
+  user_blocked: '#dc2626',
+  business_upgrade: '#2563eb',
+  business_update_posted: '#059669',
+  business_link_click: '#6366f1',
+  listing_contact_click: '#ea580c',
+}
+
+function LiveFeedSection() {
+  const [events, setEvents] = useState<LiveEvent[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchEvents = useCallback(() => {
+    api('/api/admin/events?limit=50').then(d => {
+      if (d.events) setEvents(d.events)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    fetchEvents()
+    const interval = setInterval(fetchEvents, 30_000)
+    return () => clearInterval(interval)
+  }, [fetchEvents])
+
+  if (loading) return <div style={{ padding: '1rem', color: colors.textLight, fontSize: '0.875rem' }}>Loading live feed...</div>
+
+  return (
+    <div style={{ marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Live Activity</h2>
+        <span style={{ fontSize: '0.6875rem', color: colors.textLight, display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: colors.success, display: 'inline-block' }} />
+          Auto-refresh 30s
+        </span>
+      </div>
+
+      {events.length === 0 ? (
+        <div style={{ ...cardStyle, textAlign: 'center', color: colors.textLight, padding: '2rem', fontSize: '0.875rem' }}>
+          No events yet — activity will appear here as users interact with the site
+        </div>
+      ) : (
+        <div style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f8fafc', borderBottom: `1px solid ${colors.border}` }}>
+                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontWeight: 600, color: colors.textMuted, fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Time</th>
+                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontWeight: 600, color: colors.textMuted, fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Event</th>
+                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontWeight: 600, color: colors.textMuted, fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>User</th>
+                <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontWeight: 600, color: colors.textMuted, fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.map(e => {
+                const badgeColor = EVENT_COLORS[e.event_type] || colors.textMuted
+                const userName = e.user?.name || (e.user?.email ? e.user.email.split('@')[0] : '(anonymous)')
+                const detailStr = formatEventDetails(e.event_type, e.details)
+
+                return (
+                  <tr key={e.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
+                    <td style={{ padding: '0.5rem 0.75rem', color: colors.textLight, whiteSpace: 'nowrap', fontSize: '0.75rem' }}>
+                      {formatTimeAgo(e.created_at)}
+                    </td>
+                    <td style={{ padding: '0.5rem 0.75rem' }}>
+                      <span style={{
+                        display: 'inline-block', padding: '0.125rem 0.5rem', borderRadius: '9999px',
+                        fontSize: '0.6875rem', fontWeight: 600, backgroundColor: `${badgeColor}18`, color: badgeColor,
+                      }}>
+                        {e.event_type.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.5rem 0.75rem', color: colors.textMuted, fontSize: '0.75rem' }}>
+                      {userName}
+                    </td>
+                    <td style={{ padding: '0.5rem 0.75rem', color: colors.textLight, fontSize: '0.75rem', maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {detailStr}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function formatEventDetails(type: string, details: Record<string, unknown>): string {
+  if (!details || Object.keys(details).length === 0) return '—'
+  switch (type) {
+    case 'search': return String(details.query || '')
+    case 'review_created': return '★'.repeat(Number(details.rating) || 0)
+    case 'message_sent': return `listing #${details.listing_id || '?'}`
+    case 'business_link_click': return `${details.linkType || '?'} — ${details.slug || ''}`
+    case 'listing_created': return String(details.title || '')
+    case 'porch_post_created': return String(details.title || '')
+    case 'feedback': return String(details.message_preview || '')
+    case 'login': return String(details.name || details.email || '')
+    default: {
+      const vals = Object.values(details).filter(v => v != null)
+      return vals.length > 0 ? vals.join(', ') : '—'
+    }
+  }
+}
+
+interface TrafficData {
+  totals: {
+    views_today: number
+    views_week: number
+    views_month: number
+    unique_visitors_30d: number
+    real_users: number
+    real_signups_today: number
+    real_signups_7d: number
+    real_signups_30d: number
+  }
+  daily_views: Record<string, number>
+  daily_signups: Record<string, number>
+  sources: Record<string, number>
+  top_pages: Record<string, number>
+  devices: Record<string, number>
+  locations: {
+    countries: Record<string, number>
+    cities: Record<string, number>
+  }
+  event_counts?: Record<string, number>
+  recent_searches?: Record<string, number>
+}
+
+function SourceBar({ sources }: { sources: Record<string, number> }) {
+  const sorted = Object.entries(sources).sort((a, b) => b[1] - a[1])
+  const total = sorted.reduce((s, [, v]) => s + v, 0)
+  const max = sorted.length > 0 ? sorted[0][1] : 1
+
+  if (sorted.length === 0) return <p style={{ color: colors.textLight, fontSize: '0.75rem' }}>No data</p>
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+      {sorted.map(([source, count]) => {
+        const pct = total > 0 ? ((count / total) * 100).toFixed(1) : '0'
+        return (
+          <div key={source} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.6875rem', color: colors.textMuted, width: '100px', textAlign: 'right', flexShrink: 0, fontWeight: 500 }}>{source}</span>
+            <div style={{ flex: 1, height: '16px', backgroundColor: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${(count / max) * 100}%`, backgroundColor: colors.primary, borderRadius: '3px', minWidth: count > 0 ? '2px' : '0' }} />
+            </div>
+            <span style={{ fontSize: '0.6875rem', color: colors.textMuted, width: '70px', flexShrink: 0, textAlign: 'right' }}>
+              {pct}% <span style={{ fontWeight: 600, color: colors.text }}>{count}</span>
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function TrafficSection() {
+  const [data, setData] = useState<TrafficData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api('/api/admin/traffic').then(d => {
+      setData(d)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
+
+  if (loading) return <div style={{ padding: '1rem', color: colors.textLight, fontSize: '0.875rem' }}>Loading traffic data...</div>
+  if (!data) return <div style={{ padding: '1rem', color: colors.textLight, fontSize: '0.875rem' }}>No traffic data yet</div>
+
+  return (
+    <div style={{ marginBottom: '2rem' }}>
+      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem' }}>Web Traffic</h2>
+
+      {/* View stat cards */}
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+        <StatCard label="Views Today" value={data.totals.views_today} highlight />
+        <StatCard label="Views This Week" value={data.totals.views_week} />
+        <StatCard label="Views This Month" value={data.totals.views_month} />
+        <StatCard label="Unique Visitors 30d" value={data.totals.unique_visitors_30d} />
+      </div>
+
+      {/* Signup stat cards */}
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        <StatCard label="Real Signups 7d" value={data.totals.real_signups_7d} highlight />
+        <StatCard label="Real Signups 30d" value={data.totals.real_signups_30d} />
+        <StatCard label="Total Real Users" value={data.totals.real_users} />
+      </div>
+
+      {/* Traffic Sources */}
+      <div style={{ ...cardStyle, marginBottom: '1rem' }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Traffic Sources (30d)</div>
+        <SourceBar sources={data.sources} />
+      </div>
+
+      {/* Daily Views + Devices */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={cardStyle}>
+          <BarChart data={data.daily_views} label="Daily Page Views (30d)" color={colors.primary} />
+        </div>
+        <div style={cardStyle}>
+          <BarChart data={data.devices} label="Devices (30d)" color="#7c3aed" />
+        </div>
+      </div>
+
+      {/* Top Pages */}
+      <div style={{ ...cardStyle, marginBottom: '1rem' }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top Pages (30d)</div>
+        <SourceBar sources={data.top_pages} />
+      </div>
+
+      {/* Real Signups chart */}
+      <div style={{ ...cardStyle, marginBottom: '1rem' }}>
+        <BarChart data={data.daily_signups} label="Real Signups (30d)" color={colors.success} />
+      </div>
+
+      {/* Locations */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={cardStyle}>
+          <BarChart data={data.locations.countries} label="Top Countries" color="#059669" />
+        </div>
+        <div style={cardStyle}>
+          <BarChart data={data.locations.cities} label="Top Cities" color="#ea580c" />
+        </div>
+      </div>
+
+      {/* Event breakdown */}
+      {data.event_counts && Object.keys(data.event_counts).length > 0 && (
+        <div style={{ ...cardStyle, marginBottom: '1rem' }}>
+          <BarChart data={data.event_counts} label="User Events (30d)" color="#6366f1" />
+        </div>
+      )}
+
+      {/* Top searches */}
+      {data.recent_searches && Object.keys(data.recent_searches).length > 0 && (
+        <div style={{ ...cardStyle, marginBottom: '1rem' }}>
+          <BarChart data={data.recent_searches} label="Top Search Queries (30d)" color="#ea580c" />
+        </div>
+      )}
+
+      <hr style={{ border: 'none', borderTop: `1px solid ${colors.border}`, margin: '1.5rem 0' }} />
+    </div>
+  )
+}
+
 interface AnalyticsData {
   totals: { users: number; listings: number; porch_posts: number; porch_replies: number; messages: number; posts_today: number }
   daily: {
-    user_growth: { real: Record<string, number>; seed: Record<string, number> }
-    post_volume: { real: Record<string, number>; seed: Record<string, number> }
-    listing_volume: { real: Record<string, number>; seed: Record<string, number> }
+    user_growth: Record<string, number>
+    post_volume: Record<string, number>
+    listing_volume: Record<string, number>
     replies: Record<string, number>
     messages: Record<string, number>
   }
@@ -1348,7 +1622,6 @@ interface AnalyticsData {
     by_post_type: Record<string, number>
     by_category: Record<string, number>
   }
-  cron: { enabled: boolean; posts_today: number; date: string; start_date: string } | null
   signup_funnel: {
     last_7_days: FunnelData
     last_30_days: FunnelData
@@ -1477,35 +1750,30 @@ function AnalyticsTab() {
   if (loading) return <div style={{ padding: '2rem', color: colors.textLight, textAlign: 'center' }}>Loading analytics...</div>
   if (!data) return <div style={{ padding: '2rem', color: colors.textLight, textAlign: 'center' }}>Failed to load analytics</div>
 
-  // Merge real+seed for daily charts
+  // Merge post + listing volume for daily total chart
   const allDates = new Set<string>()
-  const addDates = (obj: Record<string, number>) => Object.keys(obj).forEach(d => allDates.add(d))
-  addDates(data.daily.post_volume.real)
-  addDates(data.daily.post_volume.seed)
-  addDates(data.daily.listing_volume.real)
-  addDates(data.daily.listing_volume.seed)
+  Object.keys(data.daily.post_volume).forEach(d => allDates.add(d))
+  Object.keys(data.daily.listing_volume).forEach(d => allDates.add(d))
 
   const dailyPostTotal: Record<string, number> = {}
   for (const d of allDates) {
-    dailyPostTotal[d] = (data.daily.post_volume.real[d] || 0) + (data.daily.post_volume.seed[d] || 0) +
-                        (data.daily.listing_volume.real[d] || 0) + (data.daily.listing_volume.seed[d] || 0)
+    dailyPostTotal[d] = (data.daily.post_volume[d] || 0) + (data.daily.listing_volume[d] || 0)
   }
-
-  const cronStatus = data.cron
-    ? (data.cron.enabled ? 'Enabled' : 'Disabled')
-    : 'Not configured'
 
   return (
     <div>
+      <LiveFeedSection />
+
+      <TrafficSection />
+
       <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem' }}>Analytics</h2>
 
       {/* Stat cards */}
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        <StatCard label="Total Users" value={data.totals.users} />
+        <StatCard label="Real Users" value={data.totals.users} />
         <StatCard label="Porch Posts" value={data.totals.porch_posts} />
         <StatCard label="Listings" value={data.totals.listings} />
         <StatCard label="Posts Today" value={data.totals.posts_today} highlight />
-        <StatCard label="Cron" value={cronStatus} />
       </div>
 
       {/* Signup Funnel */}
@@ -1555,32 +1823,6 @@ function AnalyticsTab() {
         </div>
       </div>
 
-      {/* Cron status */}
-      {data.cron && (
-        <div style={cardStyle}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cron Seed Status</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
-            <div>
-              <div style={{ fontSize: '0.6875rem', color: colors.textLight }}>Status</div>
-              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: data.cron.enabled ? colors.success : colors.danger }}>
-                {data.cron.enabled ? 'Enabled' : 'Disabled'}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.6875rem', color: colors.textLight }}>Seeds Today</div>
-              <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{data.cron.posts_today}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.6875rem', color: colors.textLight }}>Date</div>
-              <div style={{ fontSize: '0.875rem' }}>{data.cron.date}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.6875rem', color: colors.textLight }}>Start Date</div>
-              <div style={{ fontSize: '0.875rem' }}>{data.cron.start_date}</div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

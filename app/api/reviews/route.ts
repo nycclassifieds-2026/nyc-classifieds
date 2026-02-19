@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { logEvent } from '@/lib/events'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
@@ -62,6 +63,14 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json({ error: 'Failed to create review' }, { status: 500 })
     }
+
+    logEvent('review_created', { business_user_id, rating }, {
+      userId: parseInt(userId),
+      notify: true,
+      notifyTitle: 'New review',
+      notifyBody: `${'★'.repeat(rating)} review posted`,
+    })
+
     return NextResponse.json({ ok: true })
   }
 
@@ -90,6 +99,9 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: 'Failed to reply' }, { status: 500 })
     }
+
+    logEvent('review_reply', { review_id }, { userId: parseInt(userId) })
+
     return NextResponse.json({ ok: true })
   }
 

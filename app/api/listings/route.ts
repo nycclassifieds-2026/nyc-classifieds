@@ -4,6 +4,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { sendEmail } from '@/lib/email'
 import { listingLiveEmail } from '@/lib/email-templates'
 import { sendPushToAdmins } from '@/lib/push'
+import { logEvent } from '@/lib/events'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const PAGE_SIZE = 24
@@ -118,6 +119,8 @@ export async function POST(request: NextRequest) {
 
   // Push notification to admins
   sendPushToAdmins({ title: 'New listing', body: title.trim(), url: `/listings/${listing.id}` }).catch(() => {})
+
+  logEvent('listing_created', { listing_id: listing.id, title: title.trim(), category: category_slug }, { userId: parseInt(userId), ip })
 
   // Send listing live email (async)
   ;(async () => {

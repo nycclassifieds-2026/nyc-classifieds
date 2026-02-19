@@ -195,7 +195,7 @@ export default function ListingDetailClient({ id }: { id: string }) {
           {!isOwner && currentUser && isActive && (
             <div>
               {!showMessage && !sent && (
-                <button onClick={() => setShowMessage(true)} style={{
+                <button onClick={() => { setShowMessage(true); window.__track?.('listing_contact_click', { listing_id: listing!.id }) }} style={{
                   width: '100%', padding: '0.75rem', borderRadius: '0.5rem',
                   border: 'none', backgroundColor: '#2563eb', color: '#fff',
                   fontSize: '1rem', fontWeight: 600, cursor: 'pointer',

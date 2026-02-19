@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { sendEmail } from '@/lib/email'
 import { helpfulVoteEmail } from '@/lib/email-templates'
 import { createNotification } from '@/lib/notifications'
+import { logEvent } from '@/lib/events'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
@@ -116,6 +117,8 @@ export async function POST(
       } catch {}
     })()
   }
+
+  logEvent('helpful_vote', { reply_id: parsedReplyId, post_id: postId, voted }, { userId: numericUserId })
 
   return NextResponse.json({ helpful_count: newCount, voted })
 }

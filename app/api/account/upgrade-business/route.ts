@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { cookies } from 'next/headers'
+import { logEvent } from '@/lib/events'
 
 export async function POST(request: NextRequest) {
   const db = getSupabaseAdmin()
@@ -84,6 +85,13 @@ export async function POST(request: NextRequest) {
     console.error('Upgrade to business error:', error)
     return NextResponse.json({ error: 'Failed to upgrade' }, { status: 500 })
   }
+
+  logEvent('business_upgrade', { user_id: session.id, business_name: business_name.trim(), slug }, {
+    userId: session.id,
+    notify: true,
+    notifyTitle: 'Business upgrade',
+    notifyBody: `${business_name.trim()} upgraded to business`,
+  })
 
   return NextResponse.json({ ok: true, business_slug: slug })
 }

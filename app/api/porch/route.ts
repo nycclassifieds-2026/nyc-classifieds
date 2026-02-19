@@ -5,6 +5,7 @@ import { moderateFields } from '@/lib/porch-moderation'
 import { sendEmail } from '@/lib/email'
 import { urgentPostLiveEmail } from '@/lib/email-templates'
 import { sendPushToAdmins } from '@/lib/push'
+import { logEvent } from '@/lib/events'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const PAGE_SIZE = 20
@@ -200,6 +201,8 @@ export async function POST(request: NextRequest) {
 
   // Push notification to admins
   sendPushToAdmins({ title: 'New porch post', body: title.trim(), url: `/porch/${post.id}` }).catch(() => {})
+
+  logEvent('porch_post_created', { post_id: post.id, post_type, title: title.trim() }, { userId: parseInt(userId), ip })
 
   // Send confirmation email for urgent post types (async)
   const URGENT_TYPES = new Set(['lost-and-found', 'pet-sighting', 'alert'])

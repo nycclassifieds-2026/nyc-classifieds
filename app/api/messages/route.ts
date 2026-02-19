@@ -4,6 +4,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { sendEmail } from '@/lib/email'
 import { newMessageEmail } from '@/lib/email-templates'
 import { createNotification } from '@/lib/notifications'
+import { logEvent } from '@/lib/events'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 
@@ -190,6 +191,13 @@ export async function POST(request: NextRequest) {
       }
     } catch {}
   })()
+
+  logEvent('message_sent', { from: uid, to: recipient_id, listing_id }, {
+    userId: uid, ip,
+    notify: true,
+    notifyTitle: 'New message',
+    notifyBody: `Message sent re: listing #${listing_id}`,
+  })
 
   return NextResponse.json({ id: data.id }, { status: 201 })
 }
