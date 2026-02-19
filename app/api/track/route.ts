@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     // Client-side event tracking
     if (type === 'event' && body.event) {
-      db.from('user_events').insert({
+      await db.from('user_events').insert({
         event_type: body.event,
         path,
         details: body.details || {},
@@ -84,8 +84,7 @@ export async function POST(request: NextRequest) {
     const country = request.headers.get('x-vercel-ip-country') || null
     const city = request.headers.get('x-vercel-ip-city') || null
 
-    // Fire-and-forget insert
-    db.from('page_views').insert({
+    await db.from('page_views').insert({
       path,
       referrer: referrer || null,
       referrer_source: referrerSource,
