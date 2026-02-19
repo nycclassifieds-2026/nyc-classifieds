@@ -1474,13 +1474,21 @@ interface TrafficData {
     views_week: number
     views_month: number
     unique_visitors_30d: number
+    unique_visitors_today: number
+    returning_visitors: number
+    new_visitors: number
     real_users: number
     real_signups_today: number
     real_signups_7d: number
     real_signups_30d: number
+    total_events_30d: number
   }
   daily_views: Record<string, number>
+  daily_uniques: Record<string, number>
+  daily_events: Record<string, number>
   daily_signups: Record<string, number>
+  hourly: Record<string, number>
+  by_day_of_week: Record<string, number>
   sources: Record<string, number>
   top_pages: Record<string, number>
   devices: Record<string, number>
@@ -1488,8 +1496,11 @@ interface TrafficData {
     countries: Record<string, number>
     cities: Record<string, number>
   }
-  event_counts?: Record<string, number>
-  recent_searches?: Record<string, number>
+  event_counts: Record<string, number>
+  recent_searches: Record<string, number>
+  zero_result_searches: Record<string, number>
+  business_clicks: Record<string, number>
+  listing_contact_clicks: Record<string, number>
 }
 
 function SourceBar({ sources }: { sources: Record<string, number> }) {
@@ -1533,23 +1544,34 @@ function TrafficSection() {
   if (loading) return <div style={{ padding: '1rem', color: colors.textLight, fontSize: '0.875rem' }}>Loading traffic data...</div>
   if (!data) return <div style={{ padding: '1rem', color: colors.textLight, fontSize: '0.875rem' }}>No traffic data yet</div>
 
+  const t = data.totals
+
   return (
     <div style={{ marginBottom: '2rem' }}>
-      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem' }}>Web Traffic</h2>
+      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem' }}>Web Traffic & UX Analytics</h2>
 
-      {/* View stat cards */}
+      {/* Row 1: Page view stats */}
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-        <StatCard label="Views Today" value={data.totals.views_today} highlight />
-        <StatCard label="Views This Week" value={data.totals.views_week} />
-        <StatCard label="Views This Month" value={data.totals.views_month} />
-        <StatCard label="Unique Visitors 30d" value={data.totals.unique_visitors_30d} />
+        <StatCard label="Views Today" value={t.views_today} highlight />
+        <StatCard label="Views 7d" value={t.views_week} />
+        <StatCard label="Views 30d" value={t.views_month} />
+        <StatCard label="Uniques Today" value={t.unique_visitors_today} highlight />
+        <StatCard label="Uniques 30d" value={t.unique_visitors_30d} />
       </div>
 
-      {/* Signup stat cards */}
+      {/* Row 2: Visitor + event stats */}
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+        <StatCard label="Returning Visitors" value={t.returning_visitors} />
+        <StatCard label="New Visitors" value={t.new_visitors} />
+        <StatCard label="Events 30d" value={t.total_events_30d} />
+        <StatCard label="Total Real Users" value={t.real_users} />
+      </div>
+
+      {/* Row 3: Signup stats */}
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        <StatCard label="Real Signups 7d" value={data.totals.real_signups_7d} highlight />
-        <StatCard label="Real Signups 30d" value={data.totals.real_signups_30d} />
-        <StatCard label="Total Real Users" value={data.totals.real_users} />
+        <StatCard label="Signups Today" value={t.real_signups_today} highlight />
+        <StatCard label="Signups 7d" value={t.real_signups_7d} />
+        <StatCard label="Signups 30d" value={t.real_signups_30d} />
       </div>
 
       {/* Traffic Sources */}
@@ -1558,13 +1580,33 @@ function TrafficSection() {
         <SourceBar sources={data.sources} />
       </div>
 
-      {/* Daily Views + Devices */}
+      {/* Daily Views + Daily Unique Visitors */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
         <div style={cardStyle}>
           <BarChart data={data.daily_views} label="Daily Page Views (30d)" color={colors.primary} />
         </div>
         <div style={cardStyle}>
+          <BarChart data={data.daily_uniques} label="Daily Unique Visitors (30d)" color="#7c3aed" />
+        </div>
+      </div>
+
+      {/* Hourly + Day-of-week */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={cardStyle}>
+          <BarChart data={data.hourly} label="Traffic by Hour (UTC, 30d)" color="#0891b2" />
+        </div>
+        <div style={cardStyle}>
+          <BarChart data={data.by_day_of_week} label="Traffic by Day of Week (30d)" color="#d946ef" />
+        </div>
+      </div>
+
+      {/* Devices + Signups */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={cardStyle}>
           <BarChart data={data.devices} label="Devices (30d)" color="#7c3aed" />
+        </div>
+        <div style={cardStyle}>
+          <BarChart data={data.daily_signups} label="Real Signups (30d)" color={colors.success} />
         </div>
       </div>
 
@@ -1572,11 +1614,6 @@ function TrafficSection() {
       <div style={{ ...cardStyle, marginBottom: '1rem' }}>
         <div style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textMuted, marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top Pages (30d)</div>
         <SourceBar sources={data.top_pages} />
-      </div>
-
-      {/* Real Signups chart */}
-      <div style={{ ...cardStyle, marginBottom: '1rem' }}>
-        <BarChart data={data.daily_signups} label="Real Signups (30d)" color={colors.success} />
       </div>
 
       {/* Locations */}
@@ -1589,19 +1626,47 @@ function TrafficSection() {
         </div>
       </div>
 
-      {/* Event breakdown */}
-      {data.event_counts && Object.keys(data.event_counts).length > 0 && (
-        <div style={{ ...cardStyle, marginBottom: '1rem' }}>
-          <BarChart data={data.event_counts} label="User Events (30d)" color="#6366f1" />
-        </div>
-      )}
+      {/* User Events + Daily Event Volume */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+        {Object.keys(data.event_counts).length > 0 && (
+          <div style={cardStyle}>
+            <BarChart data={data.event_counts} label="User Events Breakdown (30d)" color="#6366f1" />
+          </div>
+        )}
+        {Object.keys(data.daily_events).length > 0 && (
+          <div style={cardStyle}>
+            <BarChart data={data.daily_events} label="Daily Events Volume (30d)" color="#6366f1" />
+          </div>
+        )}
+      </div>
 
-      {/* Top searches */}
-      {data.recent_searches && Object.keys(data.recent_searches).length > 0 && (
-        <div style={{ ...cardStyle, marginBottom: '1rem' }}>
-          <BarChart data={data.recent_searches} label="Top Search Queries (30d)" color="#ea580c" />
-        </div>
-      )}
+      {/* Searches: Top queries + Zero-result */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+        {Object.keys(data.recent_searches).length > 0 && (
+          <div style={cardStyle}>
+            <BarChart data={data.recent_searches} label="Top Search Queries (30d)" color="#ea580c" />
+          </div>
+        )}
+        {Object.keys(data.zero_result_searches).length > 0 && (
+          <div style={cardStyle}>
+            <BarChart data={data.zero_result_searches} label="Zero-Result Searches (30d)" color={colors.danger} />
+          </div>
+        )}
+      </div>
+
+      {/* Business clicks + Listing contact clicks */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+        {Object.keys(data.business_clicks).length > 0 && (
+          <div style={cardStyle}>
+            <BarChart data={data.business_clicks} label="Business Link Clicks (30d)" color="#0d9488" />
+          </div>
+        )}
+        {Object.keys(data.listing_contact_clicks).length > 0 && (
+          <div style={cardStyle}>
+            <BarChart data={data.listing_contact_clicks} label="Listing Contact Clicks (30d)" color="#b45309" />
+          </div>
+        )}
+      </div>
 
       <hr style={{ border: 'none', borderTop: `1px solid ${colors.border}`, margin: '1.5rem 0' }} />
     </div>
