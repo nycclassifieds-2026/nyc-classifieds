@@ -36,6 +36,7 @@ interface User {
   address: string | null
   photo_gallery: string[] | null
   social_links: Record<string, string> | null
+  seo_keywords: string[] | null
 }
 
 interface Listing {
@@ -95,6 +96,20 @@ export default function AccountClient() {
   const [editingSocials, setEditingSocials] = useState(false)
   const [socialsForm, setSocialsForm] = useState<Record<string, string>>({})
 
+  // SEO Keywords
+  const [keywordInput, setKeywordInput] = useState('')
+  const [keywordsLocal, setKeywordsLocal] = useState<string[]>([])
+  const [keywordsSaving, setKeywordsSaving] = useState(false)
+
+  // Business Updates
+  const [bizUpdates, setBizUpdates] = useState<{ id: number; title: string; body: string | null; photos: string[]; created_at: string }[]>([])
+  const [showUpdateForm, setShowUpdateForm] = useState(false)
+  const [updateTitle, setUpdateTitle] = useState('')
+  const [updateBody, setUpdateBody] = useState('')
+  const [updatePhotos, setUpdatePhotos] = useState<string[]>([])
+  const [updateSubmitting, setUpdateSubmitting] = useState(false)
+  const [updatePhotoUploading, setUpdatePhotoUploading] = useState(false)
+
   // Reviews
   const [reviews, setReviews] = useState<Review[]>([])
   const [reviewAvg, setReviewAvg] = useState(0)
@@ -147,6 +162,20 @@ export default function AccountClient() {
       .catch(() => router.push('/login'))
       .finally(() => setLoading(false))
   }, [router])
+
+  // Sync keywords from user data
+  useEffect(() => {
+    if (user?.seo_keywords) setKeywordsLocal(user.seo_keywords)
+  }, [user])
+
+  // Load updates when user has business profile
+  useEffect(() => {
+    if (!user || user.account_type !== 'business') return
+    fetch(`/api/business/updates?user_id=${user.id}`)
+      .then(r => r.json())
+      .then(d => setBizUpdates(d.updates || []))
+      .catch(() => {})
+  }, [user])
 
   // Load reviews when user has business profile
   useEffect(() => {
@@ -305,6 +334,68 @@ export default function AccountClient() {
       if ((await res.json()).ok) { await refreshUser(); setEditingSocials(false) }
     } catch {}
     finally { setSaving(false) }
+  }
+
+  const addKeyword = () => {
+    const kw = keywordInput.trim().slice(0, 30)
+    if (!kw || keywordsLocal.length >= 10 || keywordsLocal.includes(kw)) return
+    setKeywordsLocal(prev => [...prev, kw])
+    setKeywordInput('')
+  }
+
+  const removeKeyword = (kw: string) => {
+    setKeywordsLocal(prev => prev.filter(k => k !== kw))
+  }
+
+  const saveKeywords = async () => {
+    setKeywordsSaving(true)
+    try {
+      const res = await fetch('/api/account/edit-business', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seo_keywords: keywordsLocal }) })
+      if ((await res.json()).ok) await refreshUser()
+    } catch {}
+    finally { setKeywordsSaving(false) }
+  }
+
+  const submitUpdate = async () => {
+    if (!updateTitle.trim()) return
+    setUpdateSubmitting(true)
+    try {
+      const res = await fetch('/api/business/updates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: updateTitle, body: updateBody || null, photos: updatePhotos }),
+      })
+      const data = await res.json()
+      if (data.update) {
+        setBizUpdates(prev => [data.update, ...prev])
+        setShowUpdateForm(false)
+        setUpdateTitle('')
+        setUpdateBody('')
+        setUpdatePhotos([])
+      }
+    } catch {}
+    finally { setUpdateSubmitting(false) }
+  }
+
+  const deleteUpdate = async (id: number) => {
+    if (!confirm('Delete this update?')) return
+    const res = await fetch(`/api/business/updates?id=${id}`, { method: 'DELETE' })
+    if ((await res.json()).ok) {
+      setBizUpdates(prev => prev.filter(u => u.id !== id))
+    }
+  }
+
+  const handleUpdatePhotoUpload = async (file: File) => {
+    if (updatePhotos.length >= 3) return
+    setUpdatePhotoUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: form })
+      const data = await res.json()
+      if (data.url) setUpdatePhotos(prev => [...prev, data.url])
+    } catch {}
+    finally { setUpdatePhotoUploading(false) }
   }
 
   const handleReply = async (reviewId: number) => {
@@ -661,6 +752,123 @@ export default function AccountClient() {
                   <div key={platform} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span style={{ width: '80px', fontSize: '0.8125rem', fontWeight: 500, color: '#64748b', textTransform: 'capitalize' }}>{platform}</span>
                     <input value={socialsForm[platform] || ''} onChange={e => setSocialsForm(f => ({ ...f, [platform]: e.target.value }))} placeholder={`${platform}.com/yourbusiness`} style={{ ...inputStyle, flex: 1 }} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* SEO Keywords */}
+          <section style={{ ...cardStyle, marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.5rem' }}>
+              SEO Keywords <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: '0.8125rem' }}>({keywordsLocal.length}/10)</span>
+            </h3>
+            <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '0 0 0.75rem' }}>
+              Add keywords customers might search for (e.g., &quot;emergency plumber&quot;, &quot;same-day delivery&quot;)
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: keywordsLocal.length > 0 ? '10px' : '0' }}>
+              {keywordsLocal.map(kw => (
+                <span key={kw} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '4px',
+                  padding: '4px 10px', borderRadius: '1rem', fontSize: '0.8125rem',
+                  backgroundColor: '#eff6ff', color: '#2563eb', fontWeight: 500,
+                }}>
+                  {kw}
+                  <button onClick={() => removeKeyword(kw)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', fontSize: '0.875rem', padding: 0, lineHeight: 1 }}>&times;</button>
+                </span>
+              ))}
+            </div>
+            {keywordsLocal.length < 10 && (
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  value={keywordInput}
+                  onChange={e => setKeywordInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addKeyword() } }}
+                  placeholder="Type keyword + Enter"
+                  maxLength={30}
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <button onClick={addKeyword} style={editBtnStyle}>Add</button>
+              </div>
+            )}
+            {(JSON.stringify(keywordsLocal) !== JSON.stringify(user.seo_keywords || [])) && (
+              <button onClick={saveKeywords} disabled={keywordsSaving} style={{ marginTop: '10px', padding: '6px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontSize: '0.8125rem', fontWeight: 600, cursor: keywordsSaving ? 'not-allowed' : 'pointer', opacity: keywordsSaving ? 0.6 : 1 }}>
+                {keywordsSaving ? 'Saving...' : 'Save Keywords'}
+              </button>
+            )}
+          </section>
+
+          {/* Business Updates */}
+          <section style={{ ...cardStyle, marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>
+                Updates {bizUpdates.length > 0 && <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: '0.8125rem' }}>({bizUpdates.length})</span>}
+              </h3>
+              {!showUpdateForm && (
+                <button onClick={() => setShowUpdateForm(true)} style={editBtnStyle}>Post Update</button>
+              )}
+            </div>
+
+            {showUpdateForm && (
+              <div style={{ padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px', marginBottom: '12px', background: '#fafafa' }}>
+                <input
+                  value={updateTitle}
+                  onChange={e => setUpdateTitle(e.target.value)}
+                  placeholder="Update title"
+                  style={{ ...inputStyle, marginBottom: '8px', fontWeight: 600 }}
+                />
+                <textarea
+                  value={updateBody}
+                  onChange={e => setUpdateBody(e.target.value)}
+                  placeholder="Details (optional)"
+                  rows={3}
+                  style={{ ...inputStyle, resize: 'vertical', marginBottom: '8px', fontFamily: 'inherit' }}
+                />
+                {/* Photo uploads */}
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                  {updatePhotos.map((url, i) => (
+                    <div key={i} style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '6px', overflow: 'hidden' }}>
+                      <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button onClick={() => setUpdatePhotos(prev => prev.filter((_, j) => j !== i))} style={{ position: 'absolute', top: '2px', right: '2px', width: '18px', height: '18px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>x</button>
+                    </div>
+                  ))}
+                  {updatePhotos.length < 3 && (
+                    <label style={{ width: '64px', height: '64px', borderRadius: '6px', border: '2px dashed #93c5fd', backgroundColor: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: updatePhotoUploading ? 'wait' : 'pointer', opacity: updatePhotoUploading ? 0.5 : 1 }}>
+                      <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleUpdatePhotoUpload(f); e.target.value = '' }} disabled={updatePhotoUploading} />
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    </label>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={submitUpdate} disabled={updateSubmitting || !updateTitle.trim()} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontSize: '0.8125rem', fontWeight: 600, cursor: updateSubmitting ? 'not-allowed' : 'pointer', opacity: updateSubmitting || !updateTitle.trim() ? 0.6 : 1 }}>
+                    {updateSubmitting ? 'Posting...' : 'Post'}
+                  </button>
+                  <button onClick={() => { setShowUpdateForm(false); setUpdateTitle(''); setUpdateBody(''); setUpdatePhotos([]) }} style={editBtnStyle}>Cancel</button>
+                </div>
+              </div>
+            )}
+
+            {bizUpdates.length === 0 ? (
+              <p style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>No updates posted yet. Share news, promotions, or announcements with your customers.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {bizUpdates.map(u => (
+                  <div key={u.id} style={{ padding: '12px', borderLeft: '3px solid #2563eb', borderRadius: '0 8px 8px 0', backgroundColor: '#f8fafc' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: '#111827' }}>{u.title}</span>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '8px' }}>{new Date(u.created_at).toLocaleDateString()}</span>
+                      </div>
+                      <button onClick={() => deleteUpdate(u.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '0.75rem', fontWeight: 500, padding: 0 }}>Delete</button>
+                    </div>
+                    {u.body && <p style={{ fontSize: '0.8125rem', color: '#334155', margin: '4px 0 0', lineHeight: 1.5 }}>{u.body}</p>}
+                    {u.photos.length > 0 && (
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
+                        {u.photos.map((url, i) => (
+                          <img key={i} src={url} alt="" style={{ width: '48px', height: '48px', borderRadius: '4px', objectFit: 'cover' }} />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -9,6 +9,7 @@ import SearchAutocomplete from './components/SearchAutocomplete'
 import HomepageAd from './components/HomepageAd'
 import FeedbackWidget from './components/FeedbackWidget'
 import PushPrompt from './components/PushPrompt'
+import PageTracker from './components/PageTracker'
 
 const IS_PRELAUNCH = false // disabled — site is open
 
@@ -336,6 +337,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 
       {children}
 
+      {!hideNav && <PageTracker />}
       {!hideNav && <FeedbackWidget />}
       {!hideNav && user && <PushPrompt />}
 

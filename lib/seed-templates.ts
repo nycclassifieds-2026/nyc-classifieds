@@ -24,6 +24,83 @@ export function fill(s: string, v: Record<string, string>): string {
   return s.replace(/\{(\w+)\}/g, (_, k) => v[k] || k)
 }
 
+/**
+ * Vary text to reduce recognizable repetition across days.
+ * Randomly applies small organic mutations:
+ * - Drop or reorder a sentence (for multi-sentence descriptions)
+ * - Swap common words/phrases
+ * - Add/remove filler words
+ */
+const WORD_SWAPS: [RegExp, string[]][] = [
+  [/\bamazing\b/i, ['great', 'incredible', 'fantastic', 'solid']],
+  [/\bgreat\b/i, ['amazing', 'excellent', 'really good', 'solid']],
+  [/\blooking for\b/i, ['trying to find', 'searching for', 'need', 'want']],
+  [/\bhighly recommend\b/i, ['definitely recommend', 'strongly suggest', '10/10 recommend', 'cant recommend enough']],
+  [/\bperfect\b/i, ['exactly right', 'ideal', 'spot on', 'just right']],
+  [/\bincredible\b/i, ['unreal', 'amazing', 'fantastic', 'unbelievable']],
+  [/\bfriendly\b/i, ['nice', 'welcoming', 'warm', 'down to earth']],
+  [/\bdelicious\b/i, ['so good', 'fire', 'amazing', 'on point']],
+  [/\breliable\b/i, ['dependable', 'consistent', 'trustworthy', 'solid']],
+  [/\bcheap\b/i, ['affordable', 'reasonable', 'budget-friendly', 'not expensive']],
+  [/\bbeautiful\b/i, ['gorgeous', 'stunning', 'lovely', 'pretty']],
+  [/\bawesome\b/i, ['great', 'solid', 'amazing', 'the best']],
+]
+
+const FILLER_INSERTS = [
+  'honestly ', 'ngl ', 'tbh ', 'not gonna lie ', 'lowkey ', 'literally ', 'genuinely ',
+]
+
+export function varyText(text: string): string {
+  let result = text
+
+  // 30% chance: swap one word/phrase
+  if (Math.random() < 0.30) {
+    const eligible = WORD_SWAPS.filter(([re]) => re.test(result))
+    if (eligible.length > 0) {
+      const [re, alts] = pick(eligible)
+      result = result.replace(re, pick(alts))
+    }
+  }
+
+  // 15% chance: insert a filler word at start of a random sentence
+  if (Math.random() < 0.15) {
+    const sentences = result.split('. ')
+    if (sentences.length >= 2) {
+      const idx = rb(1, sentences.length - 1) // skip first sentence
+      const filler = pick(FILLER_INSERTS)
+      // Only insert if sentence doesn't already start with a filler-like word
+      if (!/^(honestly|ngl|tbh|not gonna|lowkey|literally|genuinely)/i.test(sentences[idx])) {
+        sentences[idx] = filler + sentences[idx].charAt(0).toLowerCase() + sentences[idx].slice(1)
+        result = sentences.join('. ')
+      }
+    }
+  }
+
+  // 20% chance: drop the last sentence (if 3+ sentences, keeps it from getting too short)
+  if (Math.random() < 0.20) {
+    const sentences = result.split('. ')
+    if (sentences.length >= 3) {
+      sentences.pop()
+      result = sentences.join('. ')
+      if (!result.endsWith('.')) result += '.'
+    }
+  }
+
+  // 10% chance: swap two adjacent sentences (if 3+)
+  if (Math.random() < 0.10) {
+    const sentences = result.split('. ')
+    if (sentences.length >= 3) {
+      const idx = rb(0, sentences.length - 2)
+      const tmp = sentences[idx]
+      sentences[idx] = sentences[idx + 1]
+      sentences[idx + 1] = tmp
+      result = sentences.join('. ')
+    }
+  }
+
+  return result
+}
+
 // ─── Geography ───
 
 export const BOROUGHS: Record<string, { lat: number; lng: number; nhs: string[] }> = {
@@ -152,59 +229,72 @@ export function filterSeasonal(templates: PorchTemplate[], month?: number): Porc
 
 export const PORCH: Record<string, PorchTemplate[]> = {
   recommendation: [
-    { t: 'Best pizza in {nh} — hands down', b: 'If you havent tried {place} on {street} you are missing out. Their margherita is perfect. Thin crust, fresh mozz, basil from their garden. Cash only.' },
-    { t: 'Amazing dentist in {nh}', b: 'Dr. {last} on {street} is incredible. No wait, gentle, takes most insurance. My whole family goes there now.' },
-    { t: 'Great daycare in {nh}', b: 'Little Stars on {street} has been amazing for our toddler. Clean, structured, and the staff genuinely care. Waitlist is worth it but so so worth the wait. Teachers send daily photos and my kid lights up every morning.' },
-    { t: 'Best coffee shop for remote work in {nh}', b: 'The cafe on {street} has great wifi, outlets everywhere, and they dont rush you. Oat milk latte is incredible.' },
-    { t: 'Tailor recommendation — {nh}', b: '{last} Tailoring on {street}. Hemmed my pants perfectly for $12. Quick turnaround, fair prices, been there 20 years.' },
-    { t: '{place} on {street} is ELITE', b: 'ngl the food at {place} is unmatched rn. went three times this week already. if u havent been ur literally sleeping on the best spot in {nh}' },
-    { t: 'Best bodega breakfast in {nh}', b: 'The bodega on {street} makes a bacon egg and cheese that changed my life. Fresh roll, perfect egg. $5. No cap.' },
-    { t: 'Shoutout to {place} in {nh}', b: 'Been going here for years and they never disappoint. Staff remembers your order. This is what makes NYC special.' },
-    { t: 'Best dumplings near {nh}', b: '{place} on {street}. 8 dumplings for $3.50. Pork and chive. Get the spicy sauce. Thank me later.' },
-    { t: 'Locksmith saved me — {nh}', b: 'Locked out at midnight. {last} Locksmith came in 20 minutes, $60, no BS upcharge. Saving their number forever.' },
-    { t: 'Great vet in {nh}', b: 'Dr. {last} at {street} Animal Hospital. Gentle with my anxious dog, transparent pricing, took the time to explain everything.' },
-    { t: 'yall NEED to try {place}', b: 'bro i just had the best meal of my entire life at {place} on {street}. im not even exaggerating rn. the portions are crazy and its mad cheap. {nh} is blessed fr fr' },
-    { t: 'I want to share a wonderful find in {nh}', b: 'After 40 years in this neighborhood, I thought I knew every shop on {street}. But {place} just opened and the quality is outstanding. The owner is a lovely young person who clearly takes pride in their work. Highly recommend paying them a visit.' },
-    { t: '{place} is that girl', b: 'ok so {place} on {street} just became my entire personality. the vibes are immaculate, the staff is so chill, and everything is reasonably priced?? in THIS economy?? {nh} stay winning' },
-    { t: 'Professional recommendation: {place}', b: 'As a business owner in {nh} for 15 years, I can confidently recommend {place} on {street}. Consistent quality, professional service, and fair pricing. They have earned our continued patronage.' },
-    { t: '{place} — trust me on this one', b: 'Look I dont post much but {place} on {street} deserves the hype. Went with my girl last Friday, food was amazing, drinks were strong, and the bill didnt make me cry. Rare W in {nh}.' },
-    { t: 'Best laundromat in {nh}', b: 'Clean Spin on {street}. Machines actually work, its clean, and the drop-off service is $1/lb. Game changer.' },
-    { t: 'ok hear me out — {place}', b: 'i know i know another food rec but {place} on {street} literally cured my depression. their special on tuesdays is insane. {nh} ppl already know but newcomers PLEASE go' },
-    { t: 'PHENOMENAL haircut at {street}', b: 'I have been searching for a good barber since I moved to {nh} two years ago and I finally found one. {last} on {street} gave me the best cut I have ever had. $25. Worth every single penny. Book ahead tho.' },
-    { t: 'Hidden gem alert — {nh}', b: '{place}. {street}. Go. Dont ask questions. Just order the special. Your taste buds will write me a thank you note.' },
-    { t: 'Had to put yall on — {place} in {nh}', b: 'Been holding this one close to the chest but {place} on {street} is too good to gatekeep. Everything on the menu slaps. The owner {last} is a real one.' },
-    { t: 'Best kept secret on {street}', b: 'Ive lived in {nh} for 30 years. Seen restaurants come and go. {place} is the real deal. Good food, honest prices, and they treat you like family. Thats all you need to know.' },
-    { t: 'Thank you {place} — you saved my dinner party', b: 'Forgot to order a cake for my daughters birthday and {place} on {street} whipped one up in 2 hours. Not only was it beautiful, my daughter said it was the best cake shes ever had. Supporting them forever.' },
-    { t: 'This neighborhood keeps surprising me', b: 'Found the coziest bookshop on {street}. The owner {last} recommended a book based on a 2 minute conversation and it became my favorite of the year. Thats the magic of small businesses in {nh}.' },
-    { t: '{place} goes above and beyond', b: 'Ordered delivery from {place} and they included a handwritten thank you note and an extra dessert. In this city where everything feels transactional, this felt genuinely human. Small gestures matter.' },
-    { t: 'Best customer service in all of {nh}', b: '{place} on {street} is what every business should aspire to be. They remembered I mentioned my mom was visiting from {city} and asked how her trip was going a WEEK later. That kind of care is rare.' },
-    { t: 'Why I love supporting local in {nh}', b: 'Went to {place} on {street} instead of ordering from a chain. The quality was better, the price was fair, and the owner thanked me personally. My money stays in {nh}. Thats how it should be.' },
-    { t: 'INCREDIBLE experience at {place}', b: 'Took my partner here for our anniversary and they surprised us with a complimentary dessert and a congratulations card signed by the staff. We almost cried. {nh} has heart and {place} is proof.' },
-    { t: 'finally found my spot in {nh}', b: 'been looking for a regular coffee shop since I moved here and {place} on {street} is officially it. the barista already knows my order after 3 visits. this is what home feels like.' },
+    { t: 'Best pizza in {nh}', b: '{place} on {street}. Margherita. Thin crust, fresh mozz. Cash only. Go' },
+    { t: 'Dentist — {nh}', b: 'Dr. {last} on {street}. No wait, gentle, takes most insurance. My whole family switched' },
+    { t: 'Daycare in {nh}', b: 'Little Stars on {street} has been amazing for our toddler. Staff genuinely cares. They send daily photos and my kid lights up every single morning walking in there. Waitlist is long but so worth it' },
+    { t: 'Best coffee shop for remote work', b: '{place} on {street}. Good wifi. Outlets. They dont rush you out' },
+    { t: 'Tailor on {street}', b: '{last} Tailoring. Hemmed my pants for $12. 20 years theyre been there' },
+    { t: '{place} on {street} is ELITE', b: 'went three times this week already. if u havent been ur sleeping on the best spot in {nh}' },
+    { t: 'bodega BEC on {street}', b: 'The bodega on {street} makes a bacon egg and cheese that changed my life. $5. Fresh roll every time' },
+    { t: '{place} in {nh}', b: 'Been going here for years. They remember my order. Thats the whole review' },
+    { t: 'Dumplings — {nh}', b: '{place}. {street}. 8 for $3.50. Pork and chive. Spicy sauce. Thank me later' },
+    { t: 'Locksmith saved me', b: 'Locked out at midnight on {street}. {last} came in 20 min. $60. No BS. Saving that number forever' },
+    { t: 'Vet — {nh}', b: 'Dr. {last} at {street}. Gentle with my anxious dog. Took the time to actually explain stuff instead of just handing me a bill. Transparent pricing' },
+    { t: 'yall NEED to try {place}', b: 'bro i just had the best meal at {place} on {street}. portions are insane and its cheap?? how. {nh} is blessed' },
+    { t: 'Wonderful find in {nh}', b: 'After 40 years in this neighborhood I thought I knew every shop on {street}. {place} just opened and the quality is outstanding. The owner clearly takes pride in their work' },
+    { t: '{place} is that girl', b: 'ok so {place} on {street} just became my entire personality. vibes immaculate. staff chill. reasonably priced in THIS economy?? {nh} stay winning' },
+    { t: '{place} — professional recommendation', b: 'As a business owner in {nh} for 15 years I can confidently recommend {place} on {street}. Consistent. Professional. Fair' },
+    { t: '{place} — trust me', b: '{place} on {street}. Went with my girl last Friday. Food was good. Drinks were strong. Bill didnt make me cry. Rare' },
+    { t: 'Laundromat — {nh}', b: 'Clean Spin on {street}. Machines work. Its clean. Drop-off is $1/lb' },
+    { t: 'hear me out — {place}', b: 'i know another food rec but {place} on {street} literally cured my depression. tuesday special is insane' },
+    { t: 'barber on {street}', b: 'Been looking for 2 years since I moved to {nh}. {last} on {street}. Best cut ive ever had. $25. Book ahead' },
+    { t: 'Hidden gem — {nh}', b: '{place}. {street}. Just go. Order the special. Dont ask questions' },
+    { t: '{place} in {nh} — putting yall on', b: 'Been gatekeeping this for too long. {place} on {street}. Everything on the menu. The owner {last} is a real one' },
+    { t: 'Best kept secret on {street}', b: 'Lived in {nh} 30 years. Seen em come and go. {place} is the real deal' },
+    { t: 'Thank you {place}', b: 'Forgot to order a cake for my daughters birthday. {place} on {street} whipped one up in 2 hours and my daughter said it was the best cake shes ever had' },
+    { t: 'Bookshop on {street}', b: 'The owner {last} recommended a book based on a 2 minute conversation and it became my favorite of the year. Thats it thats the post' },
+    { t: '{place} goes above and beyond', b: 'Delivery order. They included a handwritten thank you note and an extra dessert. In this city. Small gestures matter' },
+    { t: '{place} remembered my mom', b: 'I mentioned my mom was visiting from {city} and a WEEK later they asked how her trip was going. That kind of care doesnt exist anymore except at {place} on {street}' },
+    { t: 'Support local — {nh}', b: 'Went to {place} instead of a chain. Better quality, fair price, owner thanked me personally. My money stays in {nh}' },
+    { t: 'Anniversary at {place}', b: 'They surprised us with a complimentary dessert and a card signed by the staff. My partner almost cried. {nh} has heart' },
+    { t: 'found my spot', b: '{place} on {street}. Barista already knows my order after 3 visits. This is what home feels like' },
+    { t: '{place} on {street} honestly', b: 'I dont usually post food recs but this place earned it. Went for the first time last week and already went back twice' },
+    { t: 'Plumber — {nh}', b: 'Toilet was about to flood at 11pm on a Sunday. {last} picked up the phone and was there in 30 minutes. Fair price. No emergency upcharge nonsense. Putting this here so I dont lose the number' },
+    { t: 'mechanic near {nh}', b: '{last} on {street}. Honest. Told me I DIDNT need the repair another shop quoted me $800 for. Who does that anymore. Going there for everything now' },
+    { t: 'Dry cleaner — {nh}', b: '{last} Cleaners on {street}. Got a stain out of my coat that I thought was permanent. $8. Same day. Ive been going to them since' },
+    { t: 'pharmacist on {street}', b: 'The pharmacist at the place on {street} actually takes the time to explain your medication and checks for interactions. She remembered my name the second time I went in. Switching all my prescriptions there' },
   ],
   question: [
-    { t: 'Good gym near {nh}?', b: 'Just moved here. Looking for a no-frills gym with free weights. Not Planet Fitness. Budget around $50-80/month.' },
-    { t: 'Anyone know a good plumber?', b: 'Kitchen sink backed up and Draino isnt cutting it. Need someone reliable who wont overcharge. {nh} area.' },
-    { t: 'Best grocery store in {nh}?', b: 'New to the neighborhood. Where does everyone shop? Looking for good produce and reasonable prices.' },
-    { t: 'Parking situation in {nh}?', b: 'Thinking about getting a car. How bad is street parking around here? Any monthly lots that arent insane?' },
-    { t: 'Dog-friendly restaurants in {nh}?', b: 'Have a well-behaved lab. Looking for places with outdoor seating that welcome dogs.', s: WARM },
-    { t: 'Best barber in {nh}?', b: 'Need a good fade. Tired of chain places. Who does everyone go to around here?' },
-    { t: 'Internet provider — {nh}?', b: 'Moving to {nh}. Optimum or Fios? Anyone have experience? Need reliable wifi for WFH.' },
-    { t: 'Where to watch the game in {nh}?', b: 'Looking for a sports bar with big screens, decent wings, not too packed. Any spots?' },
-    { t: 'Cheap eats in {nh}?', b: 'Im broke but hungry. What are the best meals under $10 around here? Hit me with your spots.' },
-    { t: 'Quiet bar in {nh}?', b: 'Looking for somewhere I can actually hear my date talk. Not looking for a club scene.' },
-    { t: 'where the good food at in {nh}??', b: 'just moved here from {city} and i need to find my spots asap. dont say applebees lmaooo. whats the go-to for late night eats around {street}??' },
-    { t: 'Good pediatrician in {nh}?', b: 'New baby, need a pediatrician taking new patients. Prefer someone who doesnt rush appointments.' },
-    { t: 'yo who does yall hair in {nh}', b: 'need a braider or stylist thats not gonna have me sitting for 9 hours and charge me 400. somewhere near {street} ideally. drop names pls' },
-    { t: 'HELP — need emergency locksmith {nh}', b: 'locked myself out AGAIN. its 11pm. who do i call thats not gonna charge me $300 to open my own door. {street} area. pls respond fast im freezing' },
-    { t: 'Can anyone recommend a good accountant?', b: 'Tax season is approaching and I need a CPA in the {nh} area. Preferably someone experienced with small business returns and freelance income. Reasonable rates appreciated.' },
-    { t: 'Daycare recs for {nh}??', b: 'FTM going back to work in 3 months and I am PANICKING about childcare. Need something near {street} thats not gonna cost my entire salary. How do ppl afford this lol help' },
-    { t: 'which {train} station has an elevator??', b: 'my mom is visiting and she uses a walker. we live near {street} in {nh}. anyone know which stations nearby are actually accessible? the MTA website is useless as usual' },
-    { t: 'Reliable mechanic in {nh}?', b: 'My check engine light has been on for a week and Im scared to find out why. Need someone honest near {street} who wont try to sell me a whole new engine for a loose gas cap.' },
-    { t: 'tbh where do ppl go out in {nh}', b: 'im 23 and just moved here and i literally have no idea where ppl my age go on weekends. bars? clubs? rooftops? someone give me a whole list im begging' },
-    { t: 'Best spot to study near {street}?', b: 'College kid looking for a quiet place with wifi. Library is always packed. Coffee shop recs welcome. Bonus if they dont judge me for sitting there 5 hours with one latte.' },
-    { t: 'Looking for a piano teacher — {nh}', b: 'My daughter is 8 and wants to learn piano. We live near {street}. Looking for someone patient and good with kids. In-home lessons preferred if possible.' },
-    { t: 'Any good thrift stores in {nh}?', b: 'Trying to furnish my apartment without going broke. Where are the good secondhand spots around here? Not looking for "vintage" priced at retail lol' },
+    { t: 'Gym near {nh}?', b: 'No-frills. Free weights. Not Planet Fitness. $50-80/month' },
+    { t: 'Plumber — {nh}', b: 'Kitchen sink backed up. Draino isnt working. Who do yall call?' },
+    { t: 'Grocery store — {nh}?', b: 'Just moved here. Where does everyone shop? I need good produce that isnt gonna cost me $15 for 3 avocados' },
+    { t: 'Parking in {nh}', b: 'Thinking about getting a car. How bad is it. Be honest' },
+    { t: 'Dog-friendly restaurants?', b: 'Well-behaved lab. Outdoor seating. {nh} area. Go', s: WARM },
+    { t: 'Barber in {nh}?', b: 'Need a good fade. Im tired of chain places' },
+    { t: 'Internet — {nh}', b: 'Moving to {nh}. Optimum or Fios? I work from home so it needs to actually work' },
+    { t: 'Sports bar — {nh}', b: 'Big screens. Decent wings. Not too packed. Does this exist' },
+    { t: 'Cheap eats {nh}', b: 'Im broke but hungry. Best meals under $10. Go' },
+    { t: 'Quiet bar near {nh}?', b: 'Need somewhere I can hear my date talk. Not a club' },
+    { t: 'where the good food at in {nh}', b: 'just moved from {city}. need spots. dont say applebees lol. late night eats near {street}??' },
+    { t: 'Pediatrician — {nh}', b: 'New baby. Need a pediatrician who actually takes time with you and isnt rushing you out the door in 5 minutes' },
+    { t: 'who does yall hair in {nh}', b: 'braider or stylist near {street}. not trying to sit for 9 hours and pay 400. drop names' },
+    { t: 'LOCKSMITH NOW — {nh}', b: 'locked out. again. its 11pm. {street}. who do I call thats not gonna charge $300 to open my own door' },
+    { t: 'Accountant — {nh}', b: 'Tax season. Need a CPA. Small business + freelance returns. Reasonable rates' },
+    { t: 'Daycare recs?? {nh}', b: 'Going back to work in 3 months. PANICKING. Need something near {street} that wont cost my entire salary. How does anyone afford this' },
+    { t: '{train} station with elevator??', b: 'Mom visiting. She uses a walker. Near {street}. Which stations are actually accessible? MTA website is useless' },
+    { t: 'Mechanic — {nh}', b: 'Check engine light has been on for a week. Need someone honest near {street} who wont try to sell me a new engine for what is probably a loose gas cap' },
+    { t: 'where do ppl go out in {nh}', b: '23, just moved here. No idea where people my age go on weekends. Bars? Rooftops? Give me everything' },
+    { t: 'Study spot near {street}', b: 'College kid. Need quiet + wifi. Library is always full. Coffee shop that wont judge me for 5 hours with one latte' },
+    { t: 'Piano teacher — {nh}', b: 'My daughter is 8. We live near {street}. Someone patient who comes to your home if possible' },
+    { t: 'Thrift stores in {nh}?', b: 'Furnishing my apartment on a budget. Where are the actual secondhand spots. Not "vintage" priced at retail' },
+    { t: 'Laundromat near {street}?', b: 'My building doesnt have laundry. Need somewhere nearby that isnt sketchy and machines actually work. Is that too much to ask' },
+    { t: 'Late night food in {nh}', b: 'Whats open after midnight around here. I work late and my options have been bodega chips for 3 weeks straight' },
+    { t: 'Dog walker — {nh}', b: 'Need someone to walk my dog midday while I work. Shes a sweetie but she pulls. Near {street}. Weekdays' },
+    { t: 'Dermatologist in {nh}', b: 'Need one thats actually taking new patients. Every place I call has a 4 month waitlist. Am I doing this wrong' },
+    { t: 'best bagel in {nh}', b: 'this is a serious question. no wrong answers except Dunkin' },
+    { t: 'Does anyone know a notary near {street}', b: 'Need something notarized before Friday. Banks want appointments weeks out. UPS store maybe? Help' },
+    { t: 'Roach situation', b: 'Moved into my new apartment in {nh} and its... bad. Who do people use for pest control thats not a rip off and actually works. I need someone this week' },
+    { t: 'Where to donate clothes — {nh}', b: 'I have 4 bags of clothes. Housing Works? Salvation Army? Whats closest to {street}. I dont have a car' },
   ],
   alert: [
     { t: 'Package thefts on {street}', b: 'Third package stolen this week from our building lobby. Be careful. Delivery drivers leaving packages outside. Talk to your super.' },
@@ -657,3 +747,255 @@ export const REPLIES_LONG = [
 
 /** Legacy export for backwards compat */
 export const REPLY_POOL = [...REPLIES_SHORT, ...REPLIES_MEDIUM, ...REPLIES_LONG]
+
+// ─── Context-aware reply pools by post type ───
+// Each pool has short, medium, and long replies that make sense for that post type
+
+export const REPLIES_BY_TYPE: Record<string, { short: string[]; medium: string[]; long: string[] }> = {
+  recommendation: {
+    short: ['W post', 'noted', 'bookmarked', 'GOAT post', 'vouch', 'need this', 'facts.', 'real.', 'saving this', 'respect'],
+    medium: [
+      'Can confirm — went there last week. Legit.',
+      'Been going here for years. Great rec.',
+      'The staff is so friendly there.',
+      'Tell them {first} sent you.',
+      'My family has been going there for years.',
+      'Seconding this 100%.',
+      'The owner is the nicest person.',
+      'Prices went up but still worth it.',
+      'Can vouch for this. A+ service.',
+      'say less im going tomorrow',
+      'bro THANK YOU',
+      'no because WHY did nobody tell me about this sooner',
+      'My husband and I will definitely check this out.',
+      'I brought my mother here last week and she loved it.',
+      'ok but have yall tried the one on the next block tho? even better imo',
+      'been here 20 years and I STILL learn new stuff from this app',
+      'How did I not know about this?? I live 2 blocks away!',
+      'Do they deliver? Asking for my lazy self.',
+    ],
+    long: [
+      'OK so I actually went there last weekend based on a recommendation from someone else on here and I have to say it completely lived up to the hype. The staff was incredibly friendly, the prices were fair, and the quality was top notch. Already told all my neighbors about it.',
+      'Ok I have to chime in here because I have been a regular at this place for almost a decade. What makes it special is the consistency. Rain or shine, busy or slow, they always deliver. The owner knows my name and my order. You dont find that kind of thing anymore.',
+      'Im not even gonna front — I have been gatekeeping this place for TWO YEARS because I didnt want it to get too crowded. But now that the secret is out I might as well confirm it. Everything this person said is facts.',
+      'I respectfully disagree but appreciate you sharing your perspective. I went there twice and both times the service was slow and the quality was just OK. Maybe I caught them on a bad day.',
+      'I took my kids here and they had a blast. Highly recommend for families. The staff was patient with my toddler having a meltdown and they even brought out some crayons.',
+    ],
+  },
+  question: {
+    short: ['DM me', 'following', '+1 need this too', 'bump', 'same question lol', 'good question'],
+    medium: [
+      'DM me, I have a recommendation.',
+      'Just what I was looking for.',
+      'I asked the same thing when I moved here.',
+      'Try the spot on {street}, been going for years.',
+      'Are they open weekends?',
+      'How much does it usually cost?',
+      'Do they take walk-ins?',
+      'Any alternatives on a budget?',
+      'Genuine question — is there parking nearby?',
+      'yoooo I needed this info thank u',
+      'Let me know if you need anything else.',
+      'Had a different experience but glad it works for you.',
+      'tbh I had a mid experience but maybe Ill give it another shot',
+    ],
+    long: [
+      'Big ups to the OP for posting this. Community info like this is everything. I moved here 3 years ago not knowing a soul and posts like this helped me find my barber, my mechanic, my favorite restaurant, and honestly some of my closest friends.',
+      'As someone who has lived in this neighborhood for over 15 years I can tell you that finding good recommendations like this is what makes our community special.',
+      'I literally created an account just to respond to this post. I have been looking for exactly this kind of recommendation since I moved here 6 months ago. Every time I asked people in person they gave me vague answers.',
+    ],
+  },
+  alert: {
+    short: ['thanks for the heads up', 'wow be safe yall', 'noted', 'yikes', 'stay safe', 'be careful out there', 'good looking out'],
+    medium: [
+      'Thanks for the heads up! Sharing with my building group chat.',
+      'I saw this too. Crazy. Everyone be careful.',
+      'Called 311 about this yesterday. No response yet.',
+      'My neighbor said the same thing. Stay safe everyone.',
+      'Good looking out for the community.',
+      'I live on that block. Can confirm its bad.',
+      'This has been going on for weeks. Glad someone is posting about it.',
+      'Does anyone know if they fixed it yet?',
+      'Shared with my building group chat.',
+      'I almost got caught up in that too. Wild.',
+    ],
+    long: [
+      'Thank you for posting this. I live two blocks away and had no idea. Just told all my neighbors. This is exactly why this app matters — we look out for each other.',
+      'I want to add to this — I saw the same thing from my window. Called the precinct and they said they are aware but didnt give a timeline. Frustrating but at least people are reporting it. Keep filing 311 complaints everyone, volume matters.',
+    ],
+  },
+  'lost-and-found': {
+    short: ['hope you find it', 'will keep an eye out', 'sharing', 'so sorry', 'checking my block', 'sending this around'],
+    medium: [
+      'Will keep an eye out in my area. Hope you find it soon.',
+      'Sharing with my neighbors. Good luck.',
+      'I walk that route every day. Ill look for it tomorrow.',
+      'Check with the bodega on the corner — they see everything.',
+      'Try posting on the Nextdoor app too. More eyes the better.',
+      'I think I saw something like that near {street} yesterday? DM me.',
+      'So sorry. I know how stressful this is. Will share.',
+      'My heart goes out to you. Checking my building lobby.',
+      'Have you tried calling the precinct lost and found?',
+      'Sending this to everyone I know in the area.',
+    ],
+    long: [
+      'Oh no. I lost my wallet last year around the same area and someone actually returned it with everything inside. There are good people out here. Dont lose hope — keep checking and keep posting. Ill spread the word.',
+      'I live on that block and I will literally keep my eyes open every time I walk by. Also check the local Facebook group if you havent already — people post found items there too. Wishing you the best.',
+    ],
+  },
+  'pet-sighting': {
+    short: ['just saw it!', 'will keep looking', 'sharing', 'poor baby', 'hope they find the owner', 'checking my area'],
+    medium: [
+      'I think I saw the same animal near {street} earlier today.',
+      'Can someone call animal control? They can help safely.',
+      'My neighbor fosters rescues — DMing you their info.',
+      'Ill check my block after work. Poor thing.',
+      'Has anyone contacted the local shelter?',
+      'I have food and water I can leave out.',
+      'Sharing this on my building group chat.',
+      'Walked by there 20 min ago and didnt see it. Might have moved on.',
+    ],
+    long: [
+      'Thank you for posting this. So many lost pets end up ok because of people like you who take the time to report sightings. I volunteer at a rescue and we see reunions happen all the time from posts exactly like this.',
+    ],
+  },
+  event: {
+    short: ['im there', 'sounds fun', 'pulling up', 'cant wait', 'saved!!', 'count me in', 'need this', 'lets goooo'],
+    medium: [
+      'Anyone want to go together? DM me.',
+      'Been meaning to check this out.',
+      'Went last time and it was great.',
+      'What time does it end?',
+      'Is it kid-friendly? Asking for a parent.',
+      'Sending this to my partner.',
+      'This is why I love this neighborhood.',
+      'screenshotted this whole thread lol',
+      'Going this weekend for sure.',
+      'Is there parking nearby or should I take the train?',
+      'Last time was so much fun. Def going again.',
+    ],
+    long: [
+      'We went to this last time and it was honestly one of the best nights we have had in this neighborhood. The vibes were perfect, the people were friendly, and my kids had a blast. Already putting it on the calendar.',
+      'So my wife and I actually went on a date night there last Friday and it was genuinely one of the best evenings we have had in a long time. Sometimes you forget how many incredible hidden gems are right in your own neighborhood.',
+    ],
+  },
+  'stoop-sale': {
+    short: ['omw', 'dibs on the records', 'how early can I come', 'saved', 'pulling up saturday'],
+    medium: [
+      'Do you have any vinyl records?',
+      'Ill come by Saturday morning for sure.',
+      'Is the furniture still available?',
+      'Any kids stuff? My daughter just outgrew everything.',
+      'Can I come Friday to look? I work Saturdays.',
+      'Sending this to my roommate — we need furniture.',
+    ],
+    long: [
+      'I love stoop sales in this neighborhood. Last time I found a vintage lamp for $5 that would have been $200 at a "vintage" shop in Manhattan. Ill definitely swing by Saturday.',
+    ],
+  },
+  'garage-sale': {
+    short: ['omw', 'any tools left?', 'saved', 'coming saturday', 'cash ready'],
+    medium: [
+      'Any power tools left? Looking for a drill.',
+      'Ill be there early. Do you accept Venmo?',
+      'Is the furniture still available?',
+      'Great deals. Went to your last one too.',
+      'Any kitchen appliances? Moving into a new place.',
+    ],
+    long: [
+      'I love garage sales in this area. Last time someone was selling a table saw for $50 that still works perfectly. These kinds of neighborhood sales are the best way to find deals in NYC. See you Saturday.',
+    ],
+  },
+  volunteer: {
+    short: ['im in', 'count me in', 'signing up', 'beautiful', 'we need more of this', 'respect', 'love this'],
+    medium: [
+      'This is amazing. Signing up for Saturday.',
+      'Can I bring my kids? They need to see this.',
+      'We need more of this in the neighborhood.',
+      'Ive been looking for volunteer opportunities nearby. Thank you.',
+      'How many people do you need? I can bring friends.',
+      'This is what community looks like.',
+    ],
+    long: [
+      'As a small business owner in the area its nice to see neighbors supporting each other like this. We all go through tough times and knowing the community has your back makes all the difference. Count me in.',
+    ],
+  },
+  welcome: {
+    short: ['welcome!', 'youll love it here', 'welcome to the neighborhood!'],
+    medium: [
+      'Welcome to the neighborhood!',
+      'You are going to love it here.',
+      'I live on the same block. Welcome!',
+      'DM me if you need restaurant recs. Ive been here 10 years.',
+      'Best decision you ever made. This neighborhood is special.',
+      'Welcome! The bodega on the corner is your new best friend.',
+      'Check out the park near {street}. Best kept secret.',
+    ],
+    long: [
+      'Welcome! I moved here 5 years ago from the same city and I never looked back. The neighborhood has everything you need and the people are genuinely friendly. DM me if you want specifics — happy to share my favorite spots.',
+      'Congrats on the move! Pro tip: introduce yourself to the bodega owner on the corner. Once they know your name and your order, you are officially a local. Also the farmers market on Saturday is a must.',
+    ],
+  },
+  shoutout: {
+    short: ['love this', 'this!!!', 'facts', 'real.', 'W', 'needed this today', 'faith in humanity'],
+    medium: [
+      'This is why I love this neighborhood.',
+      'We need more posts like this.',
+      'This made my day ngl.',
+      'Stuff like this is why I love living here.',
+      'THIS is community. This is what its about.',
+      'Faith in humanity restored. Thank you.',
+      'I need more of this energy on my feed.',
+      'This is the most wholesome thing Ive seen all week.',
+    ],
+    long: [
+      'Can we just appreciate how wholesome this thread is?? In a city of 8 million people, strangers helping strangers. This is the NYC I fell in love with. Not the one you see on the news. The real one.',
+      'My grandmother used to take me to a place just like this when I was a kid growing up in this neighborhood. Those memories are some of my most treasured. Its beautiful to see a new generation discovering spots that carry that same spirit.',
+    ],
+  },
+  seasonal: {
+    short: ['love this season', 'so true', 'facts', 'needed this', 'same'],
+    medium: [
+      'This is my favorite time of year in the neighborhood.',
+      'Already looking forward to it.',
+      'Thanks for the reminder! Almost forgot.',
+      'This is what makes this neighborhood special.',
+      'Going this weekend for sure.',
+    ],
+    long: [
+      'Every year I look forward to this. The neighborhood really comes alive and you can feel the energy change. Grateful to live here.',
+    ],
+  },
+  carpool: {
+    short: ['DM me', 'interested', 'what time?', 'im down'],
+    medium: [
+      'DM me — I go the same direction.',
+      'What time do you usually leave?',
+      'Interested. Is this every day or just weekdays?',
+      'I might be able to do this 2-3 days a week.',
+      'My schedule is flexible. Lets figure it out.',
+    ],
+    long: [
+      'I have been looking for a carpool buddy for months. The commute alone is brutal and splitting gas would save me a ton. DMing you now.',
+    ],
+  },
+  group: {
+    short: ['im in', 'DM me', 'count me in', 'sounds perfect', 'this is exactly what I need'],
+    medium: [
+      'This sounds great. DMing you now.',
+      'Ive been looking for exactly this. Count me in.',
+      'What day/time works best? I can be flexible.',
+      'Can beginners join? Im just getting started.',
+      'My partner and I are both interested. Is that ok?',
+      'Went to something like this before and it was awesome.',
+    ],
+    long: [
+      'This is exactly what I have been looking for since I moved here. Having a regular group to do things with makes such a difference. DMing you now. Hope there is still room.',
+    ],
+  },
+}
+
+// Fallback: for post types not in REPLIES_BY_TYPE, use the generic pools
+export function getRepliesForType(postType: string): { short: string[]; medium: string[]; long: string[] } {
+  return REPLIES_BY_TYPE[postType] || { short: REPLIES_SHORT, medium: REPLIES_MEDIUM, long: REPLIES_LONG }
+}

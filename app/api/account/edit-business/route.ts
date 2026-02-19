@@ -49,6 +49,13 @@ export async function POST(request: NextRequest) {
     updates.photo_gallery = photo_gallery
   }
   if (social_links !== undefined) updates.social_links = social_links
+  if (body.seo_keywords !== undefined && Array.isArray(body.seo_keywords)) {
+    const keywords = body.seo_keywords
+      .map((k: string) => String(k).trim().slice(0, 30))
+      .filter((k: string) => k.length > 0)
+      .slice(0, 10)
+    updates.seo_keywords = keywords
+  }
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'No fields to update' }, { status: 400 })

@@ -9,10 +9,10 @@
 
 import { SupabaseClient } from '@supabase/supabase-js'
 import {
-  pick, rb, nhName, fill, filterSeasonal,
+  pick, rb, nhName, fill, filterSeasonal, varyText,
   BOROUGHS, BOROUGH_WEIGHTS, NAMES, DEMO_WEIGHTS,
   STREETS, PLACES, CITIES, HOBBIES, MOVIES, BOOKS, TRAINS,
-  PORCH, REPLIES_SHORT, REPLIES_MEDIUM, REPLIES_LONG,
+  PORCH, getRepliesForType,
 } from './seed-templates'
 import { moderateFields } from './porch-moderation'
 
@@ -86,68 +86,74 @@ function getToneProfile(userId: number): ToneProfile {
   return TONES[userId % TONES.length]
 }
 
+/**
+ * Apply subtle tone to BODY text only.
+ * Titles are never transformed — they stay clean and readable.
+ * Most tones are light touches: a trailing phrase, slight punctuation shift.
+ * Templates already have built-in voice variety, so tone is seasoning, not a rewrite.
+ */
 function applyTone(text: string, tone: ToneProfile): string {
+  // 40% chance of no transformation at all — keeps variety natural
+  if (Math.random() < 0.40) return text
+
   switch (tone) {
     case 'gen_z_chill':
-      return text.toLowerCase().replace(/\./g, '').replace(/!+/g, '').replace(/,\s/g, ' ').trim()
-    case 'gen_z_hype':
-      return text.replace(/\./g, ' fr fr').replace(/!/, ' NO CAP')
     case 'gen_z_dry':
-      return text.toLowerCase().replace(/!/g, '.').replace(/\.\./g, '.').trim()
+      // Subtle: just drop trailing period sometimes
+      return Math.random() < 0.5 ? text.replace(/\.$/,'') : text
+    case 'gen_z_hype':
+      // Occasional emphasis on last sentence only
+      return Math.random() < 0.5 ? text.replace(/\.$/,' fr') : text
     case 'millennial_earnest':
-      return text.replace(/\.$/, ' tbh').replace(/!$/, ' honestly')
+      return text.replace(/\.$/, Math.random() < 0.5 ? ' tbh.' : ' honestly.')
     case 'millennial_ironic':
-      return text.replace(/\.$/, ' lol').replace(/!$/, ' I guess')
+      return text.replace(/\.$/, Math.random() < 0.5 ? ' lol' : ' but yeah.')
     case 'millennial_anxious':
-      return text.replace(/\.$/, '...right?').replace(/!$/, '!! (asking for a friend)')
+      return Math.random() < 0.4 ? text.replace(/\.$/, '...right?') : text
     case 'boomer_formal':
-      return text.replace(/(^|\. )([a-z])/g, (_, pre, c) => pre + c.toUpperCase()).replace(/dont/g, 'do not').replace(/cant/g, 'cannot')
-    case 'boomer_warm':
-      return text.replace(/\.$/, '. God bless.')
-    case 'boomer_grumpy':
-      return text.replace(/\.$/, '. But what do I know.')
-    case 'texter_fast':
-      return text.toLowerCase().replace(/\./g, '').replace(/you/g, 'u').replace(/are/g, 'r').replace(/to /g, '2 ').replace(/for /g, '4 ').replace(/'/g, '')
-    case 'texter_emoji':
-      return text.replace(/\./g, ' ').replace(/!/, ' ').trim()
-    case 'texter_minimal':
-      return text.toLowerCase().replace(/[.!,]/g, '').trim()
     case 'professional_polished':
-      return text.replace(/(^|\. )([a-z])/g, (_, pre, c) => pre + c.toUpperCase()).replace(/dont/g, 'do not').replace(/cant/g, 'cannot').replace(/wont/g, 'will not')
+      // Capitalize sentence starts, expand one contraction
+      return text.replace(/(^|\. )([a-z])/g, (_, pre, c) => pre + c.toUpperCase())
+    case 'boomer_warm':
+      return text // Templates already have warm tone built in
+    case 'boomer_grumpy':
+      return Math.random() < 0.3 ? text.replace(/\.$/, '. Just saying.') : text
+    case 'texter_fast':
+    case 'texter_minimal':
+      // Just drop trailing punctuation — don't butcher the whole text
+      return text.replace(/\.$/,'')
+    case 'texter_emoji':
+      return text // No-op, templates already vary
     case 'professional_casual':
       return text.replace(/(^|\. )([a-z])/g, (_, pre, c) => pre + c.toUpperCase())
     case 'storyteller_long':
-      return text
     case 'storyteller_nostalgic':
-      return text.replace(/\.$/, '. Reminds me of the old days.')
-    case 'straight_shooter':
-      return text.replace(/!+/g, '.').replace(/\.\./g, '.')
-    case 'hype_beast':
-      return Math.random() < 0.3 ? text.toUpperCase() : text.replace(/\.$/, '!!!')
-    case 'chill_surfer':
-      return text.replace(/\./g, '~').replace(/!/g, ' dude')
-    case 'chill_stoner':
-      return text.replace(/\./g, '...').replace(/!/g, '...')
-    case 'parent_tired':
-      return text.replace(/\.$/, '. (If I can stay awake.)')
     case 'parent_proud':
-      return text
+      return text // These tones are already in the template voice
+    case 'straight_shooter':
+      return text.replace(/!+$/,'.')
+    case 'hype_beast':
+      return Math.random() < 0.3 ? text.replace(/\.$/,'!!') : text
+    case 'chill_surfer':
+    case 'chill_stoner':
+      return text // No-op — the surfer/stoner regex was destroying content
+    case 'parent_tired':
+      return Math.random() < 0.3 ? text.replace(/\.$/, '. If I can stay awake lol.') : text
     case 'old_school_nyc':
-      return text.replace(/\.$/, ', ya know what I mean?')
+      return Math.random() < 0.3 ? text.replace(/\.$/, '. You know how it is.') : text
     case 'old_school_brooklyn':
-      return text.replace(/\.$/, '. Thats how we do it around here.')
+      return text
     case 'poet_lyrical':
-      return text.replace(/\./g, ' —')
     case 'poet_haiku':
-      return text.replace(/\. /g, '.\n')
+      return text // Never transform prose into pseudo-poetry
     case 'immigrant_grateful':
-      return text.replace(/\.$/, '. This city is beautiful.')
+      return Math.random() < 0.2 ? text.replace(/\.$/, '. Love this city.') : text
     case 'transplant_excited':
-      return text.replace(/\.$/, '. I love this neighborhood!')
+      return Math.random() < 0.2 ? text.replace(/\.$/, '. Still getting used to everything here.') : text
     case 'activist_passionate':
-      return text.replace(/\.$/, '. We need more of this.')
+      return Math.random() < 0.3 ? text.replace(/\.$/, '. Community matters.') : text
     case 'local_historian':
-      return text.replace(/\.$/, '. Been here long enough to know.')
+      return Math.random() < 0.3 ? text.replace(/\.$/, '. Seen a lot of changes around here.') : text
     default:
       return text
   }
@@ -370,8 +376,8 @@ function generatePorchPost(user: SeedUser, created_at: string, postType: string,
   const vars = generateTemplateVars(user)
   const tone = getToneProfile(user.id)
 
-  const title = applyTone(fill(tmpl.t, vars).slice(0, 100), tone)
-  const body = applyTone(fill(tmpl.b, vars).slice(0, 500), tone)
+  const title = fill(tmpl.t, vars).slice(0, 100) // Never transform titles
+  const body = applyTone(varyText(fill(tmpl.b, vars)).slice(0, 500), tone)
 
   const pinned = (postType === 'lost-and-found' || postType === 'pet-sighting') && Math.random() < 0.10
   const expH = postType === 'alert' ? 48 : (postType === 'lost-and-found' || postType === 'pet-sighting') ? 72 : 720
@@ -389,13 +395,14 @@ function generatePorchPost(user: SeedUser, created_at: string, postType: string,
   }
 }
 
-function generateReply(user: SeedUser) {
+function generateReply(user: SeedUser, postType?: string) {
+  const pool = getRepliesForType(postType || '')
   const roll = Math.random()
   let body: string
-  if (roll < 0.30) body = pick(REPLIES_SHORT)
-  else if (roll < 0.80) body = pick(REPLIES_MEDIUM)
-  else body = pick(REPLIES_LONG)
-  body = body.replace('{first}', user.name.split(' ')[0] || 'Friend')
+  if (roll < 0.30) body = pick(pool.short)
+  else if (roll < 0.80) body = pick(pool.medium)
+  else body = pick(pool.long)
+  body = body.replace('{first}', user.name.split(' ')[0] || 'Friend').replace('{street}', pick(STREETS))
   return applyTone(body, getToneProfile(user.id))
 }
 
@@ -533,12 +540,12 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
     }
   }
 
-  // Create replies
+  // Create replies — context-aware based on post type
   if (replyTarget > 0) {
     const cutoff = new Date(Date.now() - 48 * 3600000).toISOString()
     const { data: recentPosts } = await db
       .from('porch_posts')
-      .select('id, user_id')
+      .select('id, user_id, post_type')
       .gte('created_at', cutoff)
       .limit(200)
 
@@ -546,7 +553,7 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
       for (let i = 0; i < replyTarget; i++) {
         const targetPost = pick(recentPosts)
         const replyUser = seedUsers.find(u => u.id !== targetPost.user_id) || pick(seedUsers)
-        const replyBody = generateReply(replyUser)
+        const replyBody = generateReply(replyUser, targetPost.post_type)
 
         const modResult = moderateFields(replyBody)
         if (modResult.blocked) { skippedModeration++; continue }

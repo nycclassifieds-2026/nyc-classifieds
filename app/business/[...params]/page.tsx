@@ -1,53 +1,98 @@
-'use client'
-
-import { use, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import type { Metadata } from 'next'
+import { notFound, redirect } from 'next/navigation'
+import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { slugify } from '@/lib/data'
+import { getCategorySeo, SITE_URL } from '@/lib/seo'
 import BusinessProfileClient from './BusinessProfileClient'
 
-function slugify(s: string) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+interface PageProps {
+  params: Promise<{ params: string[] }>
 }
 
-export default function BusinessProfilePage({ params }: { params: Promise<{ params: string[] }> }) {
-  const { params: segments } = use(params)
+async function getBusinessBySlug(slug: string) {
+  const db = getSupabaseAdmin()
+  const { data } = await db
+    .from('users')
+    .select('business_name, business_slug, business_category, business_description, business_photo, selfie_url, business_address, phone, seo_keywords')
+    .eq('business_slug', slug)
+    .eq('account_type', 'business')
+    .single()
+  return data
+}
 
-  // /business/[category]/[slug] — new canonical URL
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { params: segments } = await params
+
+  // Only generate metadata for canonical 2-segment URLs
+  if (segments.length !== 2) return {}
+
+  const slug = segments[1]
+  const biz = await getBusinessBySlug(slug)
+  if (!biz) return {}
+
+  const categorySeo = getCategorySeo(biz.business_category)
+  const name = biz.business_name
+  const category = biz.business_category || 'Business'
+  const catSlug = slugify(category)
+
+  const title = `${name} — ${category} in NYC | The NYC Classifieds`
+  const description = biz.business_description
+    ? biz.business_description.slice(0, 160)
+    : `${name} is a ${category.toLowerCase()} ${categorySeo.descriptionTemplate}. View reviews, hours, photos, and more.`
+
+  const keywords = [
+    name,
+    category,
+    ...(biz.seo_keywords || []),
+    ...categorySeo.keywords,
+    'NYC',
+    'New York City',
+  ]
+
+  const url = `${SITE_URL}/business/${catSlug}/${biz.business_slug}`
+  const image = biz.business_photo || biz.selfie_url
+
+  return {
+    title,
+    description,
+    keywords,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'The NYC Classifieds',
+      type: 'website',
+      locale: 'en_US',
+      ...(image && { images: [{ url: image, width: 600, height: 600, alt: name }] }),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      ...(image && { images: [image] }),
+    },
+  }
+}
+
+export default async function BusinessProfilePage({ params }: PageProps) {
+  const { params: segments } = await params
+
+  // /business/[category]/[slug] — canonical URL
   if (segments.length === 2) {
     return <BusinessProfileClient slug={segments[1]} category={segments[0]} />
   }
 
-  // /business/[slug] — old URL, redirect client-side
+  // /business/[slug] — old URL, server-side redirect
   if (segments.length === 1) {
-    return <OldUrlRedirect slug={segments[0]} />
+    const biz = await getBusinessBySlug(segments[0])
+    if (biz) {
+      const catSlug = biz.business_category ? slugify(biz.business_category) : 'other'
+      redirect(`/business/${catSlug}/${biz.business_slug}`)
+    }
+    redirect('/business')
   }
 
   // Invalid URL
-  return (
-    <main style={{ maxWidth: '1050px', margin: '0 auto', padding: '48px 24px', textAlign: 'center' }}>
-      <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#111827' }}>Page not found</h1>
-      <a href="/business" style={{ color: '#2563eb', fontSize: '0.875rem', marginTop: '1rem', display: 'inline-block' }}>
-        Browse Business Directory
-      </a>
-    </main>
-  )
-}
-
-function OldUrlRedirect({ slug }: { slug: string }) {
-  const router = useRouter()
-
-  useEffect(() => {
-    fetch(`/api/business/${slug}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.business) {
-          const catSlug = data.business.business_category ? slugify(data.business.business_category) : 'other'
-          router.replace(`/business/${catSlug}/${data.business.business_slug}`)
-        } else {
-          router.replace('/business')
-        }
-      })
-      .catch(() => router.replace('/business'))
-  }, [slug, router])
-
-  return <div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Redirecting...</div>
+  notFound()
 }

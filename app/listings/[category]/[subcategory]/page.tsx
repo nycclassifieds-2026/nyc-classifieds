@@ -65,11 +65,17 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
     const catName = cat?.name || category
     const statusPrefix = listing.status === 'sold' ? '[SOLD] ' : listing.status === 'expired' ? '[EXPIRED] ' : ''
     const loc = listing.location || ''
-    return buildMetadata({
+    const meta = buildMetadata({
       title: `${statusPrefix}${listing.title} — ${catName}${loc ? ` in ${loc}` : ''}`,
       description: listing.description?.slice(0, 155) || `${listing.title} — free classified listing from a verified NYC resident.${loc ? ` Located in ${loc}.` : ''} Browse more on NYC Classifieds.`,
       path: `/listings/${category}/${subcategory}`,
     })
+    // Add listing image as OG image
+    if (listing.images.length > 0) {
+      meta.openGraph = { ...meta.openGraph, images: [{ url: listing.images[0], alt: listing.title }] }
+      meta.twitter = { ...meta.twitter, images: [listing.images[0]] }
+    }
+    return meta
   }
 
   return { title: `Listing #${subcategory}` }
@@ -140,6 +146,8 @@ export default async function SubcategoryOrDetailPage({ params }: { params: Prom
         name: listing.title,
         description: listing.description || undefined,
         url: fullUrl,
+        ...(listing.images.length > 0 && { image: listing.images }),
+        category: catName,
         offers: {
           '@type': 'Offer',
           price: listing.price ? (listing.price / 100).toFixed(2) : '0',
@@ -150,7 +158,46 @@ export default async function SubcategoryOrDetailPage({ params }: { params: Prom
               ? 'https://schema.org/Discontinued'
               : 'https://schema.org/InStock',
           seller: { '@type': 'Person', name: listing.users.name },
+          ...(listing.location && {
+            availableAtOrFrom: {
+              '@type': 'Place',
+              name: listing.location,
+              address: {
+                '@type': 'PostalAddress',
+                addressLocality: listing.location,
+                addressRegion: 'NY',
+                addressCountry: 'US',
+              },
+            },
+          }),
         },
+      })
+    } else {
+      // Non-product categories (services, gigs, jobs, community, etc.)
+      schemas.push({
+        '@context': 'https://schema.org',
+        '@type': 'Offer',
+        name: listing.title,
+        description: listing.description || undefined,
+        url: fullUrl,
+        ...(listing.images.length > 0 && { image: listing.images }),
+        ...(listing.price && {
+          price: (listing.price / 100).toFixed(2),
+          priceCurrency: 'USD',
+        }),
+        availability: listing.status === 'sold'
+          ? 'https://schema.org/SoldOut'
+          : listing.status === 'expired'
+            ? 'https://schema.org/Discontinued'
+            : 'https://schema.org/InStock',
+        seller: { '@type': 'Person', name: listing.users.name },
+        ...(listing.location && {
+          areaServed: {
+            '@type': 'Place',
+            name: listing.location,
+            address: { '@type': 'PostalAddress', addressLocality: listing.location, addressRegion: 'NY', addressCountry: 'US' },
+          },
+        }),
       })
     }
 

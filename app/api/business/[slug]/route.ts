@@ -10,7 +10,7 @@ export async function GET(
 
   const { data: business } = await db
     .from('users')
-    .select('id, name, business_name, business_slug, business_category, business_description, website, phone, hours, service_area, photo_gallery, selfie_url, business_photo, business_address, social_links, verified, created_at')
+    .select('id, name, business_name, business_slug, business_category, business_description, website, phone, hours, service_area, photo_gallery, selfie_url, business_photo, business_address, social_links, seo_keywords, verified, created_at')
     .eq('business_slug', slug)
     .eq('account_type', 'business')
     .single()
@@ -19,8 +19,8 @@ export async function GET(
     return NextResponse.json({ error: 'Business not found' }, { status: 404 })
   }
 
-  // Parallelize listings + reviews queries
-  const [listingsResult, reviewsResult] = await Promise.all([
+  // Parallelize listings + reviews + updates queries
+  const [listingsResult, reviewsResult, updatesResult] = await Promise.all([
     db
       .from('listings')
       .select('id, title, price, images, category_slug, subcategory_slug, location, created_at, status')
@@ -37,10 +37,17 @@ export async function GET(
         .order('created_at', { ascending: false })
         .limit(50)
     ).catch(() => ({ data: null })),
+    db
+      .from('business_updates')
+      .select('id, title, body, photos, created_at')
+      .eq('user_id', business.id)
+      .order('created_at', { ascending: false })
+      .limit(10),
   ])
 
   const listings = listingsResult.data || []
   const reviews = reviewsResult.data || []
+  const updates = updatesResult.data || []
   const ratings = reviews.map((r: { rating: number }) => r.rating)
   const reviewAverage = ratings.length > 0
     ? Math.round(ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length * 10) / 10
@@ -50,6 +57,7 @@ export async function GET(
     business,
     listings,
     reviews,
+    updates,
     reviewAverage,
     reviewCount: ratings.length,
   })
