@@ -76,13 +76,9 @@ export async function POST(request: NextRequest) {
       return new NextResponse(null, { status: 204 })
     }
 
-    // Page view tracking
-    const referrerSource = classifySource(referrer)
-
-    // Skip internal navigation
-    if (referrerSource === 'Internal') {
-      return new NextResponse(null, { status: 204 })
-    }
+    // Page view tracking — record all views, classify internal nav as Direct
+    const rawSource = classifySource(referrer)
+    const referrerSource = rawSource === 'Internal' ? 'Direct' : rawSource
 
     const deviceType = classifyDevice(screenWidth)
     const country = request.headers.get('x-vercel-ip-country') || null
