@@ -1,8 +1,9 @@
 /**
- * Cron seed engine — generates Porch content incrementally throughout the day.
+ * Cron seed engine — generates Porch content for the day.
  *
- * Called every 2 hours by Vercel cron (12x/day).
- * Each run creates a fraction of the daily target (~1/12 per run).
+ * Called every 6 hours by Vercel cron for redundancy.
+ * Each run creates ALL remaining content for the day in one pass.
+ * State tracking (date check + daily counters) prevents double-creation.
  * 30 distinct tone profiles. Systematic neighborhood coverage.
  * Generates 80-200 Porch actions/day (posts + replies).
  */
@@ -406,7 +407,7 @@ function generateReply(user: SeedUser, postType?: string) {
   return applyTone(body, getToneProfile(user.id))
 }
 
-// ─── Main Engine — Incremental (runs every 2 hours) ───
+// ─── Main Engine — Full daily run (called every 6h for redundancy) ───
 
 export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
   const profilesFixed = await fixSeedProfiles(db)
@@ -459,13 +460,8 @@ export async function runSeedCron(db: SupabaseClient): Promise<RunResult> {
   // How many left to create today?
   const alreadyDone = state.posts_today + state.replies_today
   const remaining = Math.max(0, scaledTarget - alreadyDone)
-  // Each run creates ~1/12 of daily target (runs every 2 hours, 12 runs/day)
-  // But also catch up if behind schedule
-  const etHour = parseInt(new Date().toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric', hour12: false }))
-  const expectedFraction = Math.min(1.0, (etHour + 2) / 24)
-  const expectedDone = Math.round(scaledTarget * expectedFraction)
-  const runTarget = Math.max(Math.round(scaledTarget / 12), expectedDone - alreadyDone)
-  const thisRunTarget = Math.min(runTarget, remaining)
+  // Create all remaining content for the day in a single run
+  const thisRunTarget = remaining
 
   if (thisRunTarget <= 0) {
     return {

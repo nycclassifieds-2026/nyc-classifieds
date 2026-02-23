@@ -123,7 +123,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8,
       })
 
-      // Neighborhood + category — only if category has content
+      // Neighborhood + category + subcategory
       if (hasListings) {
         for (const cat of categories) {
           if (!populatedCategories.has(cat.slug)) continue
@@ -133,7 +133,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'weekly',
             priority: 0.6,
           })
-          // Skip neighborhood+category+subcategory — too granular until we have density
+
+          for (const sub of cat.subs) {
+            const subSlug = slugify(sub)
+            if (!populatedSubcategories.has(`${cat.slug}:${subSlug}`)) continue
+            entries.push({
+              url: `${SITE_URL}/${b.slug}/${nhSlug}/${cat.slug}/${subSlug}`,
+              lastModified: now,
+              changeFrequency: 'weekly',
+              priority: 0.5,
+            })
+          }
         }
       }
     }

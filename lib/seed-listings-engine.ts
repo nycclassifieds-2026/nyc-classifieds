@@ -8,7 +8,7 @@
 
 import { SupabaseClient } from '@supabase/supabase-js'
 import {
-  pick, rb, nhName, fill,
+  pick, pickN, rb, nhName, fill, expandDescription,
   BOROUGHS, BOROUGH_WEIGHTS, NAMES, DEMO_WEIGHTS,
   STREETS, PLACES, CITIES, HOBBIES, TRAINS,
 } from './seed-templates'
@@ -98,13 +98,13 @@ function getGrowthMultiplier(startDate: string): number {
   return Math.min(1.0 + (daysSinceLaunch * 0.015), 3.0)
 }
 
-// ─── Daily target — 100-300 listings/day ───
+// ─── Daily target — 300-600 listings/day (higher volume for coverage) ───
 
 function getDailyTarget(growthMultiplier: number): number {
   const day = new Date().getDay()
   const isWeekend = day === 0 || day === 6
-  const min = isWeekend ? 150 : 100
-  const max = isWeekend ? 300 : 200
+  const min = isWeekend ? 400 : 300
+  const max = isWeekend ? 600 : 500
   return Math.round(rb(min, max) * growthMultiplier)
 }
 
@@ -225,21 +225,63 @@ function getLocation(borough: string, nh: string): { location: string; lat: numb
   return { location: `${nhName(nh)}, ${boroughName}`, lat, lng }
 }
 
-// ─── Borough coverage tracker ───
+// ─── Coverage tracker — systematic borough + neighborhood + category rotation ───
 
-function createBoroughTracker() {
-  const counts: Record<string, number> = {}
-  for (const b of Object.keys(BOROUGHS)) counts[b] = 0
+function createCoverageTracker() {
+  const nhCounts: Record<string, number> = {}
+  const catCounts: Record<string, number> = {}
+
+  // Init all neighborhoods
+  for (const [borough, data] of Object.entries(BOROUGHS)) {
+    for (const nh of data.nhs) {
+      nhCounts[`${borough}:${nh}`] = 0
+    }
+  }
+
+  // Init all categories
+  for (const cat of Object.keys(CATEGORY_WEIGHTS)) {
+    catCounts[cat] = 0
+  }
 
   return {
-    pick(candidates: SeedUser[]): SeedUser {
-      const candidateBoroughs = [...new Set(candidates.map(u => u._borough))]
-      const minCount = Math.min(...candidateBoroughs.map(b => counts[b] || 0))
-      const underRep = candidateBoroughs.filter(b => (counts[b] || 0) === minCount)
-      const targetBorough = pick(underRep)
-      const boroughCandidates = candidates.filter(u => u._borough === targetBorough)
-      const chosen = boroughCandidates.length > 0 ? pick(boroughCandidates) : pick(candidates)
-      counts[chosen._borough] = (counts[chosen._borough] || 0) + 1
+    /** Pick the least-served borough+neighborhood for a user, returning a reassigned user */
+    pickUser(candidates: SeedUser[]): SeedUser {
+      // Find least-served borough
+      const boroughTotals: Record<string, number> = {}
+      for (const [key, c] of Object.entries(nhCounts)) {
+        const b = key.split(':')[0]
+        boroughTotals[b] = (boroughTotals[b] || 0) + c
+      }
+      // Weight by target (manhattan should have more, etc.)
+      const boroughWeightMap: Record<string, number> = { manhattan: 35, brooklyn: 30, queens: 20, bronx: 10, 'staten-island': 5 }
+      const boroughs = Object.keys(BOROUGHS)
+      const minRatio = Math.min(...boroughs.map(b => (boroughTotals[b] || 0) / (boroughWeightMap[b] || 1)))
+      const underBoroughs = boroughs.filter(b => (boroughTotals[b] || 0) / (boroughWeightMap[b] || 1) <= minRatio + 0.5)
+      const targetBorough = pick(underBoroughs)
+
+      // Within borough, pick least-served neighborhood
+      const boroughNhs = BOROUGHS[targetBorough].nhs
+      const minNh = Math.min(...boroughNhs.map(nh => nhCounts[`${targetBorough}:${nh}`] || 0))
+      const underNhs = boroughNhs.filter(nh => (nhCounts[`${targetBorough}:${nh}`] || 0) === minNh)
+      const targetNh = pick(underNhs)
+
+      // Find a candidate in this borough or reassign one
+      let chosen = candidates.find(u => u._borough === targetBorough)
+      if (!chosen) chosen = pick(candidates)
+
+      // Override to target neighborhood for even coverage
+      chosen = { ...chosen, _borough: targetBorough, _nh: targetNh }
+      nhCounts[`${targetBorough}:${targetNh}`] = (nhCounts[`${targetBorough}:${targetNh}`] || 0) + 1
+      return chosen
+    },
+
+    /** Pick least-served category (weighted by CATEGORY_WEIGHTS) */
+    pickCategory(): string {
+      const cats = Object.keys(CATEGORY_WEIGHTS)
+      const minRatio = Math.min(...cats.map(c => (catCounts[c] || 0) / (CATEGORY_WEIGHTS[c] || 1)))
+      const underCats = cats.filter(c => (catCounts[c] || 0) / (CATEGORY_WEIGHTS[c] || 1) <= minRatio + 0.5)
+      const chosen = pick(underCats)
+      catCounts[chosen] = (catCounts[chosen] || 0) + 1
       return chosen
     },
   }
@@ -287,21 +329,8 @@ export async function runListingSeedCron(db: SupabaseClient): Promise<ListingRun
   const rawTarget = getDailyTarget(growthMult)
   const dailyTarget = Math.round(rawTarget * killSwitch.multiplier)
 
-  // Incremental: figure out how many listings this run should create
-  // based on time of day and what we've already done today
-  const etNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }))
-  const hourOfDay = etNow.getHours()
-  const hoursArr = Object.entries(HOURLY_WEIGHTS)
-  const totalWeight = hoursArr.reduce((s, [, w]) => s + w, 0)
-  const weightSoFar = hoursArr
-    .filter(([h]) => parseInt(h) <= hourOfDay)
-    .reduce((s, [, w]) => s + w, 0)
-  const expectedByNow = Math.round(dailyTarget * (weightSoFar / totalWeight))
-  const deficit = Math.max(0, expectedByNow - state.listings_today)
-
-  // Add a small random batch on top for natural variance
-  const batchSize = deficit + rb(3, 12)
-  const runTarget = Math.min(batchSize, dailyTarget - state.listings_today)
+  // Create all remaining listings for the day in a single run
+  const runTarget = dailyTarget - state.listings_today
 
   if (runTarget <= 0) {
     return {
@@ -310,7 +339,7 @@ export async function runListingSeedCron(db: SupabaseClient): Promise<ListingRun
     }
   }
 
-  const boroughTracker = createBoroughTracker()
+  const coverageTracker = createCoverageTracker()
   const usedTitles = new Set<string>()
   let created = 0
 
@@ -318,9 +347,9 @@ export async function runListingSeedCron(db: SupabaseClient): Promise<ListingRun
   const batch: Record<string, unknown>[] = []
 
   for (let i = 0; i < runTarget; i++) {
-    const user = boroughTracker.pick(seedUsers)
+    const user = coverageTracker.pickUser(seedUsers)
     const vars = generateVars(user)
-    const catSlug = pickCategory()
+    const catSlug = coverageTracker.pickCategory()
 
     const tmpl = pickListingTemplate(catSlug, user._nh, vars)
     if (!tmpl) continue
@@ -331,10 +360,13 @@ export async function runListingSeedCron(db: SupabaseClient): Promise<ListingRun
 
     const loc = getLocation(user._borough, user._nh)
 
+    // Expand description with category-specific bonus detail
+    const expandedDesc = expandDescription(tmpl.description, catSlug, vars)
+
     batch.push({
       user_id: user.id,
       title: tmpl.title,
-      description: tmpl.description,
+      description: expandedDesc,
       price: tmpl.price || null,
       category_slug: catSlug,
       subcategory_slug: tmpl.subcategory,
