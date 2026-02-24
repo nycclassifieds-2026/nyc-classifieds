@@ -135,7 +135,12 @@ export async function POST(
     } catch {}
   })()
 
-  logEvent('porch_reply', { post_id: postId, reply_id: reply.id }, { userId: parseInt(userId) })
+  logEvent('porch_reply', { post_id: postId, reply_id: reply.id }, {
+    userId: parseInt(userId),
+    notify: true,
+    notifyTitle: 'New porch reply',
+    notifyBody: `Reply on post #${postId}`,
+  })
 
   return NextResponse.json({ id: reply.id, reply }, { status: 201 })
 }

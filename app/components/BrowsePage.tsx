@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import ListingGrid, { getDisplayMode } from './ListingGrid'
 import PreLaunchGate from './PreLaunchGate'
+import AlertButton from './AlertButton'
 import { type Category, slugify } from '@/lib/data'
 
 interface Listing {
@@ -97,16 +98,19 @@ export default function BrowsePage({
             {total} listing{total !== 1 ? 's' : ''}
           </p>
         </div>
-        <Link href="/listings/new" style={{
-          backgroundColor: '#1a56db',
-          color: '#ffffff',
-          padding: '8px 20px',
-          borderRadius: '6px',
-          fontSize: '0.8125rem',
-          fontWeight: 600,
-        }}>
-          Post
-        </Link>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <AlertButton category={effectiveCategorySlug} subcategory={activeSub || undefined} />
+          <Link href="/listings/new" style={{
+            backgroundColor: '#1a56db',
+            color: '#ffffff',
+            padding: '8px 20px',
+            borderRadius: '6px',
+            fontSize: '0.8125rem',
+            fontWeight: 600,
+          }}>
+            Post
+          </Link>
+        </div>
       </div>
 
       <PreLaunchGate>

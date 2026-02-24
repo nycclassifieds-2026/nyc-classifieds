@@ -70,7 +70,12 @@ export async function PATCH(
     return NextResponse.json({ error: 'Update failed' }, { status: 500 })
   }
 
-  logEvent('listing_edited', { listing_id: parseInt(id), changes: Object.keys(updates).filter(k => k !== 'updated_at') }, { userId: parseInt(userId) })
+  logEvent('listing_edited', { listing_id: parseInt(id), changes: Object.keys(updates).filter(k => k !== 'updated_at') }, {
+    userId: parseInt(userId),
+    notify: true,
+    notifyTitle: 'Listing edited',
+    notifyBody: `Listing #${id} edited`,
+  })
 
   return NextResponse.json({ updated: true })
 }
@@ -100,7 +105,12 @@ export async function DELETE(
 
   await db.from('listings').update({ status: 'removed' }).eq('id', id)
 
-  logEvent('listing_deleted', { listing_id: parseInt(id) }, { userId: parseInt(userId) })
+  logEvent('listing_deleted', { listing_id: parseInt(id) }, {
+    userId: parseInt(userId),
+    notify: true,
+    notifyTitle: 'Listing deleted',
+    notifyBody: `Listing #${id} deleted`,
+  })
 
   return NextResponse.json({ deleted: true })
 }

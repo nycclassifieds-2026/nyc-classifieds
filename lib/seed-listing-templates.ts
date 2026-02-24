@@ -24,18 +24,18 @@ export interface SubcategoryTemplates {
 // Personals + Housing + Jobs get the heaviest rotation
 
 export const CATEGORY_WEIGHTS: Record<string, number> = {
-  personals: 25,
-  housing: 18,
+  personals: 22,
+  housing: 16,
   jobs: 12,
   'for-sale': 10,
   services: 8,
   gigs: 7,
+  community: 6,
   tickets: 5,
   pets: 5,
   barter: 3,
   rentals: 3,
-  resumes: 2,
-  community: 2,
+  resumes: 3,
 }
 
 /** Pick a category slug weighted by CATEGORY_WEIGHTS */
@@ -91,30 +91,26 @@ const PERSONALS: SubcategoryTemplates[] = [
   {
     sub: 'missed-connections',
     templates: [
-      { title: 'Blue jacket, L train — Lorimer', description: 'You were reading Murakami. We made eye contact a few times. You smiled at 1st Ave. I was in the gray hoodie. Long shot I know', priceRange: [0, 0] },
-      { title: 'Coffee shop — Saturday, {nh}', description: 'Oat milk latte. I had the Americano. We talked about jazz and then my friend showed up and you left before I could get your name', priceRange: [0, 0] },
-      { title: 'Dog park — Tompkins', description: 'Your corgi is Biscuit. My mutt is Chaos. Walk together sometime?', priceRange: [0, 0] },
-      { title: 'Laundromat — {street}', description: 'Wednesday night. You made that joke about your socks never matching. Curly hair, great smile. Red sneakers (thats me)', priceRange: [0, 0] },
-      { title: 'Bookstore — {nh}', description: 'You were in the poetry section. I was pretending to browse fiction. You bought Neruda. I bought Neruda after you left. This is embarrassing', priceRange: [0, 0] },
-      { title: '{train} train — Tuesday', description: 'You gave me the last seat. Headphones on. We got off at the same stop and I chickened out', priceRange: [0, 0] },
-      { title: 'Farmers market — Union Square', description: 'Saturday, the peaches. We both reached for the same one and you laughed. Tattoo sleeves. Ive been thinking about it', priceRange: [0, 0] },
-      { title: 'Bar on {street}', description: 'Friday night. You were reading at the bar by yourself which is honestly the most attractive thing ive ever seen. My friends pulled me away before I could say anything. Vintage band tee. This is a long shot but whatever', priceRange: [0, 0] },
-      { title: 'Grocery store — {nh}', description: 'You reached the top shelf for me and made a joke about it. Checkout line conversation. You just moved to the neighborhood. Welcome. DM me', priceRange: [0, 0] },
-      { title: 'Running along the river', description: 'We run the same route. You always wave. Orange shoes (me). Tomorrow?', priceRange: [0, 0] },
-      { title: 'Brooklyn Steel — last Thursday', description: 'Stood next to each other during the opener. We talked between sets about how the band is underrated. Denim jacket. Where did you go when the crowd moved', priceRange: [0, 0] },
-      { title: '{train} — stuck underground 45 min', description: 'You shared your gummy bears with me. Best subway delay ever. You got off before I could ask your name', priceRange: [0, 0] },
-      { title: 'Gallery — {nh}', description: 'The abstract piece in the corner. Bad wine, great conversation. You do design, I do education. Wish I stayed longer', priceRange: [0, 0] },
-      { title: 'Pizza line — {nh}', description: 'You said Lucalis, I said Di Fara. You were right. I owe you a slice', priceRange: [0, 0] },
-      { title: 'Bodega cat on {street}', description: 'We both stopped to pet it. You said "this is the real NYC experience" and I think about that like once a day', priceRange: [0, 0] },
-      { title: 'Gym — {street}, 6am', description: 'Adjacent treadmills every morning. Too awkward to talk to someone with headphones in. Im the one without a water bottle (every single time)', priceRange: [0, 0] },
-      { title: 'Rooftop bar — {nh}', description: 'Sunset. You asked me to take your photo. I said something stupid. You laughed anyway. Gold hoops, all black', priceRange: [0, 0] },
-      { title: 'Ferry to Governors Island', description: 'You were sketching. I peeked. It was incredible. You caught me looking', priceRange: [0, 0] },
-      { title: '{train} train, this morning', description: 'You had the green coat and you dropped your metrocard and when I picked it up our hands touched and you smiled and ok I know how this sounds but it was a moment', priceRange: [0, 0] },
-      { title: 'to the girl at the halal cart on {street}', description: 'We were both waiting for our food and you said something funny about the hot sauce. I laughed. You left. I regret not saying more. Purple jacket', priceRange: [0, 0] },
-      { title: 'Prospect Park — Sunday morning', description: 'We were both sitting on the same bench reading. I was reading {book}. You asked me if it was good. We talked for maybe 5 minutes and then your friend called. I didnt get your name', priceRange: [0, 0] },
-      { title: 'Halloween party — {nh}', description: 'You were dressed as something creative, I was a last minute vampire. We danced and I lost you in the crowd. I dont even know whose party that was but I need to find you', priceRange: [0, 0] },
-      { title: 'Waiting room on {street}', description: 'We were both sitting in the waiting room for like an hour and you kept making faces at me about how slow they were. You have the best laugh. Blue sneakers', priceRange: [0, 0] },
-      { title: 'crosswalk on {street}', description: 'This is absurd but we made eye contact at the crosswalk and you mouthed "nice shirt" and the light changed and you went the other way. Red flannel. Come back to that crosswalk I guess?', priceRange: [0, 0] },
+      { title: 'Blue jacket, L train — {nh}', description: 'You were reading Murakami on the L train heading into Manhattan. We made eye contact a few times and you smiled right before the doors opened at 1st Ave. I was in the gray hoodie sitting across from you. I know this is a total long shot but I havent stopped thinking about that smile since. If you see this and remember the guy who was clearly trying not to stare, say hi. I take that train every morning around 8:15', priceRange: [0, 0] },
+      { title: 'Coffee shop — Saturday morning, {nh}', description: 'You ordered the oat milk latte with an extra shot. I had the Americano and was sitting by the window working on my laptop. We ended up talking about jazz for like 20 minutes — you mentioned you play saxophone and I was genuinely fascinated. Then my friend showed up and you left before I could get your name or number. The barista said you come in on Saturdays too. Im going to be there again this weekend, same spot by the window. Dark hair, green jacket, incredible taste in music', priceRange: [0, 0] },
+      { title: 'Dog park — {nh}', description: 'We go to the same dog park almost every evening around 6. Your corgi is Biscuit and my mutt is the brown one who always tries to wrestle with him. We have talked a few times about the neighborhood and you mentioned you just moved to {nh} from somewhere out west. I wanted to ask if you wanted to grab a coffee sometime but I always chicken out when the moment comes. Im the one in the red jacket who always has treats in my pocket. If you see this just come say hi next time, I promise Im less awkward in real life', priceRange: [0, 0] },
+      { title: 'Laundromat on {street} — Wednesday night', description: 'We were both doing laundry at the place on {street} around 9pm on Wednesday. You made that joke about how your socks never match no matter what you do, and I laughed way too hard because its the most relatable thing anyone has ever said to me. Curly hair, great smile, you were wearing those white sneakers. I was the one in the red high tops folding a ridiculous amount of sheets. I go there every Wednesday around the same time. Would love to continue the conversation about the missing sock conspiracy', priceRange: [0, 0] },
+      { title: 'Bookstore in {nh} — poetry section', description: 'I was pretending to browse the fiction section but really I was watching you look through the poetry shelf at the bookstore on {street}. You picked up a Neruda collection and read a page out loud to yourself — probably didnt realize anyone heard but it was beautiful. I bought the same book after you left which is embarrassing to admit but here we are. You had on a brown corduroy jacket and were carrying a tote bag with some art on it. I know this is a reach but I go to that bookstore almost every weekend. Maybe ill actually say something next time instead of writing this', priceRange: [0, 0] },
+      { title: '{train} train — Tuesday evening', description: 'Tuesday around 6pm on the {train}. It was packed and you gave me the last seat even though you looked tired too. You had your headphones on and were bobbing your head to something and I wanted so badly to ask what you were listening to. We both got off at the same stop and I watched you walk up the stairs and just... froze. I do not know what it is about you but I have been replaying that moment all week. If this finds you somehow, I owe you a seat and a conversation. Im the one who said thank you three times because I forgot I already said it', priceRange: [0, 0] },
+      { title: 'Farmers market — Union Square, Saturday', description: 'We both reached for the same carton of peaches at the Union Square farmers market on Saturday morning and you laughed and said "great minds" or something like that. You had tattoo sleeves on both arms, sunglasses on your head, and a canvas bag. We talked for maybe 2 minutes about which peaches were better and then I got self conscious about holding up the line and walked away. I have been kicking myself ever since. I go every Saturday around 10am, usually start at the south end. If you remember the awkward peach person, come find me', priceRange: [0, 0] },
+      { title: 'Bar on {street} — Friday night', description: 'Friday night at the bar on {street}. You were sitting by yourself reading a book and honestly that is the most attractive thing I have ever seen another human being do in public. We made eye contact a couple times and I was working up the nerve to come say something when my friends dragged me to another spot. You were wearing a vintage band tee — I think it was Talking Heads but I was too far away to be sure. This is a long shot but I had to try. I go there most Fridays and Im going to be braver next time I promise', priceRange: [0, 0] },
+      { title: 'Grocery store — {nh}', description: 'You reached the top shelf for me at the grocery store near {street} and made a joke about how they put all the good stuff up high on purpose. We ended up talking in the checkout line for a few minutes and you mentioned you just moved to {nh} from out of state. You seemed really genuine and I kicked myself for not asking for your number. If you remember the short person who needed help reaching the pasta sauce and then talked your ear off about the neighborhood, that was me. Welcome to {nh} by the way — its a great place once you find your spots', priceRange: [0, 0] },
+      { title: 'Running along the Hudson — orange shoes', description: 'We run the same route along the river almost every morning. You always wave when we pass each other going opposite directions around the same spot near the pier. Ive been wanting to stop and actually introduce myself for weeks but it feels weird to interrupt someones run. Im the one with the orange shoes — you probably noticed because they are aggressively bright. Maybe one day we could actually run together instead of just waving at each other like characters in a movie. I am usually out there by 7am', priceRange: [0, 0] },
+      { title: 'Brooklyn Steel — last Thursday', description: 'We were standing next to each other during the opening act at Brooklyn Steel last Thursday. We started talking between sets about how the opener was actually better than the headliner and you agreed which told me everything I needed to know about you. You were wearing a denim jacket and had this incredible laugh. When the headliner started the crowd shifted and suddenly you were gone and I spent the rest of the show looking around like an idiot. If you remember the conversation about underrated bands with the person in the black hoodie, please reach out', priceRange: [0, 0] },
+      { title: '{train} train — stuck underground 45 min', description: 'The {train} train stalled between stations for like 45 minutes last week and instead of being miserable you pulled out a bag of gummy bears and offered them to me and the person next to us. We talked the entire time about everything — where we grew up, favorite movies, that weird restaurant on {street}. It was the best subway delay I have ever experienced and thats saying something because Ive had some good ones. You got off one stop before me and I was too slow to ask for your number. Kicking myself. You had the green backpack and the best energy', priceRange: [0, 0] },
+      { title: 'Gallery opening — {nh}', description: 'The gallery opening in {nh} last Friday. We were both standing in front of that abstract piece in the corner and you said something about it that completely changed how I saw it. The wine was terrible but the conversation was incredible. You mentioned you work in design and I said I was in education and we talked for maybe 20 minutes before someone pulled you away. I wish I had stayed longer instead of leaving when I did. If you remember discussing color theory with a stranger who was clearly out of their depth but very enthusiastic about it, that was me', priceRange: [0, 0] },
+      { title: 'Pizza line — {nh}', description: 'We were both in line at the pizza place on {street} and somehow got into a full debate about the best pizza in NYC. You said Lucalis and I said Di Fara and you made such a convincing case that I actually went to Lucalis the next day and you were absolutely right. I owe you a slice. You were wearing a navy jacket and had a messenger bag. We talked for the whole wait but I didnt think to get your number before we sat at different tables. Biggest regret of my week and its been a rough week', priceRange: [0, 0] },
+      { title: 'Bodega cat on {street}', description: 'We both stopped to pet the orange bodega cat on {street} at the same time and you said "this is the real NYC experience" with complete sincerity and I think about that moment like once a day which is probably not normal but here I am posting about it on the internet. You were wearing all black which doesnt narrow it down much in this city. We talked for a few minutes and you were funny and warm and then you said you had to go and that was it. The cat misses you. I also miss you. Mostly the cat though', priceRange: [0, 0] },
+      { title: 'Gym on {street} — 6am every morning', description: 'We are on adjacent treadmills every single morning at the gym on {street} at 6am. I know your routine by now — you do 30 minutes then move to weights. I want to say something but you always have headphones in and I dont want to be that person who bothers someone at the gym. Im the one who never has a water bottle and has to use the fountain every 10 minutes like a rookie. If you ever want a workout partner or just someone to complain about early mornings with, take one headphone out and give me a signal', priceRange: [0, 0] },
+      { title: 'Rooftop bar — sunset, {nh}', description: 'The rooftop bar in {nh} a couple Saturdays ago. The sunset was insane and you asked me to take your photo with it in the background. I said something dumb while taking it and you laughed anyway which was generous of you. Gold hoops, all black outfit, incredible smile. I handed your phone back and my brain just completely shut down instead of saying something smooth like a normal human. My friends still make fun of me for fumbling that moment. If you want that photo retaken by someone who has had time to prepare a better joke, Im available', priceRange: [0, 0] },
+      { title: 'Governors Island ferry', description: 'On the ferry to Governors Island last weekend. You were sitting on the bench across from me sketching something in a notebook and I tried to peek without being obvious. It was incredible — some kind of cityscape. You caught me looking and instead of being weirded out you showed me the whole sketchbook. We talked about art and the city for the entire ride over but when we got off the boat I lost you in the crowd. I have been going back to that ferry every weekend hoping to run into you again. Plaid shirt, pencil behind your ear', priceRange: [0, 0] },
+      { title: 'Halal cart on {street}', description: 'We were both standing at the halal cart on {street} around midnight waiting for our food and you made some joke about the hot sauce that had me cracking up. We talked for a few minutes about living in {nh} and you mentioned you work nights somewhere nearby. You were wearing a purple jacket and had the best deadpan humor. I laughed, you left, and I stood there holding my lamb over rice regretting not saying more. I am at that cart way too often so if you see someone ordering extra white sauce and looking around hopefully, its me', priceRange: [0, 0] },
+      { title: 'Prospect Park — Sunday morning bench', description: 'We were both sitting on the same bench in Prospect Park Sunday morning reading. I was reading {book} and you asked me if it was good. We ended up talking for maybe 15 minutes about books and the city and how Sunday mornings in the park are the only thing keeping us sane. Then your friend called and you had to leave and I sat there for another hour reading the same page over and over because I couldnt concentrate. I go to that bench almost every Sunday around 10. Brown jacket, glasses, and a strong opinion about Murakami', priceRange: [0, 0] },
     ],
   },
   {
@@ -165,7 +161,7 @@ const HOUSING: SubcategoryTemplates[] = [
       { title: 'Studio — exposed brick, {nh}', description: 'Top floor walkup. Original brick. Quiet. Great closet for a studio. Cat friendly. Near {train}', priceRange: [150000, 200000] },
       { title: '3BR — W/D in unit, {nh}', description: 'Washer dryer in the apartment. Full kitchen. Super lives on-site. Pets welcome. Near subway. This is real btw I know it sounds too good', priceRange: [320000, 450000] },
       { title: '2BR — rooftop, doorman, {nh}', description: 'Doorman, gym, rooftop, central AC, W/D. Walk to {train}. Pet friendly. The whole package. Gross rent', priceRange: [350000, 480000] },
-      { title: 'Rent-stabilized 1BR — {nh}', description: 'Below market. Heat included. Good super. Near {street}. Dont sleep on this', priceRange: [140000, 180000] },
+      { title: 'Rent-stabilized 1BR — {nh}', description: 'Rent-stabilized one bedroom well below market rate. Heat and hot water included in rent. The super actually lives in the building and responds the same day which in NYC is basically a miracle. Located near {street} with easy access to the {train}. Apartment is in good shape — hardwood floors, decent closet space, kitchen was updated a few years ago. Dont sleep on this one, rent stabilized units in {nh} go fast', priceRange: [140000, 180000] },
       { title: 'Studio — high ceilings, {nh}', description: '10 foot ceilings south-facing. 400sqft but feels bigger than my last 1BR honestly. Near {train}', priceRange: [145000, 185000] },
       { title: 'Alcove studio — {nh}', description: 'Sleeping alcove makes this basically a 1BR. Elevator. Laundry. Live-in super. Quiet street. No fee', priceRange: [165000, 210000] },
       { title: '4BR brownstone — {nh}', description: 'Huge. Original details with updated kitchen. Backyard access. Near {street}. Roommates or families. This will go fast', priceRange: [400000, 550000] },
@@ -200,8 +196,8 @@ const HOUSING: SubcategoryTemplates[] = [
   {
     sub: 'parking-storage',
     templates: [
-      { title: 'Indoor parking — {nh}', description: 'Covered garage. 24/7 access. Cameras. Fits sedan or small SUV. Near {street}', priceRange: [25000, 45000] },
-      { title: 'Storage unit — {nh}', description: '5x10 climate controlled. Clean. Month to month. Access 7am-10pm', priceRange: [15000, 25000] },
+      { title: 'Indoor parking — {nh}', description: 'Covered indoor garage spot near {street} in {nh}. 24/7 access with a key card, security cameras throughout. Fits a sedan or small SUV comfortably. The garage is clean and well-lit, not one of those sketchy basement situations. If you have a car in NYC you know how valuable a guaranteed spot is — no more circling the block for 45 minutes or getting tickets from alternate side parking', priceRange: [25000, 45000] },
+      { title: 'Storage unit — {nh}', description: '5x10 storage unit in {nh}, climate controlled so your stuff wont get ruined by humidity or temperature swings. The facility is clean, well-maintained, and has security cameras. Access hours are 7am to 10pm which covers most situations. Month to month lease so no long term commitment required. Great for seasonal stuff, extra furniture, business inventory, whatever you need to store. Located near {street}', priceRange: [15000, 25000] },
       { title: 'Parking spot — {nh}', description: 'Outdoor spot behind my building on {street}. Gated. You get a clicker. Not the fanciest setup but its a guaranteed spot in {nh} and thats worth something', priceRange: [18000, 30000] },
     ],
   },
@@ -236,7 +232,7 @@ const JOBS: SubcategoryTemplates[] = [
     templates: [
       { title: 'Electrician Apprentice — union', description: '$25-35/hr + benefits. Will train the right person. Must show up and work hard. Steady pay, steady work', priceRange: [0, 0] },
       { title: 'Licensed Plumber', description: '$40-60/hr. 5+ years NYC. Residential and light commercial. Own tools and van. Good clients, steady work', priceRange: [0, 0] },
-      { title: 'HVAC Tech — commercial', description: '$30-45/hr. EPA certified. Benefits after 90 days. Company vehicle. {nh} area', priceRange: [0, 0] },
+      { title: 'HVAC Tech — commercial', description: '$30-45/hr depending on experience. Must be EPA certified. We do commercial HVAC — office buildings, restaurants, retail spaces across NYC. Company vehicle provided so you dont need your own. Benefits kick in after 90 days including health insurance and paid time off. Steady work year round, summers are especially busy. Looking for someone who can troubleshoot on their own and communicates well with building managers. {nh} area base', priceRange: [0, 0] },
       { title: 'Carpenter — custom work', description: '$28-40/hr. Custom closets, shelving, trim. Quality over speed. Need references or portfolio. {nh}', priceRange: [0, 0] },
       { title: 'Painter — residential', description: '$25-35/hr. Interior/exterior. Must be clean and careful. We do high end apartments where you cant have drips or tape lines showing', priceRange: [0, 0] },
     ],
@@ -244,16 +240,16 @@ const JOBS: SubcategoryTemplates[] = [
   {
     sub: 'healthcare',
     templates: [
-      { title: 'Home Health Aide — {nh}', description: '$17-20/hr. PCA or HHA cert. Helping seniors stay independent. Flexible schedule', priceRange: [0, 0] },
+      { title: 'Home Health Aide — {nh}', description: '$17-20/hr depending on experience. Must have PCA or HHA certification. We help seniors in {nh} stay independent in their homes — meal prep, medication reminders, light housekeeping, companionship. Flexible schedule, you can work as many or as few hours as you want. Our clients are wonderful people who just need a little extra help. This is genuinely rewarding work if you have patience and a good heart', priceRange: [0, 0] },
       { title: 'Medical Assistant — {nh}', description: '$18-22/hr. Bilingual preferred but not required. Vitals, intake, EHR. Friendly clinic. Benefits', priceRange: [0, 0] },
-      { title: 'Dental Hygienist — {nh}', description: '$45-55/hr. Private practice. Good patients. Modern equipment. 4 days, no weekends', priceRange: [0, 0] },
+      { title: 'Dental Hygienist — {nh}', description: '$45-55/hr at a private practice in {nh}. Our patients are great — mostly long-term regulars who actually take care of their teeth. Modern equipment, digital X-rays, the good stuff. Schedule is 4 days a week with no weekends which is rare in dental and something we plan to keep. Small office, friendly team, the kind of place where people stay for years. Looking for someone with at least 2 years experience who is personable and thorough', priceRange: [0, 0] },
     ],
   },
   {
     sub: 'retail',
     templates: [
-      { title: 'Retail Associate — {nh}', description: '$16-18/hr. PT and FT available. Employee discount. If you actually like helping customers and arent just staring at your phone all day, we want you', priceRange: [0, 0] },
-      { title: 'Store Manager — {nh}', description: '$50-60K. 2+ years retail mgmt. Inventory, scheduling, customer experience. Growing brand', priceRange: [0, 0] },
+      { title: 'Retail Associate — {nh}', description: '$16-18/hr with both part-time and full-time positions available. Employee discount on everything in the store. We are a small independently owned shop in {nh} near {street} and we genuinely care about the customer experience. If you actually enjoy helping people find what they need and can hold a conversation without staring at your phone, we want to talk to you. No retail experience needed as long as you are reliable and friendly. Flexible scheduling for students', priceRange: [0, 0] },
+      { title: 'Store Manager — {nh}', description: '$50-60K salary for an experienced store manager at our location in {nh}. Need someone with at least 2 years of retail management experience who can handle inventory, staff scheduling, visual merchandising, and customer experience. We are a growing brand with a loyal customer base and we need someone who can keep the day-to-day running smoothly while we focus on expansion. This is a real leadership role, not just a glorified cashier position. Health insurance and bonus structure available', priceRange: [0, 0] },
     ],
   },
   {
@@ -280,13 +276,13 @@ const FOR_SALE: SubcategoryTemplates[] = [
   {
     sub: 'furniture',
     templates: [
-      { title: 'Dining table — solid wood, seats 6', description: 'Moving. Real wood not veneer. Some scratches. You haul. Cash. Near {street}', priceRange: [10000, 25000] },
-      { title: 'Couch — Article, great condition', description: '2 years old. No stains no pet damage. Seats 3. I would keep it if it fit in my new place', priceRange: [30000, 60000] },
+      { title: 'Dining table — solid wood, seats 6', description: 'Solid wood dining table that comfortably seats 6, bought it from a furniture shop in Brooklyn a few years ago. Real hardwood, not veneer — you can tell by the weight of this thing. There are some surface scratches from normal use but structurally its in great shape. Selling because Im moving and it wont fit in my new apartment. You would need to haul it yourself, its heavy so bring a friend. Cash or Venmo. Located near {street} in {nh}', priceRange: [10000, 25000] },
+      { title: 'Couch — Article, great condition', description: 'Article Sven couch in charcoal, seats 3 comfortably. Bought it 2 years ago and its in excellent condition — no stains, no pet damage, cushions still have their shape. I would keep it if it fit through the door of my new apartment but it does not so here we are. This couch retailed for over $1,500 and you are getting it for a fraction of that. Its genuinely comfortable, the kind where guests fall asleep watching a movie. Pick up in {nh} near {street}', priceRange: [30000, 60000] },
       { title: 'IKEA Kallax 4x4 — white', description: 'Assembled. Moving. Great for books/vinyl. You disassemble and haul. Its heavy fair warning', priceRange: [4000, 8000] },
       { title: 'Queen bed frame + headboard', description: 'Platform frame. No box spring needed. No squeaks. Mattress not included. Pick up this weekend', priceRange: [12000, 25000] },
       { title: 'Standing desk — electric', description: 'Uplift V2. Dual motors. Bamboo top. Goes from 25 to 50 inches. Going back to the office so I dont need it anymore. Barely used', priceRange: [20000, 35000] },
       { title: 'Recliner — real leather', description: 'La-Z-Boy. Dark brown. Moving and it wont fit through the new door. I am genuinely sad about this. Pick up on {street}', priceRange: [15000, 30000] },
-      { title: 'Dresser — 6 drawer', description: 'Works fine. Nothing fancy. All drawers open smooth. Solid. You pick up. Near {street}', priceRange: [5000, 12000] },
+      { title: 'Dresser — 6 drawer', description: 'Six drawer dresser in decent shape. Nothing fancy or designer but its solid — all the drawers open and close smoothly, no broken handles, no wobble. Dark wood finish with some minor scuffs on the top from years of use but nothing major. This is the kind of functional furniture that just works and will last you a long time. You pick up from my building near {street} in {nh}, elevator in the building so getting it downstairs is easy', priceRange: [5000, 12000] },
       { title: 'Couch — FREE if you pick up today', description: 'Gray. Functional. Has some wear but its comfortable. Moving tomorrow and I am literally begging someone to take this thing. {street}', priceRange: [0, 0] },
     ],
   },
@@ -294,9 +290,9 @@ const FOR_SALE: SubcategoryTemplates[] = [
     sub: 'electronics',
     templates: [
       { title: 'MacBook Pro M2 — 16GB', description: 'Battery 98%. AppleCare until 2027. Always had a case. Upgrading to M4. Comes with charger and box', priceRange: [90000, 130000] },
-      { title: 'PS5 + 2 controllers', description: 'Disc edition. Works perfect. 3 games. Original box. Just dont play anymore', priceRange: [30000, 45000] },
-      { title: 'Samsung 55" 4K TV', description: 'Used 1 year. Great picture. Comes with wall mount or stand. Remote included. Pick up {nh}', priceRange: [20000, 35000] },
-      { title: 'iPhone 14 Pro — unlocked', description: '256GB. No scratches, case + screen protector since day 1. Battery 91%. Any carrier. Midnight purple', priceRange: [50000, 75000] },
+      { title: 'PS5 + 2 controllers', description: 'PlayStation 5 disc edition with 2 wireless DualSense controllers. Works perfectly, no issues at all. Comes with 3 games and the original box with all cables. Im selling because I just dont have time to game anymore and its been collecting dust for months. Rather it go to someone who will actually enjoy it. Firmware is up to date. Can meet in {nh} or near the {train}', priceRange: [30000, 45000] },
+      { title: 'Samsung 55" 4K TV', description: 'Samsung 55 inch 4K Smart TV, only used for about a year. Picture quality is excellent — bright colors, great contrast, no dead pixels or burn-in. Comes with either a wall mount or the original stand, your choice. Remote included. Smart TV apps all work smoothly. Selling because I upgraded to a bigger screen for my new apartment. You pick up in {nh}, bring a friend because its awkward to carry alone. Ill help you get it to the elevator', priceRange: [20000, 35000] },
+      { title: 'iPhone 14 Pro — unlocked', description: 'iPhone 14 Pro, 256GB, Midnight Purple, factory unlocked so it works with any carrier. Had a case and screen protector on it from day one so there are zero scratches anywhere. Battery health is at 91% which is great for its age. Face ID, all cameras, speakers, everything works perfectly. Selling because I upgraded to the 16 and dont need two phones. Comes with a charging cable. Can do the exchange in {nh} — happy to let you test everything before you buy', priceRange: [50000, 75000] },
       { title: 'Sony XM5 headphones', description: '6 months old. Got AirPods Max as a gift so selling these. Original case and box. Best noise cancelling headphones that exist', priceRange: [18000, 28000] },
       { title: 'iPad Air 5th gen', description: 'WiFi 256GB. Apple Pencil included. Used for drawing mostly. No scratches. Getting a laptop instead', priceRange: [35000, 50000] },
     ],
@@ -304,31 +300,31 @@ const FOR_SALE: SubcategoryTemplates[] = [
   {
     sub: 'bikes',
     templates: [
-      { title: 'Trek FX3 hybrid', description: 'Carbon fork. Disc brakes. Ridden 1 season. Fits 5\'8"-6\'0"', priceRange: [35000, 55000] },
-      { title: 'Brompton folding bike', description: '6 speed. Folds in 20 seconds. Perfect for apartments and the subway. Includes bag', priceRange: [100000, 150000] },
-      { title: 'E-bike — 500W', description: '28mph. 40 mile range. Battery removable, charges in 4 hours. Got a car so selling', priceRange: [60000, 100000] },
-      { title: 'Fixed gear — matte black', description: '52cm. Flip flop hub. New chain and tires. Comes with U-lock', priceRange: [20000, 35000] },
-      { title: 'Road bike — needs work', description: 'Its a project. Brakes work, gears dont shift great, but the frame is good. Selling cheap because I dont have time to fix it', priceRange: [8000, 18000] },
+      { title: 'Trek FX3 hybrid', description: 'Carbon fork, hydraulic disc brakes, Shimano groupset. Ridden one season for commuting and weekend rides, maybe 500 miles total. Fits 5\'8" to 6\'0". Recently tuned up — new brake pads, cables, chain all in great shape. Selling because Im upgrading to a road bike. This thing is perfect for city riding, handles potholes like a champ and the disc brakes are a lifesaver in the rain. Comes with lights and a bottle cage', priceRange: [35000, 55000] },
+      { title: 'Brompton folding bike', description: '6 speed Brompton, folds down in about 20 seconds flat. I used this for commuting from {nh} to midtown and it is genuinely the best commuter solution in NYC — take it on the subway, fold it under your desk, never worry about locking it outside. Includes the Brompton carry bag. Selling because I switched jobs and dont commute anymore. Everything works perfectly, recently serviced at a Brompton dealer', priceRange: [100000, 150000] },
+      { title: 'E-bike — 500W motor', description: 'Electric bike with a 500W rear hub motor. Tops out at 28mph and gets about 40 miles on a full charge depending on how much you pedal. Battery is removable so you can charge it in your apartment without hauling the whole bike upstairs. Used it for deliveries for a few months but I got a car now so it just sits in my hallway. Everything works, brakes are good, tires have plenty of tread left. Charger included obviously', priceRange: [60000, 100000] },
+      { title: 'Fixed gear — matte black', description: '52cm frame, matte black, flip flop hub so you can ride fixed or freewheel. Just put on a new chain and fresh tires last month. Comes with a Kryptonite U-lock that alone is worth like $60. Great city bike — light, fast, low maintenance. Selling because I moved to a place with no bike storage. Can meet anywhere near the {train} to test ride it', priceRange: [20000, 35000] },
+      { title: 'Road bike — needs work', description: 'This is a project bike for someone who likes tinkering. The frame is solid aluminum, good geometry, no dents or cracks. Brakes work fine but the gears dont shift great — probably needs a new derailleur cable and maybe an adjustment. I just dont have the time or tools to deal with it right now. Selling cheap because I know it needs love. If you know what youre doing you could have a really nice bike for not a lot of money', priceRange: [8000, 18000] },
     ],
   },
   {
     sub: 'clothing-accessories',
     templates: [
-      { title: 'North Face puffer — M', description: '700 fill. Black. No rips. Bought a longer coat', priceRange: [8000, 15000] },
-      { title: 'Vintage Levis 501s — 32x32', description: 'Actual vintage not repro. Perfect fade. They dont fit me anymore and I am in denial about it', priceRange: [5000, 10000] },
-      { title: 'Nike AF1 — size 10 DS', description: 'White on white. Never worn. In box with receipt. Wrong size gift', priceRange: [8000, 13000] },
-      { title: 'Canada Goose — size L', description: 'Expedition parka. Worn 2 winters. Minor wear on cuffs. Professionally cleaned. This coat kept me alive', priceRange: [35000, 55000] },
-      { title: 'Timbs — size 11', description: 'Worn one winter. Waterproofed. Classic wheat. No scuffs', priceRange: [7000, 12000] },
+      { title: 'North Face puffer — M', description: '700 fill down. Black. No rips, no stains, zipper works perfectly. I bought a longer coat for this winter so I dont need two. Kept in good shape, always hung up never balled up in a closet. Fits true to size medium. Warm enough for the worst NYC winters. Can meet near {street} or anywhere in {nh}', priceRange: [8000, 15000] },
+      { title: 'Vintage Levis 501s — 32x32', description: 'Actual vintage not repro — picked these up at a thrift store in {nh} years ago. The fade is perfect, that natural worn-in look you cant get from new jeans no matter how much they charge you. They dont fit me anymore and I am in deep denial about it but its time to let them go to someone who will appreciate them. No holes, no weird stains, just beautifully broken in denim', priceRange: [5000, 10000] },
+      { title: 'Nike AF1 — size 10 DS', description: 'White on white Air Force 1s. Deadstock, never worn, never even tried on. Still in the original box with the receipt. Got these as a gift but they are a half size too small and I waited too long to return them. Perfect condition, tissue paper still inside. Can meet anywhere in {nh} or ship if you cover it', priceRange: [8000, 13000] },
+      { title: 'Canada Goose — size L', description: 'Expedition parka, size large. Worn two winters and this coat literally kept me alive during those polar vortex weeks. Minor wear on the cuffs from normal use but I had it professionally cleaned last month and it looks great. Down is still fully puffed, zipper smooth, fur trim in good shape. Selling because Im moving somewhere warmer. You will not regret this purchase when February hits', priceRange: [35000, 55000] },
+      { title: 'Timbs — size 11', description: 'Classic wheat Timberland boots, size 11. Worn one winter and waterproofed before I ever wore them outside. No scuffs, no salt stains, soles barely worn. They still look almost new honestly. Just have too many boots at this point and need to clear some space. These are the real deal, NYC staple. Can meet in {nh} or near the {train}', priceRange: [7000, 12000] },
     ],
   },
   {
     sub: 'free-stuff',
     templates: [
-      { title: 'FREE couch — {nh}', description: 'Gray sectional. Has some wear but its comfortable. Moving and I need it gone by Saturday. You haul. Please take it I am begging', priceRange: [0, 0] },
-      { title: 'Moving boxes — FREE, {nh}', description: 'Like 30 boxes all sizes plus packing paper and bubble wrap. Outside my building on {street}. First come. Theyre going in the trash tonight if nobody takes them', priceRange: [0, 0] },
-      { title: 'Books — 3 boxes, {nh}', description: 'Fiction, cookbooks, random nonfiction. Downsizing. On my stoop Saturday morning. Take what you want', priceRange: [0, 0] },
-      { title: 'Plants — rehoming, {nh}', description: '8 plants. Monstera (4ft), pothos, snake plant, spider plant, etc. I am moving and I cant take them. Please give them a window', priceRange: [0, 0] },
-      { title: 'FREE desk — {nh}', description: 'IKEA desk. Works fine. Nothing wrong with it I just got a new one. You pick up from my building on {street}. Its heavy heads up', priceRange: [0, 0] },
+      { title: 'FREE couch — {nh}', description: 'Gray sectional couch, free to whoever wants it. Has some wear on the cushions from years of movie marathons but its genuinely comfortable and has plenty of life left. I am moving out of my apartment in {nh} and need it gone by Saturday or its going to the curb. You haul it, bring at least one other person because its big. Please take this couch, I am literally begging. Its on the third floor but the stairway is wide', priceRange: [0, 0] },
+      { title: 'Moving boxes — FREE, {nh}', description: 'About 30 moving boxes in all sizes — small, medium, large, wardrobe boxes — plus a ton of packing paper and bubble wrap. Just finished unpacking and I hate to throw all this away when someone could use it. Everything is outside my building on {street} in {nh}. First come first served, grab what you need. If nobody takes them by tonight they are going in the recycling. Save some money on your move', priceRange: [0, 0] },
+      { title: 'Books — 3 boxes, {nh}', description: 'Three full boxes of books that need a new home. Mix of fiction, cookbooks, memoirs, random nonfiction — some great stuff in there. Im downsizing and I cannot fit another bookshelf in this apartment. They will be on my stoop Saturday morning starting at 8am on {street} in {nh}. Take whatever you want, leave whatever you dont. If its raining Ill put them under the awning. Please come, these books deserve better than a recycling bin', priceRange: [0, 0] },
+      { title: 'Plants — rehoming, {nh}', description: 'I have 8 plants that need new homes. A 4-foot monstera that is my pride and joy, two golden pothos, a snake plant, a spider plant, a rubber tree, and a couple of others. I am moving to a place with no natural light and I refuse to watch them die. Please take one or take all of them, just promise me you will give them a window and water them. Pots included. Near {street} in {nh}. They are beautiful and I am emotional about this', priceRange: [0, 0] },
+      { title: 'FREE desk — {nh}', description: 'IKEA desk in good condition, completely free. Nothing wrong with it at all, I just bought a standing desk and this one needs to go. Its the standard size one — fits a monitor, keyboard, and some notebooks comfortably. You pick up from my building on {street} in {nh}. Fair warning its heavier than you think IKEA furniture should be. Elevator in the building so getting it down is manageable. Please take it so I dont have to figure out how to dispose of it', priceRange: [0, 0] },
     ],
   },
   {
@@ -343,10 +339,10 @@ const FOR_SALE: SubcategoryTemplates[] = [
   {
     sub: 'sneakers-streetwear',
     templates: [
-      { title: 'Jordan 4 Bred — sz 10 DS', description: 'Deadstock. SNKRS receipt. Never tried on. Double boxed. Meet in {nh} or I ship. Price firm', priceRange: [22000, 30000] },
-      { title: 'New Balance 990v6 — sz 10.5', description: 'Made in USA. Gray. Wore them twice. Too narrow for my wide feet. Box included. Basically new', priceRange: [14000, 20000] },
-      { title: 'Supreme bogo hoodie — M', description: 'FW24 black on black. Tried on once. Receipt in hand. Meet in Manhattan. Dont lowball me', priceRange: [35000, 50000] },
-      { title: 'Dunks — sz 9, worn once', description: 'Panda dunks. Wore them to dinner and decided theyre not for me. No creases. $90 firm. Meet in {nh}', priceRange: [7000, 11000] },
+      { title: 'Jordan 4 Bred — sz 10 DS', description: 'Jordan 4 Bred Reimagined, size 10, completely deadstock. Never tried on, never taken out of the box except to photograph. SNKRS receipt available for verification. Double boxed for shipping if you want them sent, or happy to meet in {nh} for an in-person exchange so you can inspect them yourself. Price is firm — these are going for more than this on StockX right now. Serious buyers only please, I am not entertaining lowball offers', priceRange: [22000, 30000] },
+      { title: 'New Balance 990v6 — sz 10.5', description: 'New Balance 990v6 Made in USA, gray colorway, size 10.5. Wore them twice and realized they are too narrow for my wide feet which is heartbreaking because these are the most comfortable shoes I have ever put on. Box and extra laces included. They look basically brand new — no scuffs, no creasing, soles are pristine. If you have normal-width feet these are the best sneakers money can buy and Im selling them for well under retail', priceRange: [14000, 20000] },
+      { title: 'Supreme bogo hoodie — M', description: 'Supreme box logo hoodie, FW24, black on black, size medium. Tried on once to check the fit and put it right back in the bag. Receipt in hand, can verify authenticity however you want. These sold out in seconds and resale is significantly higher than what Im asking. Can meet in Manhattan to do the exchange in person. Do not lowball me, the price is based on current market value and Im already being generous', priceRange: [35000, 50000] },
+      { title: 'Dunks — sz 9, worn once', description: 'Nike Dunk Low Panda colorway, size 9. Wore them once to dinner and decided the silhouette just isnt for me — Im more of a New Balance person apparently. No creases, no scuffs, the soles look like I walked maybe 200 steps in them. Comes with the box. Price is firm at $90 which is below what people are selling used pairs for. Can meet anywhere in {nh} or near the {train} station', priceRange: [7000, 11000] },
     ],
   },
 ]
@@ -507,9 +503,9 @@ const TICKETS: SubcategoryTemplates[] = [
     sub: 'concerts',
     templates: [
       { title: '2 tix — MSG this weekend', description: 'Section 112. Work came up. Face value, Ticketmaster transfer. Not trying to scalp just trying to not waste them. DM for details', priceRange: [10000, 25000] },
-      { title: 'Brooklyn Steel — SOLD OUT, 2 tix', description: 'GA. Cant go anymore. Face value. This is a good show dont let these go to waste', priceRange: [5000, 12000] },
+      { title: 'Brooklyn Steel — SOLD OUT, 2 tix', description: 'Two general admission tickets to the sold out show at Brooklyn Steel. These were for me and my partner but something came up and we genuinely cant make it. Selling at face value because I am not a scalper, just someone who doesnt want good tickets to go to waste. Can transfer through the app immediately or meet in person near {nh}. This is going to be an incredible show, the venue is one of the best in the city for sound', priceRange: [5000, 12000] },
       { title: 'Radio City — 4 tickets together', description: 'Orchestra center. Family thing came up and we cant make it. Selling all 4 below what I paid. Will transfer right away', priceRange: [12000, 25000] },
-      { title: 'Bowery Ballroom — Friday, 2 tix', description: 'Sold out. GA. Selling at cost. Best small venue in the city. DM me for the artist', priceRange: [4000, 8000] },
+      { title: 'Bowery Ballroom — Friday, 2 tix', description: 'Sold out show at Bowery Ballroom this Friday night. Two GA tickets, selling at exactly what I paid. If you havent been to the Bowery Ballroom its honestly the best small venue in the city — great sight lines from anywhere and the sound is always perfect. I bought these months ago but have a schedule conflict I cant move. DM me and Ill tell you the artist and transfer right away. Dont miss this one', priceRange: [4000, 8000] },
       { title: 'Terminal 5 — 2 GA', description: 'Next Saturday. Got sick and not going to recover in time. Selling both at face value. Can transfer right now', priceRange: [6000, 14000] },
     ],
   },
@@ -705,6 +701,65 @@ const RESUMES: SubcategoryTemplates[] = [
   },
 ]
 
+// ─── COMMUNITY — 30 templates ───
+
+const COMMUNITY: SubcategoryTemplates[] = [
+  {
+    sub: 'events',
+    templates: [
+      { title: 'Block party — {street}, Saturday', description: 'Annual block party on {street} this Saturday from 2pm to 8pm. Live music, food from local restaurants, face painting for the kids, and a bounce house. Everyone in {nh} is welcome. We have been doing this for 6 years now and it gets bigger every time. Bring a lawn chair if you want to hang out. No cars allowed on the block starting at noon. Come meet your neighbors or just enjoy the food', priceRange: [0, 0] },
+      { title: 'Free outdoor movie — {nh} park', description: 'Free outdoor movie screening in the park near {street} this Friday at sunset. Bring a blanket and snacks. We are showing a classic NYC film. This is a neighborhood thing, not a corporate sponsored event — just a group of us who bought a projector and thought it would be fun. Been doing it monthly all summer. Family friendly. Dogs welcome if they dont bark at the screen', priceRange: [0, 0] },
+      { title: 'Stoop sale — {street}, Sunday', description: 'Cleaning out our apartment and putting everything on the stoop Sunday morning starting at 9am. Furniture, kitchen stuff, clothes, books, vinyl records, random things accumulated over 8 years in this apartment. Everything priced to sell or honestly just take it. Near {street} in {nh}. Come early for the good stuff, by afternoon whatever is left goes free', priceRange: [0, 0] },
+      { title: 'Neighborhood cleanup — {nh}', description: 'Organizing a neighborhood cleanup this Saturday morning in {nh}. Meeting at {street} at 9am. We will provide garbage bags, gloves, and grabbers. Last time we had about 20 people and filled 40 bags in 3 hours. Coffee and bagels for everyone who shows up. This neighborhood deserves to look as good as the people in it. All ages welcome, kids love it honestly', priceRange: [0, 0] },
+    ],
+  },
+  {
+    sub: 'local-alerts',
+    templates: [
+      { title: 'Package thieves — {street} area', description: 'Heads up to everyone near {street} in {nh}. Someone has been stealing packages from front stoops in the last week. At least 3 people on my block have had deliveries taken. If you have a camera pointed at the street please check your footage from Tuesday afternoon around 3pm. Already filed a police report. In the meantime, ship to your job or have a neighbor grab your packages. Stay aware out there', priceRange: [0, 0] },
+      { title: 'Water main work — {street}', description: 'DEP is doing water main work on {street} between the cross streets near {nh}. Expect reduced water pressure for the next few days and possible discoloration — run your cold water for a minute before drinking. Street parking will be affected too, they have cones up. Asked the crew and they said it should be done by end of next week. Just wanted to give a heads up since the city notice was basically unreadable', priceRange: [0, 0] },
+      { title: 'Car break-ins — {nh}', description: 'There have been several car break-ins around {nh} in the last two weeks, mostly on the side streets near {street}. They are smashing windows and grabbing whatever is visible — backpacks, electronics, shopping bags. Please dont leave anything in your car. Even an empty bag can look like a target. I have already reported it to the local precinct. If you see anything suspicious please call it in. Lets look out for each other', priceRange: [0, 0] },
+    ],
+  },
+  {
+    sub: 'lost-found',
+    templates: [
+      { title: 'FOUND — set of keys near {street}', description: 'Found a set of keys on the sidewalk near {street} in {nh}. Has about 6 keys on a keyring with a small blue carabiner and what looks like a gym membership tag. I left them with the bodega on the corner in case the owner retraces their steps. If these are yours, DM me and describe the keychain and Ill tell you exactly where they are. Hopefully this reaches you before you have to change all your locks', priceRange: [0, 0] },
+      { title: 'LOST — wallet, {nh} area', description: 'Lost my wallet somewhere in {nh} yesterday afternoon, probably between {street} and the {train} station. Black leather billfold with my ID, 2 credit cards, and some cash. Already cancelled the cards but the ID is a pain to replace. If you found it please reach out — you can keep the cash honestly I just want the wallet and ID back. Reward for anyone who returns it. I know its a long shot but this neighborhood has good people', priceRange: [0, 0] },
+      { title: 'FOUND — phone on {train} train', description: 'Found a phone on the {train} train this morning, looks like it fell out of someones pocket. Its locked but I can see notifications coming in so its definitely someones daily phone. I turned it in to the MTA booth at the station near {street}. If you lost your phone on the {train} this morning around 8am, go check with them. Spread the word because someone is probably panicking right now', priceRange: [0, 0] },
+    ],
+  },
+  {
+    sub: 'volunteers',
+    templates: [
+      { title: 'Food pantry needs volunteers — {nh}', description: 'Our food pantry in {nh} near {street} needs volunteers for Saturday morning distribution shifts. We serve about 200 families every week and we are stretched thin right now. No experience needed — you will be sorting, packing, and distributing food. Shifts are 8am to 12pm. Even one Saturday a month would make a huge difference. This is real community work, the families who come through are our neighbors and they are grateful', priceRange: [0, 0] },
+      { title: 'Tutoring volunteers — after school, {nh}', description: 'Looking for volunteers to help with our free after-school tutoring program at the community center near {street}. We need help with math, reading, and science for kids grades 3 through 8. Tuesdays and Thursdays from 3:30 to 5:30pm. You do not need to be a teacher, just patient and willing to help. These kids are smart and motivated, they just need a little extra support. Background check required', priceRange: [0, 0] },
+    ],
+  },
+  {
+    sub: 'groups',
+    templates: [
+      { title: 'Running club — {nh}', description: 'Free running club meeting every Saturday at 8am near {street} in {nh}. All paces welcome, we have groups doing 3 miles and groups doing 8. We run, we grab coffee after, we complain about our weeks. Its become a real community thing with about 30 regulars. No signup, no fees, just show up with sneakers on. We run rain or shine because we are unhinged and we love it', priceRange: [0, 0] },
+      { title: 'Book club — {nh}, new members welcome', description: 'Our {nh} book club meets once a month at a cafe near {street}. We read a mix of contemporary fiction, nonfiction, and the occasional classic. Currently about 12 members but we have room for more. The vibe is relaxed — we discuss the book for about an hour then just hang out. No pressure to finish every book, life happens. Next meeting is in two weeks, DM me for the title and location. All are welcome', priceRange: [0, 0] },
+      { title: 'Parents group — {nh}', description: 'Informal parents group for families in {nh} with kids under 5. We do playground meetups on weekends, occasional coffee mornings, and keep a group chat going for recommendations, hand-me-downs, and general parent support. About 15 families involved right now, always welcoming new members. The kids play, the adults get to have a conversation that isnt about Bluey. Near {street}', priceRange: [0, 0] },
+    ],
+  },
+  {
+    sub: 'neighborhood-questions',
+    templates: [
+      { title: 'Just moved to {nh} — what should I know?', description: 'Just moved to {nh} from {city} last week. Apartment is near {street} and I am still figuring everything out. Where do people get groceries? Best coffee? Any restaurants I need to try immediately? How is the parking situation? What about the laundromat? Any local Facebook groups or community boards I should join? I want to be a good neighbor and actually participate in the community, not just live here. Any tips appreciated, even the obvious ones', priceRange: [0, 0] },
+      { title: 'Best school options near {nh}?', description: 'We have a kid starting kindergarten next fall and we live near {street} in {nh}. Trying to figure out the school situation — public, charter, private, the whole landscape. If you have kids in school nearby I would love to hear your experience. What did you choose and why? How are the after-school programs? Is there anything you wish you knew before enrollment? This process is overwhelming and I trust real parent opinions over online ratings', priceRange: [0, 0] },
+    ],
+  },
+  {
+    sub: 'recommendations',
+    templates: [
+      { title: 'Best laundromat in {nh}', description: 'After trying 4 different laundromats in {nh} I finally found the one. The place on {street} has machines that actually work, its clean, the attendant is friendly, and the drop-off service is $1.10 per pound with a 24 hour turnaround. I have been going for 3 months now and have never had an issue. Compared to the nightmare spots with broken machines and mystery smells, this place is a revelation. Putting this here so other people in {nh} dont waste time like I did', priceRange: [0, 0] },
+      { title: 'Incredible tailor near {street}', description: 'Found an amazing tailor on {street} in {nh} and I need everyone to know about them. Hemmed two pairs of pants, took in a jacket, and fixed a zipper on my favorite bag — all for less than $40 total. The work is meticulous, everything fits perfectly, and it was ready in 3 days. They have been there for over 20 years apparently and I cannot believe I didnt know about them until now. Support local — this person is a craftsman', priceRange: [0, 0] },
+    ],
+  },
+]
+
 // ─── Master export ───
 
 export const LISTING_TEMPLATES: Record<string, SubcategoryTemplates[]> = {
@@ -719,6 +774,7 @@ export const LISTING_TEMPLATES: Record<string, SubcategoryTemplates[]> = {
   barter: BARTER,
   rentals: RENTALS,
   resumes: RESUMES,
+  community: COMMUNITY,
 }
 
 /** Pick a random template from a category, filling placeholders */
@@ -739,7 +795,7 @@ export function pickListingTemplate(
 
   return {
     title: fill(tmpl.title, vars).slice(0, 200),
-    description: varyText(fill(tmpl.description, vars)).slice(0, 2000),
+    description: varyText(fill(tmpl.description, vars)).slice(0, 4000),
     price,
     subcategory: subGroup.sub,
   }

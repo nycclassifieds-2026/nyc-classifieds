@@ -101,6 +101,197 @@ export function varyText(text: string): string {
   return result
 }
 
+// ─── Description Expander ───
+// Appends 1-3 category-specific bonus sentences to make every listing feel real and detailed.
+
+const EXPAND_GENERAL = [
+  'DM me if interested, I respond quick.',
+  'Text works better than email for me.',
+  'Serious inquiries only please.',
+  'First come first served.',
+  'Lmk if you have any questions.',
+  'Happy to send more details.',
+  'Available evenings and weekends.',
+  'Can be flexible on timing.',
+  'Located near {street} in {nh}.',
+  'Easy to get to from the {train}.',
+]
+
+const EXPAND_FOR_SALE = [
+  'Cash, Venmo, or Zelle works for me.',
+  'You pick up from {nh}, I can help carry it down.',
+  'Price is firm, already priced to sell.',
+  'Open to reasonable offers if you come today.',
+  'Cross-posted so dont wait too long on this.',
+  'Can send more photos if you want a closer look.',
+  'Works perfectly, Im just upgrading.',
+  'Nothing wrong with it I just dont need it anymore.',
+  'Been sitting in my closet for months, time to let it go.',
+  'Smoke-free pet-free home if that matters to you.',
+  'Has some normal wear but nothing that affects how it works.',
+  'Comes with everything in the original box.',
+  'Bought this new for way more than what Im asking.',
+  'Moving and need this gone before the end of the month.',
+  'Meet near the {train} station or I can bring it to you in {nh}.',
+  'Im around most days, just give me a heads up.',
+]
+
+const EXPAND_HOUSING = [
+  'The {train} is about a {walk} minute walk which is honestly not bad at all.',
+  'Bodega on the corner, grocery store 2 blocks, you dont need a car.',
+  'Block is quiet at night but close to everything during the day.',
+  'Neighbors are chill, mix of young professionals and families who have been here for years.',
+  'Heat is included and it actually runs hot in the winter.',
+  'Street parking isnt terrible if you have a car, usually find something within a block.',
+  'Building has a live-in super who actually responds to texts.',
+  'Laundry in the basement, machines are pretty new and theres almost always one free.',
+  'I have lived in this neighborhood for years and genuinely love it here.',
+  'Natural light is really good in the mornings, south and east facing windows.',
+  'Building just redid the lobby and hallways so everything looks clean.',
+  'Good water pressure which sounds small but you know how it is in NYC.',
+  'Ceiling fans in every room, AC units included for the summer.',
+  'Close to the park if you run or have a dog.',
+  'No broker fee, dealing directly with the landlord.',
+]
+
+const EXPAND_JOBS = [
+  'We are a small team and everyone wears a few hats but thats how you learn the most.',
+  'Room to grow if you are the right person and want to stick around.',
+  'Not a corporate vibe at all, we actually enjoy working here.',
+  'Direct reports to the owner, no layers of management getting in the way.',
+  'Interview process is straightforward — come in, meet the team, see if its a fit.',
+  'We have been in business for over {biz_years} years in this neighborhood.',
+  'Benefits include health insurance and paid time off after the first 90 days.',
+  'Flexible scheduling where we can make it work.',
+  'Looking for someone who wants to stay, not just pass through.',
+  'Pay is competitive for NYC and we actually value the people who work here.',
+]
+
+const EXPAND_SERVICES = [
+  'Ive been doing this for over {svc_years} years in NYC and my work speaks for itself.',
+  'Free estimates, no pressure, no hidden fees.',
+  'References available on request, happy to connect you with past clients.',
+  'I show up when I say I will which apparently makes me rare in this city.',
+  'Licensed and insured, everything by the book.',
+  'Satisfaction guaranteed or I come back and fix it no charge.',
+  'Same day or next day for most jobs.',
+  'Been servicing {nh} and the surrounding neighborhoods for years.',
+  'I take my work personally, your space is treated like my own.',
+  'Most of my business comes from referrals which tells you something.',
+  'I answer my phone. No waiting days for a callback.',
+  'Clean, professional, on time. Thats the standard I hold myself to.',
+]
+
+const EXPAND_PERSONALS = [
+  'Im normal I promise, just putting myself out there.',
+  'No pressure, just see if we vibe.',
+  'This is slightly embarrassing to post but NYC is too big to leave things to chance.',
+  'If this sounds like you, just say hi. Worst case we both tried.',
+  'I figure life is short and you miss 100% of the shots you dont take or whatever.',
+  'My friends think its weird that Im posting this but they also havent found me anyone so here we are.',
+  'I work in {nh} most days so anywhere around here works.',
+  'Coffee first, no pressure, see if the conversation flows.',
+  'Open to any age, background, whatever. Just be genuine.',
+  'I promise Im more interesting than a text post can convey.',
+]
+
+const EXPAND_GIGS = [
+  'Cash same day, no waiting around.',
+  'Quick job, shouldnt take more than a couple hours.',
+  'Just need someone reliable who shows up when they say they will.',
+  'Text me your availability, Im flexible on timing.',
+  'Can be a recurring thing if the first time goes well.',
+  'I provide everything you need, just bring yourself.',
+  'Easy work, nothing complicated.',
+  'Paying above average because I value your time.',
+  'Near the {train} so easy to get to.',
+  'Ive hired people from here before and its always worked out.',
+]
+
+const EXPAND_TICKETS = [
+  'Transferring through Ticketmaster or AXS, totally legit.',
+  'Not scalping, literally just cant make it.',
+  'Face value, I can show you the receipt if you want proof.',
+  'Can meet in person or transfer digitally, whatever works.',
+  'These are real tickets that I bought for myself, plans changed at the last minute.',
+  'Price is what I paid, im not trying to make money off this.',
+  'Dont let these go to waste, its going to be a great show.',
+]
+
+const EXPAND_PETS = [
+  'Comes with all supplies — food, bowls, bed, everything.',
+  'Vet records available and completely up to date.',
+  'Good with kids and gets along with other animals.',
+  'House-trained and honestly pretty low maintenance.',
+  'Up to date on all shots and has been spayed/neutered.',
+  'This is hard for me but I know its the right thing.',
+  'Just want them to go to someone who has the time and space they deserve.',
+  'Happy to do a trial visit so you can see how they are.',
+]
+
+const EXPAND_BARTER = [
+  'Open to creative offers, just pitch me something.',
+  'Can meet in {nh} to exchange and check everything out.',
+  'Lets work something out that makes sense for both of us.',
+  'Everything is in good working condition.',
+  'Fair trade, no games.',
+  'Ive been wanting to do this for a while, seemed like the right move.',
+]
+
+const EXPAND_RENTALS = [
+  'ID deposit required, you get it back when its returned in the same condition.',
+  'Pick up and drop off in {nh}, I can be flexible on times.',
+  'Ill show you how to use it if you havent before, takes 5 minutes.',
+  'Everything is in great working condition, I maintain my stuff.',
+  'Can do repeat rentals at a discount if you need it regularly.',
+]
+
+const EXPAND_RESUMES = [
+  'Open to freelance, contract, or full-time — whatever the right opportunity is.',
+  'Portfolio and references available on request.',
+  'Based in NYC but open to remote or hybrid arrangements.',
+  'Available to start immediately.',
+  'Willing to chat over coffee if you want to get a sense of who I am beyond a resume.',
+  'Looking for somewhere I can actually contribute, not just fill a seat.',
+  'Im good at what I do and I am looking for a team that values that.',
+]
+
+const EXPAND_MAP: Record<string, string[]> = {
+  'for-sale': EXPAND_FOR_SALE,
+  housing: EXPAND_HOUSING,
+  jobs: EXPAND_JOBS,
+  services: EXPAND_SERVICES,
+  personals: EXPAND_PERSONALS,
+  gigs: EXPAND_GIGS,
+  tickets: EXPAND_TICKETS,
+  pets: EXPAND_PETS,
+  barter: EXPAND_BARTER,
+  rentals: EXPAND_RENTALS,
+  resumes: EXPAND_RESUMES,
+  community: EXPAND_GENERAL,
+}
+
+/**
+ * Expand a listing description with 1-3 bonus detail sentences.
+ * Makes every listing feel like a real person who put thought into the post.
+ */
+export function expandDescription(
+  desc: string,
+  category: string,
+  vars: Record<string, string>,
+): string {
+  const pool = [...(EXPAND_MAP[category] || []), ...EXPAND_GENERAL]
+  const n = rb(1, 3)
+  const picked = pickN(pool, n)
+  const extras = picked.map(s => fill(s, {
+    ...vars,
+    walk: String(rb(3, 12)),
+    biz_years: String(rb(5, 20)),
+    svc_years: String(rb(5, 15)),
+  }))
+  return desc + ' ' + extras.join(' ')
+}
+
 // ─── Geography ───
 
 export const BOROUGHS: Record<string, { lat: number; lng: number; nhs: string[] }> = {

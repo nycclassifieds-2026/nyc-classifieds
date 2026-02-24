@@ -131,6 +131,14 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: 'Failed to report' }, { status: 500 })
     }
+
+    logEvent('review_reported', { review_id, reason: reason?.trim() || null }, {
+      userId: parseInt(userId),
+      notify: true,
+      notifyTitle: 'Review reported',
+      notifyBody: `Review #${review_id} reported`,
+    })
+
     return NextResponse.json({ ok: true })
   }
 

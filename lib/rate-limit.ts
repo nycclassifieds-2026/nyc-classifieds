@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from '@/lib/supabase-server'
+import { sendPushToAdmins } from '@/lib/push'
 
 /**
  * Supabase-backed rate limiter.
@@ -19,11 +20,14 @@ export async function rateLimit(
     })
     if (error) {
       console.error('Rate limit DB error:', error.message)
+      sendPushToAdmins({ title: 'Rate limiting error', body: error.message.slice(0, 200), url: '/admin' }).catch(() => {})
       return true // fail open
     }
     return data as boolean
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
     console.error('Rate limit error:', err)
+    sendPushToAdmins({ title: 'Rate limiting error', body: msg.slice(0, 200), url: '/admin' }).catch(() => {})
     return true // fail open
   }
 }

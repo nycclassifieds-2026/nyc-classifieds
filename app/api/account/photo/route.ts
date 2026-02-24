@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { verifySession } from '@/lib/auth-utils'
+import { logEvent } from '@/lib/events'
 import { cookies } from 'next/headers'
 
 const SUPABASE_HOST = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -46,6 +47,13 @@ export async function POST(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: 'Failed to update photo' }, { status: 500 })
   }
+
+  logEvent('photo_updated', { type, user_id: parseInt(userId) }, {
+    userId: parseInt(userId),
+    notify: true,
+    notifyTitle: 'Photo updated',
+    notifyBody: `User #${userId} updated ${type} photo`,
+  })
 
   return NextResponse.json({ ok: true })
 }

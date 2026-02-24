@@ -73,6 +73,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   const isAppPage = pathname?.startsWith('/signup') || pathname?.startsWith('/login') || pathname?.startsWith('/account') || pathname?.startsWith('/messages') || pathname?.startsWith('/notifications') || pathname?.startsWith('/forgot-pin') || pathname === '/listings/new'
   const isClassifieds = pathname === '/' || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island')
   const isPorch = pathname?.startsWith('/porch')
+  const isAlerts = pathname?.startsWith('/alerts')
   const isDirectory = pathname === '/business'
 
   // Parse URL context for ads
@@ -153,6 +154,17 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
                 whiteSpace: 'nowrap',
               }}>
                 Porch
+              </Link>
+              <Link href="/alerts" style={{
+                padding: mobile ? '6px 8px' : '6px 14px',
+                fontSize: mobile ? '0.75rem' : '0.8125rem',
+                fontWeight: isAlerts ? 600 : 500,
+                color: isAlerts ? '#111827' : '#6b7280',
+                borderBottom: isAlerts ? '2px solid #d97706' : '2px solid transparent',
+                fontFamily: "'DM Sans', sans-serif",
+                whiteSpace: 'nowrap',
+              }}>
+                Alerts
               </Link>
             </nav>
 

@@ -39,6 +39,11 @@ interface User {
   seo_keywords: string[] | null
 }
 
+interface SavedSearch {
+  id: number; label: string; keywords: string | null; category: string | null
+  subcategory: string | null; min_price: number | null; max_price: number | null; created_at: string
+}
+
 interface Listing {
   id: number; title: string; price: number | null; images: string[]
   status: string; category_slug: string; created_at: string
@@ -58,6 +63,7 @@ export default function AccountClient() {
   const [user, setUser] = useState<User | null>(null)
   const [listings, setListings] = useState<Listing[]>([])
   const [porchPosts, setPorchPosts] = useState<PorchPost[]>([])
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'personal' | 'business'>('personal')
@@ -154,9 +160,11 @@ export default function AccountClient() {
         return Promise.all([
           fetch(`/api/listings?user=${d.user.id}`).then(r => r.json()),
           fetch(`/api/porch?user=${d.user.id}`).then(r => r.json()),
-        ]).then(([ld, pd]) => {
+          fetch('/api/saved-searches').then(r => r.json()),
+        ]).then(([ld, pd, sd]) => {
           if (ld?.listings) setListings(ld.listings)
           if (pd?.posts) setPorchPosts(pd.posts)
+          if (sd?.alerts) setSavedSearches(sd.alerts)
         })
       })
       .catch(() => router.push('/login'))
@@ -482,6 +490,39 @@ export default function AccountClient() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
             )}
           </Link>
+
+          {/* Alerts */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 700 }}>My Alerts</h2>
+            <Link href="/alerts" style={{ padding: '0.5rem 1rem', backgroundColor: '#2563eb', color: '#fff', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Create Alert</Link>
+          </div>
+          {savedSearches.length === 0 ? (
+            <div style={{ padding: '1.5rem', textAlign: 'center', color: '#94a3b8', border: '1px dashed #e2e8f0', borderRadius: '0.75rem', marginBottom: '2rem' }}>
+              No alerts yet. <Link href="/alerts" style={{ color: '#2563eb', fontWeight: 500 }}>Create one</Link> to get notified about new listings.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '2rem' }}>
+              {savedSearches.map(s => (
+                <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', border: '1px solid #e2e8f0', borderRadius: '0.75rem' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{s.label}</div>
+                    <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Created {new Date(s.created_at).toLocaleDateString()}</div>
+                  </div>
+                  {s.category && (
+                    <Link href={`/listings/${s.category}`} style={{ ...smallLinkStyle, fontSize: '0.7rem' }}>View listings</Link>
+                  )}
+                  <button onClick={async () => {
+                    const res = await fetch('/api/saved-searches', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: s.id }) })
+                    if (res.ok) setSavedSearches(prev => prev.filter(x => x.id !== s.id))
+                  }} style={{ ...smallLinkStyle, color: '#dc2626', fontSize: '0.7rem' }}>Delete</button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Listings */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>

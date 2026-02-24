@@ -15,6 +15,7 @@ export type NotificationType =
   | 'admin_notice'
   | 'feedback_reply'
   | 'admin_warning'
+  | 'saved_search_match'
 
 export async function createNotification(
   userId: number,

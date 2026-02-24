@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { sendEmail } from '@/lib/email'
-import { listingLiveEmail } from '@/lib/email-templates'
+import { listingLiveEmail, savedSearchMatchEmail } from '@/lib/email-templates'
 import { sendPushToAdmins } from '@/lib/push'
 import { logEvent } from '@/lib/events'
 import { verifySession } from '@/lib/auth-utils'
+import { createNotification } from '@/lib/notifications'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const PAGE_SIZE = 24
@@ -128,6 +129,35 @@ export async function POST(request: NextRequest) {
       const { data: u } = await db.from('users').select('email, name').eq('id', userId).single()
       if (u?.email && !u.email.endsWith('@example.com')) {
         await sendEmail(u.email, listingLiveEmail(u.name || 'there', title.trim(), listing.id, category_slug))
+      }
+    } catch {}
+  })()
+
+  // Match saved searches and notify (fire-and-forget)
+  ;(async () => {
+    try {
+      const { data: searches } = await db
+        .from('saved_searches')
+        .select('id, user_id, label, keywords, category, subcategory, min_price, max_price')
+
+      for (const s of searches || []) {
+        if (s.user_id === parseInt(userId)) continue // don't notify the poster
+        const catOk = !s.category || s.category === category_slug
+        const subOk = !s.subcategory || s.subcategory === (body.subcategory_slug || null)
+        const minOk = s.min_price == null || (price != null && price >= s.min_price)
+        const maxOk = s.max_price == null || (price != null && price <= s.max_price)
+        const kwOk = !s.keywords || title.toLowerCase().includes(s.keywords.toLowerCase())
+                  || (description && description.toLowerCase().includes(s.keywords.toLowerCase()))
+        if (catOk && subOk && minOk && maxOk && kwOk) {
+          await createNotification(s.user_id, 'saved_search_match',
+            `Match: ${s.label}`, title.trim(),
+            `/listings/${category_slug}/${listing.id}`)
+          // Email
+          const { data: u } = await db.from('users').select('email, name').eq('id', s.user_id).single()
+          if (u?.email && !u.email.endsWith('@example.com')) {
+            sendEmail(u.email, savedSearchMatchEmail(u.name || 'there', s.label, title.trim(), listing.id, category_slug)).catch(() => {})
+          }
+        }
       }
     } catch {}
   })()

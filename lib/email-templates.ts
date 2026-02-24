@@ -328,6 +328,37 @@ export function listingLiveEmail(
   }
 }
 
+export function savedSearchMatchEmail(
+  name: string,
+  searchLabel: string,
+  listingTitle: string,
+  listingId: number,
+  categorySlug: string,
+): { subject: string; html: string } {
+  const n = esc(name), sl = esc(searchLabel), lt = esc(listingTitle)
+  const listingUrl = `${BASE_URL}/listings/${categorySlug}/${listingId}`
+  return {
+    subject: `New match: "${sl}"`,
+    html: `
+      ${WRAPPER_START}
+        ${HEADER}
+        <p style="color: #475569; font-size: 0.875rem;">Hi ${n},</p>
+        <p style="color: #475569; font-size: 0.875rem; margin-bottom: 1rem;">
+          A new listing matches your alert <strong>"${sl}"</strong>:
+        </p>
+        <div style="background: #f1f5f9; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+          <p style="color: #0f172a; font-size: 0.9375rem; font-weight: 600; margin: 0;">${lt}</p>
+        </div>
+        ${BUTTON(listingUrl, 'View Listing')}
+        <p style="color: #94a3b8; font-size: 0.75rem; margin-top: 1.5rem;">
+          You're receiving this because you set up an alert on The NYC Classifieds. Manage your alerts in your <a href="${BASE_URL}/alerts" style="color: #2563eb;">account settings</a>.
+        </p>
+        ${FOOTER}
+      ${WRAPPER_END}
+    `,
+  }
+}
+
 export function urgentPostLiveEmail(
   name: string,
   postTitle: string,
@@ -741,6 +772,53 @@ export function userWarningEmail(
         <p style="color: #475569; font-size: 0.875rem;">
           If you believe this was a mistake, reply to this email.
         </p>
+        ${FOOTER}
+      ${WRAPPER_END}
+    `,
+  }
+}
+
+export function adminLoginAlertEmail(
+  name: string,
+  email: string,
+  timestamp: string,
+): { subject: string; html: string } {
+  const n = esc(name), e = esc(email), t = esc(timestamp)
+  return {
+    subject: `Admin login alert — ${n}`,
+    html: `
+      ${WRAPPER_START}
+        ${HEADER}
+        <p style="color: #475569; font-size: 0.875rem; margin-bottom: 0.5rem;">An admin/moderator account just logged in.</p>
+        <div style="background: #f1f5f9; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+          <p style="color: #475569; font-size: 0.875rem; margin: 0 0 0.25rem;"><strong>Name:</strong> ${n}</p>
+          <p style="color: #475569; font-size: 0.875rem; margin: 0 0 0.25rem;"><strong>Email:</strong> ${e}</p>
+          <p style="color: #475569; font-size: 0.875rem; margin: 0;"><strong>Time:</strong> ${t}</p>
+        </div>
+        <p style="color: #94a3b8; font-size: 0.75rem;">If this wasn't you, secure your account immediately.</p>
+        ${FOOTER}
+      ${WRAPPER_END}
+    `,
+  }
+}
+
+export function systemErrorAlertEmail(
+  context: string,
+  errorMessage: string,
+): { subject: string; html: string } {
+  const c = esc(context), m = esc(errorMessage)
+  return {
+    subject: `System error: ${c}`,
+    html: `
+      ${WRAPPER_START}
+        ${HEADER}
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
+          <p style="color: #dc2626; font-size: 0.875rem; font-weight: 600; margin: 0 0 0.5rem;">System Error</p>
+          <p style="color: #475569; font-size: 0.875rem; margin: 0 0 0.25rem;"><strong>Context:</strong> ${c}</p>
+          <p style="color: #475569; font-size: 0.875rem; margin: 0; white-space: pre-wrap; word-break: break-all;"><strong>Error:</strong> ${m}</p>
+        </div>
+        <p style="color: #94a3b8; font-size: 0.75rem;">Timestamp: ${new Date().toISOString()}</p>
+        ${BUTTON(`${BASE_URL}/admin`, 'Open Admin')}
         ${FOOTER}
       ${WRAPPER_END}
     `,

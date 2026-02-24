@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import ListingGrid from '@/app/components/ListingGrid'
 import SearchAutocomplete from '@/app/components/SearchAutocomplete'
 import PreLaunchGate from '@/app/components/PreLaunchGate'
+import AlertButton from '@/app/components/AlertButton'
 
 interface Listing {
   id: number
@@ -119,9 +120,12 @@ export default function SearchClient() {
       </div>
 
       {searched && (
-        <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem' }}>
-          {total} result{total !== 1 ? 's' : ''} for &ldquo;{searchParams.get('q') || query}&rdquo;
-        </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <p style={{ color: '#64748b', fontSize: '0.875rem', margin: 0 }}>
+            {total} result{total !== 1 ? 's' : ''} for &ldquo;{searchParams.get('q') || query}&rdquo;
+          </p>
+          <AlertButton keywords={query} category={category || undefined} />
+        </div>
       )}
 
       {loading ? (

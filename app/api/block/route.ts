@@ -42,7 +42,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to block user' }, { status: 500 })
   }
 
-  logEvent('user_blocked', { blocker_id: uid, blocked_id: user_id }, { userId: uid })
+  logEvent('user_blocked', { blocker_id: uid, blocked_id: user_id }, {
+    userId: uid,
+    notify: true,
+    notifyTitle: 'User blocked',
+    notifyBody: `User #${uid} blocked user #${user_id}`,
+  })
 
   return NextResponse.json({ blocked: true }, { status: 201 })
 }
@@ -69,6 +74,13 @@ export async function DELETE(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: 'Failed to unblock user' }, { status: 500 })
   }
+
+  logEvent('user_unblocked', { blocker_id: parseInt(userId), unblocked_id: user_id }, {
+    userId: parseInt(userId),
+    notify: true,
+    notifyTitle: 'User unblocked',
+    notifyBody: `User #${userId} unblocked user #${user_id}`,
+  })
 
   return NextResponse.json({ unblocked: true })
 }

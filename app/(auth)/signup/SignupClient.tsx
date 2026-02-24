@@ -261,6 +261,20 @@ export default function SignupClient() {
     ? allNeighborhoods.filter(n => n.label.toLowerCase().includes(areaSearch.toLowerCase()))
     : allNeighborhoods
 
+  const SupportFooter = () => (
+    <div style={supportFooterStyle}>
+      <p style={{ margin: 0, fontWeight: 600, color: '#475569' }}>Real people, real support</p>
+      <p style={{ margin: '0.375rem 0 0' }}>
+        Call or text us:{' '}
+        <a href="tel:2122029220" style={{ color: '#2563eb', fontWeight: 600 }}>212.202.9220</a>
+      </p>
+      <p style={{ margin: '0.25rem 0 0' }}>
+        <a href="/feedback" style={{ color: '#2563eb', fontWeight: 500 }}>Send feedback</a>
+        {' '}&middot;{' '}Or use the chat bubble in the bottom right
+      </p>
+    </div>
+  )
+
   // Dynamic progress steps
   const visibleSteps: Step[] = isBusiness
     ? ['email', 'otp', 'type', 'name', 'business', 'pin', 'address', 'selfie']
@@ -324,6 +338,7 @@ export default function SignupClient() {
           <p style={{ textAlign: 'center', marginTop: '1rem', color: '#64748b', fontSize: '0.875rem' }}>
             Already have an account? <a href="/login" style={{ color: '#2563eb', fontWeight: 500 }}>Log in</a>
           </p>
+          <SupportFooter />
         </div>
       )}
 
@@ -342,6 +357,7 @@ export default function SignupClient() {
           </button>
           <button onClick={() => { setOtp(''); handleSendOtp() }} style={linkBtnStyle}>Resend code</button>
           <button onClick={goBack} style={backBtnStyle}>Back</button>
+          <SupportFooter />
         </div>
       )}
 
@@ -365,6 +381,7 @@ export default function SignupClient() {
           </button>
           {error && <p style={errorStyle}>{error}</p>}
           <button onClick={goBack} style={backBtnStyle}>Back</button>
+          <SupportFooter />
         </div>
       )}
 
@@ -385,6 +402,7 @@ export default function SignupClient() {
             Continue
           </button>
           <button onClick={goBack} style={backBtnStyle}>Back</button>
+          <SupportFooter />
         </div>
       )}
 
@@ -488,6 +506,7 @@ export default function SignupClient() {
             You can add photos after signup from your profile.
           </p>
           <button onClick={goBack} style={backBtnStyle}>Back</button>
+          <SupportFooter />
         </div>
       )}
 
@@ -508,6 +527,7 @@ export default function SignupClient() {
             Set PIN
           </button>
           <button onClick={goBack} style={backBtnStyle}>Back</button>
+          <SupportFooter />
         </div>
       )}
 
@@ -583,6 +603,7 @@ export default function SignupClient() {
             Continue
           </button>
           <button onClick={goBack} style={backBtnStyle}>Back</button>
+          <SupportFooter />
         </div>
       )}
 
@@ -603,6 +624,7 @@ export default function SignupClient() {
           </div>
           <SelfieVerification onVerified={handleVerified} onSubmit={handleCompleteSignup} />
           <button onClick={goBack} style={backBtnStyle}>Back</button>
+          <SupportFooter />
         </div>
       )}
 
@@ -656,6 +678,12 @@ const backBtnStyle: React.CSSProperties = {
   display: 'block', width: '100%', textAlign: 'center', background: 'none',
   border: 'none', color: '#64748b', fontSize: '0.875rem', cursor: 'pointer',
   marginTop: '0.75rem', padding: '0.5rem',
+}
+
+const supportFooterStyle: React.CSSProperties = {
+  marginTop: '1.5rem', padding: '0.75rem 1rem', borderRadius: '0.5rem',
+  backgroundColor: '#f8fafc', border: '1px solid #e2e8f0',
+  fontSize: '0.8125rem', color: '#64748b', lineHeight: 1.6, textAlign: 'center',
 }
 
 const typeCardStyle: React.CSSProperties = {

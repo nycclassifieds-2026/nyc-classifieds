@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { verifySession } from '@/lib/auth-utils'
 import { haversineDistance } from '@/lib/geocode'
 import { sendEmail } from '@/lib/email'
+import { notifyError } from '@/lib/errors'
 import { verificationSuccessEmail, welcomeEmail, adminNewSignupEmail } from '@/lib/email-templates'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
@@ -105,8 +106,8 @@ export async function POST(request: NextRequest) {
         sendEmail(u.email, verificationSuccessEmail(u.name || 'there', nh)),
         sendEmail(u.email, welcomeEmail(u.name || 'there', nh)),
       ])
-      if (verRes.error) console.error('Verification email failed:', verRes.error)
-      if (welRes.error) console.error('Welcome email failed:', welRes.error)
+      if (verRes.error) notifyError('Location verification', new Error(`Verification email failed: ${verRes.error}`))
+      if (welRes.error) notifyError('Location verification', new Error(`Welcome email failed: ${welRes.error}`))
 
       // Notify admins of new real user signup (async)
       ;(async () => {
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
       })()
     }
   } catch (err) {
-    console.error('Signup email error:', err)
+    notifyError('Location verification', err)
   }
 
   return NextResponse.json({ verified: true, distance: distance.toFixed(2) })

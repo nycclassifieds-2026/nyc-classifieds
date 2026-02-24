@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-server'
 import { sendEmail } from '@/lib/email'
 import { listingExpiringEmail, listingExpiredEmail, adminDailyDigestEmail, DailyDigestStats } from '@/lib/email-templates'
 import { createNotification } from '@/lib/notifications'
+import { notifyError } from '@/lib/errors'
 
 export async function GET(request: NextRequest) {
   // Verify cron secret
@@ -244,7 +245,7 @@ export async function GET(request: NextRequest) {
       digestSent = true
     }
   } catch (err) {
-    console.error('Daily digest error:', err)
+    notifyError('Daily digest cron', err)
   }
 
   return NextResponse.json({

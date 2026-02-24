@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-server'
-import { otpEmail, welcomeEmail, businessProfileLiveEmail } from '@/lib/email-templates'
+import { otpEmail, welcomeEmail, businessProfileLiveEmail, adminLoginAlertEmail } from '@/lib/email-templates'
 import { sendEmail } from '@/lib/email'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { signEmailToken, hashPin, verifyPin, signSession, verifySession } from '@/lib/auth-utils'
 import { logEvent } from '@/lib/events'
+import { notifyError } from '@/lib/errors'
 const COOKIE_NAME = 'nyc_classifieds_user'
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -131,7 +132,7 @@ export async function POST(request: NextRequest) {
     // Check if user already exists
     const { data: user } = await db
       .from('users')
-      .select('id, pin, verified, banned')
+      .select('id, pin, verified, banned, role, name')
       .eq('email', email)
       .single()
 
@@ -142,6 +143,22 @@ export async function POST(request: NextRequest) {
     // Existing user with PIN → log them in
     if (user?.pin) {
       logEvent('otp_verified', { email, existing_user: true }, { userId: user.id })
+
+      // Alert admins when admin/mod logs in via OTP
+      if (user.role === 'admin' || user.role === 'moderator') {
+        ;(async () => {
+          try {
+            const db2 = getSupabaseAdmin()
+            const { data: admins } = await db2.from('users').select('email').eq('role', 'admin').eq('banned', false).not('email', 'like', '%@example.com')
+            if (admins) {
+              const template = adminLoginAlertEmail(user.name || email, email, new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }))
+              for (const a of admins) {
+                if (a.email) sendEmail(a.email, template).catch(() => {})
+              }
+            }
+          } catch {}
+        })()
+      }
 
       const res = NextResponse.json({
         verified: true,
@@ -297,7 +314,7 @@ export async function POST(request: NextRequest) {
     const db = getSupabaseAdmin()
     const { data: user } = await db
       .from('users')
-      .select('id, pin, name, verified, banned')
+      .select('id, pin, name, verified, banned, role')
       .eq('email', email)
       .single()
 
@@ -324,6 +341,21 @@ export async function POST(request: NextRequest) {
       notifyBody: `${user.name || email} logged in`,
     })
 
+    // Alert admins when admin/mod logs in via PIN
+    if (user.role === 'admin' || user.role === 'moderator') {
+      ;(async () => {
+        try {
+          const { data: admins } = await db.from('users').select('email').eq('role', 'admin').eq('banned', false).not('email', 'like', '%@example.com')
+          if (admins) {
+            const template = adminLoginAlertEmail(user.name || email, email, new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }))
+            for (const a of admins) {
+              if (a.email) sendEmail(a.email, template).catch(() => {})
+            }
+          }
+        } catch {}
+      })()
+    }
+
     const res = NextResponse.json({
       authenticated: true,
       user: { id: user.id, name: user.name, verified: user.verified },
@@ -346,7 +378,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
   } catch (err) {
-    console.error('Auth POST error:', err)
+    notifyError('Auth system', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

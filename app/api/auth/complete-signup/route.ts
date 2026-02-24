@@ -6,6 +6,7 @@ import { sendEmail } from '@/lib/email'
 import { verificationSuccessEmail, welcomeEmail, adminNewSignupEmail } from '@/lib/email-templates'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { sendPushToAdmins } from '@/lib/push'
+import { notifyError } from '@/lib/errors'
 
 const COOKIE_NAME = 'nyc_classifieds_user'
 const isProd = process.env.NODE_ENV === 'production'
@@ -204,7 +205,7 @@ export async function POST(request: NextRequest) {
   Promise.all([
     sendEmail(email, verificationSuccessEmail(name, nh)),
     sendEmail(email, welcomeEmail(name, nh)),
-  ]).catch(err => console.error('Signup email error:', err))
+  ]).catch(err => notifyError('Signup completion', err))
 
   // Push notification to admins
   sendPushToAdmins({ title: 'New signup', body: `${name} just signed up`, url: '/admin' }).catch(() => {})
