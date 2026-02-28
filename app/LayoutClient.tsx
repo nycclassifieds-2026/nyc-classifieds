@@ -28,7 +28,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   const pathname = usePathname()
   const router = useRouter()
   const hideNav = pathname?.startsWith('/admin')
-  const isHomepage = pathname === '/'
+  const isHomepage = pathname === '/' || pathname === '/the-classifieds'
   const isSearchPage = pathname === '/search'
   const [user, setUser] = useState<{ name?: string } | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -71,7 +71,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   }, [pathname])
 
   const isAppPage = pathname?.startsWith('/signup') || pathname?.startsWith('/login') || pathname?.startsWith('/account') || pathname?.startsWith('/messages') || pathname?.startsWith('/notifications') || pathname?.startsWith('/forgot-pin') || pathname === '/listings/new'
-  const isClassifieds = pathname === '/' || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island')
+  const isClassifieds = pathname === '/the-classifieds' || pathname?.startsWith('/the-classifieds/') || pathname?.startsWith('/listings') || pathname?.startsWith('/manhattan') || pathname?.startsWith('/brooklyn') || pathname?.startsWith('/queens') || pathname?.startsWith('/bronx') || pathname?.startsWith('/staten-island')
   const isPorch = pathname?.startsWith('/porch')
   const isAlerts = pathname?.startsWith('/alerts')
   const isDirectory = pathname === '/business'
@@ -133,7 +133,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
 
             {/* Section tabs */}
             <nav style={{ display: 'flex', alignItems: 'center', gap: mobile ? '0' : '4px', marginLeft: mobile ? '8px' : '32px' }}>
-              <Link href="/" style={{
+              <Link href="/the-classifieds" style={{
                 padding: mobile ? '6px 8px' : '6px 14px',
                 fontSize: mobile ? '0.75rem' : '0.8125rem',
                 fontWeight: isClassifieds ? 600 : 500,
