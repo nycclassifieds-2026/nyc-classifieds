@@ -25,6 +25,12 @@ const faqs = [
   { question: 'How is my privacy protected on NYC Classifieds?', answer: 'Your selfie is used for verification only and is not stored long-term. Your exact GPS coordinates are never shared with other users — only your borough and neighborhood are visible. You control what information appears on your profile.' },
   { question: 'Can I use NYC Classifieds on my phone?', answer: 'Yes. NYC Classifieds is a mobile-first progressive web app that works on any phone, tablet, or computer. No app download required — just visit thenycclassifieds.com in your browser. You can add it to your home screen for an app-like experience.' },
   { question: 'How do I report a suspicious listing?', answer: 'Every listing has a flag button. You can report suspicious listings, and our moderation team reviews flagged content. Because every user is geo-verified, abuse is rare — but we take reports seriously and act quickly.' },
+  { question: 'How is NYC Classifieds different from Nextdoor?', answer: 'Nextdoor is a national platform with an NYC filter. It is ad-heavy, drama-filled, and not really a classifieds platform. NYC Classifieds is built exclusively for New York City with geo-verified users, a full classifieds platform with 12 categories and 220+ subcategories, a community board (The Porch), and a free business directory. Every feature is designed for New Yorkers, not a national audience.' },
+  { question: 'Can I message other users on NYC Classifieds?', answer: 'Yes. NYC Classifieds has built-in direct messaging so buyers and sellers can communicate without sharing personal contact information. Messages are threaded by listing so conversations stay organized. Only verified users can send messages, which eliminates spam.' },
+  { question: 'What are saved searches and alerts?', answer: 'You can save any search on NYC Classifieds — including keywords, category, borough, and price range — and get notified when new matching listings are posted. This is especially useful for competitive categories like housing and jobs where new listings go fast.' },
+  { question: 'How does content moderation work on NYC Classifieds?', answer: 'NYC Classifieds uses multiple layers of moderation. Automatic filters catch spam, profanity, and suspicious content. Users can flag listings and posts for review. Rate limiting prevents abuse of signups, messages, and flags. Our moderation team reviews flagged content and takes action quickly. Because every user is geo-verified, abuse is far less common than on anonymous platforms.' },
+  { question: 'Do businesses get customer reviews on NYC Classifieds?', answer: 'Yes. Businesses listed in the NYC Business Directory can receive customer reviews and ratings from verified users. Customers can leave 1-5 star ratings and text reviews, and business owners can reply to reviews. Only geo-verified NYC residents can leave reviews, so businesses get honest feedback from real local customers.' },
+  { question: 'Is there a mobile app for NYC Classifieds?', answer: 'NYC Classifieds is a mobile-first progressive web app. It works on any phone, tablet, or computer — no app download required. Just visit thenycclassifieds.com in your mobile browser and add it to your home screen for an app-like experience with fast loading and offline support.' },
 ]
 
 const sectionHeading = { fontSize: '1.15rem', fontWeight: 700, color: '#111827', margin: '0 0 10px', letterSpacing: '-0.01em' } as const
@@ -202,7 +208,158 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          5. BROWSE BY CATEGORY (every subcategory linked)
+          5. BRINGING BACK WHAT CRAIGSLIST GOT RIGHT
+          ═══════════════════════════════════════════════════════════════ */}
+      <section style={sectionWrap}>
+        <h2 style={sectionHeading}>Bringing Back What Craigslist Got Right — and Fixing What Went Wrong</h2>
+        <p style={sectionBody}>
+          There was a time when Craigslist was everything local classifieds should be. Simple, free, community-driven.
+          You could find an <Link href="/listings/housing/apartments" style={linkStyle}>apartment in the East Village</Link>,
+          sell a couch in <Link href="/brooklyn/park-slope" style={linkStyle}>Park Slope</Link>, hire a{' '}
+          <Link href="/listings/services/moving-and-hauling" style={linkStyle}>moving crew</Link> for Saturday, or pick up{' '}
+          <Link href="/listings/for-sale/free-stuff" style={linkStyle}>free stuff</Link> on your block — all without
+          paying a dime. It connected real neighbors in real neighborhoods. For millions of New Yorkers, Craigslist
+          was the classifieds.
+        </p>
+        <p style={{ ...sectionBody, marginTop: '8px' }}>
+          Then it fell apart. Spam flooded every category. Scammers posted fake{' '}
+          <Link href="/listings/housing" style={linkStyle}>apartment listings</Link> with stolen photos.
+          Bots scraped contact information. Anonymous accounts meant zero accountability — you never knew if the
+          person on the other end was a real New Yorker or someone running a con from another state. The{' '}
+          <Link href="/listings/jobs" style={linkStyle}>jobs section</Link> filled with shady gig offers.
+          The <Link href="/listings/services" style={linkStyle}>services section</Link> became unreliable. People
+          stopped trusting it, and the community that made Craigslist great evaporated.
+        </p>
+        <p style={{ ...sectionBody, marginTop: '8px' }}>
+          Then came Nextdoor. The pitch was appealing: a neighborhood-focused social network for local communities.
+          But Nextdoor is a national platform, not a classifieds platform. Its feed is clogged with ads, neighborhood
+          drama, and complaints about barking dogs. The classifieds functionality is an afterthought — a few listing
+          categories buried in a noisy social feed. And since Nextdoor verifies addresses with a postcard or credit
+          card (not biometric proof), fake accounts and bad actors still get through. It is not what New Yorkers need.
+        </p>
+        <p style={{ ...sectionBody, marginTop: '8px' }}>
+          <strong>NYC Classifieds brings back everything that made local classifieds great</strong> — free, simple,
+          community-driven, hyperlocal — and adds what was always missing: real identity verification. Every user
+          takes a live selfie at their NYC address, confirmed by GPS. No bots. No scammers. No anonymous accounts.
+          Just real New Yorkers connecting with real neighbors across{' '}
+          <Link href="/manhattan" style={linkStyle}>Manhattan</Link>,{' '}
+          <Link href="/brooklyn" style={linkStyle}>Brooklyn</Link>,{' '}
+          <Link href="/queens" style={linkStyle}>Queens</Link>,{' '}
+          <Link href="/bronx" style={linkStyle}>the Bronx</Link>, and{' '}
+          <Link href="/staten-island" style={linkStyle}>Staten Island</Link>. Plus a full{' '}
+          <Link href="/porch" style={linkStyle}>community board (The Porch)</Link>,{' '}
+          a <Link href="/business" style={linkStyle}>free business directory</Link> with customer reviews,{' '}
+          <Link href="/search" style={linkStyle}>powerful search</Link>, saved searches with alerts, direct messaging,
+          and <Link href="/the-classifieds" style={linkStyle}>12 categories with 220+ subcategories</Link> covering
+          everything New Yorkers buy, sell, rent, hire, and share. 100% free, forever.
+        </p>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          6. CLASSIFIEDS THAT ACTUALLY WORK
+          ═══════════════════════════════════════════════════════════════ */}
+      <section style={sectionWrap}>
+        <h2 style={sectionHeading}>Classifieds That Actually Work — Features Built for New Yorkers</h2>
+        <p style={sectionBody}>
+          NYC Classifieds is not a stripped-down listing board. It is a full-featured classifieds platform designed
+          for how New Yorkers actually search, buy, sell, hire, and connect. Here is what you get — all free.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', marginTop: '16px' }}>
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}>
+            <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>
+              12 Categories, 220+ Subcategories
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: '#374151', lineHeight: 1.6, margin: 0 }}>
+              <Link href="/listings/housing" style={linkStyle}>Housing</Link> (apartments, rooms, sublets),{' '}
+              <Link href="/listings/jobs" style={linkStyle}>Jobs</Link> (41 subcategories),{' '}
+              <Link href="/listings/for-sale" style={linkStyle}>For Sale</Link> (furniture, electronics, clothing),{' '}
+              <Link href="/listings/services" style={linkStyle}>Services</Link> (44 subcategories),{' '}
+              <Link href="/listings/gigs" style={linkStyle}>Gigs</Link>,{' '}
+              <Link href="/listings/tickets" style={linkStyle}>Tickets &amp; Events</Link>,{' '}
+              <Link href="/listings/pets" style={linkStyle}>Pets</Link>,{' '}
+              <Link href="/listings/personals" style={linkStyle}>Personals</Link>,{' '}
+              <Link href="/listings/barter" style={linkStyle}>Barter</Link>,{' '}
+              <Link href="/listings/rentals" style={linkStyle}>Rentals &amp; Lending</Link>,{' '}
+              <Link href="/listings/resumes" style={linkStyle}>Resumes</Link>, and{' '}
+              <Link href="/porch" style={linkStyle}>Community</Link>.
+              Every listing category is fully browsable by borough and neighborhood.
+            </p>
+          </div>
+
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}>
+            <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>
+              Search &amp; Discovery
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: '#374151', lineHeight: 1.6, margin: 0 }}>
+              Full-text <Link href="/search" style={linkStyle}>search</Link> with autocomplete across all listings.
+              Filter by category, borough, and neighborhood. Sort by relevance, newest, or price. Save any search
+              and get alerts when new matches appear. Find exactly what you need in seconds — whether it is a{' '}
+              <Link href="/listings/housing/apartments" style={linkStyle}>no-fee apartment</Link>,{' '}
+              a <Link href="/listings/jobs/software-engineering" style={linkStyle}>software engineering job</Link>,{' '}
+              or a <Link href="/listings/services/plumbing" style={linkStyle}>plumber near you</Link>.
+            </p>
+          </div>
+
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}>
+            <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>
+              Direct Messaging
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: '#374151', lineHeight: 1.6, margin: 0 }}>
+              Message buyers and sellers directly through the platform — no need to share your phone number or email.
+              Conversations are threaded by listing so you can track every inquiry. Only geo-verified users can send
+              messages, which means no spam, no bots, and no strangers from outside NYC.
+            </p>
+          </div>
+
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}>
+            <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>
+              Saved Searches &amp; Alerts
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: '#374151', lineHeight: 1.6, margin: 0 }}>
+              Save any search — keywords, category, borough, price range — and get notified when new matching listings
+              are posted. Perfect for competitive categories like <Link href="/listings/housing" style={linkStyle}>NYC apartments</Link> and{' '}
+              <Link href="/listings/jobs" style={linkStyle}>jobs</Link> where new listings go fast. Never miss a match again.
+            </p>
+          </div>
+
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}>
+            <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>
+              Photo Listings
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: '#374151', lineHeight: 1.6, margin: 0 }}>
+              Upload photos for every listing. Whether you are selling <Link href="/listings/for-sale/furniture" style={linkStyle}>furniture</Link>,
+              listing a <Link href="/listings/housing/apartments" style={linkStyle}>room or apartment</Link>,
+              or advertising <Link href="/listings/services" style={linkStyle}>your services</Link> — photos help your
+              listing stand out and build trust with potential buyers.
+            </p>
+          </div>
+
+          <div style={{ padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}>
+            <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>
+              Price Filtering
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: '#374151', lineHeight: 1.6, margin: 0 }}>
+              Set min and max price filters on categories where price matters — <Link href="/listings/housing" style={linkStyle}>housing</Link>,{' '}
+              <Link href="/listings/for-sale" style={linkStyle}>for sale</Link>,{' '}
+              <Link href="/listings/services" style={linkStyle}>services</Link>, and more.
+              Zero in on listings in your budget without scrolling through results that are too expensive or too cheap.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '16px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <Link href="/the-classifieds" style={{ ...linkStyle, fontSize: '0.875rem' }}>
+            Browse all classifieds &rarr;
+          </Link>
+          <Link href="/search" style={{ ...linkStyle, fontSize: '0.875rem' }}>
+            Search NYC classifieds &rarr;
+          </Link>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          7. BROWSE BY CATEGORY (every subcategory linked)
           ═══════════════════════════════════════════════════════════════ */}
       <section style={sectionWrap}>
         <h2 style={sectionHeading}>Browse Free NYC Classifieds by Category</h2>
@@ -291,30 +448,86 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          7. THE PORCH SPOTLIGHT
+          9. THE PORCH — FULL FEATURE SHOWCASE
           ═══════════════════════════════════════════════════════════════ */}
       <section style={sectionWrap}>
-        <h2 style={sectionHeading}>The Porch — NYC Neighborhood Community Board</h2>
+        <h2 style={sectionHeading}>The Porch — NYC&#39;s Verified Neighborhood Community Board</h2>
         <p style={sectionBody}>
-          Classifieds are only half the story. <Link href="/porch" style={linkStyle}>The Porch</Link> is our
-          neighborhood community feed where verified NYC residents share recommendations, post alerts about
-          package thefts or water main breaks, organize block parties and events, report lost pets, list stoop
-          sales, and welcome newcomers. Think of it as the digital version of sitting on your front stoop and
-          chatting with the people who actually live around you — except every person is verified.
+          Classifieds are only half the story. <Link href="/porch" style={linkStyle}>The Porch</Link> is the
+          digital version of your front stoop — a neighborhood community feed where verified NYC residents connect
+          with the people who actually live around them. No anonymous trolls, no ads, no national noise. Just real,
+          geo-verified neighbors sharing what matters on your block, in your building, and across your borough.
+          Every person on The Porch has been verified with a live selfie and GPS at their NYC address.
         </p>
-        <div style={{ marginTop: '10px' }}>
+        <p style={{ ...sectionBody, marginTop: '8px' }}>
+          Whether you need a <Link href="/porch" style={linkStyle}>plumber recommendation</Link> from someone
+          who actually hired one, want to warn neighbors about a package theft, find a lost cat, or just figure
+          out what that construction noise is about — The Porch is where your neighborhood talks. It is spam-free,
+          drama-managed, and built specifically for the way New Yorkers communicate: direct, helpful, and local.
+        </p>
+
+        <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827', margin: '20px 0 10px' }}>
+          14 Post Types for Every Neighborhood Need
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px' }}>
+          {[
+            { emoji: '⭐', name: 'Recommendations', desc: 'Share and request recommendations for restaurants, doctors, plumbers, dog walkers, and more' },
+            { emoji: '❓', name: 'Questions', desc: 'Ask your neighbors anything — parking rules, best pizza nearby, building regulations, school info' },
+            { emoji: '🚨', name: 'Alerts', desc: 'Warn neighbors about package thefts, water main breaks, road closures, suspicious activity, and safety concerns' },
+            { emoji: '🔍', name: 'Lost & Found', desc: 'Post lost items (keys, wallets, phones) or report what you have found. Pinned for visibility.' },
+            { emoji: '📅', name: 'Events', desc: 'Block parties, street fairs, community meetings, building socials, neighborhood cleanups, and local happenings' },
+            { emoji: '🛋️', name: 'Stoop Sales', desc: 'List your stoop sale with date, time, address, and what you are selling. A NYC classic, now verified.' },
+            { emoji: '🏷️', name: 'Garage Sales', desc: 'Garage sales, estate sales, and building-wide sales with details and photos' },
+            { emoji: '🤝', name: 'Volunteer', desc: 'Find and share volunteer opportunities — food banks, park cleanups, community gardens, tutoring' },
+            { emoji: '🚗', name: 'Carpool', desc: 'Find or offer rides — commute shares, weekend trips, airport runs with verified neighbors' },
+            { emoji: '🐾', name: 'Pet Sightings', desc: 'Report stray or lost pet sightings in your neighborhood. Pinned for urgency.' },
+            { emoji: '👋', name: 'Welcome', desc: 'Welcome new neighbors to the block. Help newcomers find their favorite spots and settle in.' },
+            { emoji: '👥', name: 'Groups', desc: 'Form neighborhood groups — running clubs, book clubs, parent groups, dog owner meetups' },
+            { emoji: '🍂', name: 'Seasonal', desc: 'Seasonal posts — holiday events, snow removal help, summer BBQ plans, back-to-school info' },
+            { emoji: '📣', name: 'Shoutouts', desc: 'Give a shoutout to a great local business, helpful neighbor, or community hero' },
+          ].map(type => (
+            <div key={type.name} style={{
+              padding: '10px 12px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff',
+            }}>
+              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#111827', marginBottom: '2px' }}>
+                {type.emoji} {type.name}
+              </div>
+              <p style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.5, margin: 0 }}>
+                {type.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827', margin: '20px 0 8px' }}>
+          Porch Features
+        </h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+          {[
+            'Threaded replies with helpful voting',
+            'Auto-expiring posts to keep feeds fresh',
+            'Pinned urgent posts (Lost & Found, Pet Sightings)',
+            'Content moderation with automatic spam filtering',
+            'Filter by post type, borough, or neighborhood',
+          ].map(feature => (
+            <span key={feature} style={{
+              fontSize: '0.75rem', color: '#374151', padding: '4px 10px', borderRadius: '4px',
+              backgroundColor: '#f9fafb', border: '1px solid #e5e7eb',
+            }}>
+              {feature}
+            </span>
+          ))}
+        </div>
+
+        <div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px', fontSize: '0.8125rem', marginBottom: '8px' }}>
             <Link href="/porch" style={{ ...linkStyle, fontWeight: 600 }}>All NYC</Link>
             {boroughs.map(b => (
               <Link key={b.slug} href={`/porch/${b.slug}`} style={linkStyle}>{b.name}</Link>
             ))}
           </div>
-          <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '4px 0 0' }}>
-            Post types: Recommendations, Questions, Alerts, Lost &amp; Found, Events, Stoop Sales, Garage Sales,
-            Volunteer, Carpool, Pet Sightings, Welcome, Groups, Seasonal, Shoutouts
-          </p>
         </div>
-        <div style={{ marginTop: '12px' }}>
+        <div style={{ marginTop: '8px' }}>
           <Link href="/signup" style={{ ...linkStyle, fontSize: '0.875rem' }}>
             Join The Porch — sign up free &rarr;
           </Link>
@@ -322,19 +535,53 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          8. BUSINESS DIRECTORY SPOTLIGHT
+          10. BUSINESS DIRECTORY — FULL FEATURE SHOWCASE
           ═══════════════════════════════════════════════════════════════ */}
       <section style={sectionWrap}>
-        <h2 style={sectionHeading}>Free NYC Business Directory</h2>
+        <h2 style={sectionHeading}>Free NYC Business Directory — Profiles, Reviews &amp; More</h2>
         <p style={sectionBody}>
-          List your business for free in the <Link href="/business" style={linkStyle}>NYC Business Directory</Link>.
-          Every business gets a free profile page with hours, service area, photos, phone number, and website.
-          Your business appears in local search results and in your borough and neighborhood pages. Whether
-          you are a plumber in Brooklyn, a hair salon in Queens, a dog walker in Manhattan, or a restaurant in
-          the Bronx — the directory is completely free, forever.
+          The <Link href="/business" style={linkStyle}>NYC Business Directory</Link> gives every local business a
+          free profile page that shows up in neighborhood search results across NYC Classifieds. Whether you are a
+          plumber in <Link href="/brooklyn" style={linkStyle}>Brooklyn</Link>, a hair salon in{' '}
+          <Link href="/queens" style={linkStyle}>Queens</Link>, a dog walker in{' '}
+          <Link href="/manhattan" style={linkStyle}>Manhattan</Link>, or a restaurant in{' '}
+          <Link href="/bronx" style={linkStyle}>the Bronx</Link> — list your business for free, forever.
         </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 0', marginTop: '12px', marginBottom: '12px' }}>
-          {businessCategorySamples.map(cat => (
+
+        <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827', margin: '16px 0 8px' }}>
+          What Every Business Profile Includes
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px', marginBottom: '16px' }}>
+          {[
+            { title: 'Profile Page', desc: 'Dedicated page with your business name, description, hours of operation, service area, and location by borough and neighborhood.' },
+            { title: 'Photos & Media', desc: 'Upload photos of your business, your work, your team, and your space. Show potential customers what makes you stand out.' },
+            { title: 'Contact Info', desc: 'Phone number, website URL, and social media links displayed prominently. Customers can reach you directly.' },
+            { title: 'Customer Reviews & Ratings', desc: '1-5 star ratings and text reviews from geo-verified NYC customers. Only real, verified New Yorkers can leave reviews.' },
+            { title: 'Business Owner Replies', desc: 'Respond to customer reviews directly on your profile. Thank happy customers and address concerns publicly.' },
+            { title: 'Business Updates', desc: 'Post news, promotions, seasonal specials, and updates to your profile. A mini-blog that keeps customers informed.' },
+            { title: 'SEO Keywords', desc: 'Add keywords so customers find you when searching. Your profile appears in local classifieds search results and neighborhood pages.' },
+            { title: 'Borough & Neighborhood Visibility', desc: 'Your business appears on your borough and neighborhood pages, connecting you with nearby residents who need your services.' },
+          ].map(feature => (
+            <div key={feature.title} style={{
+              padding: '12px', borderRadius: '6px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff',
+            }}>
+              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#111827', marginBottom: '2px' }}>{feature.title}</div>
+              <p style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: 1.5, margin: 0 }}>{feature.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827', margin: '16px 0 8px' }}>
+          80+ Business Categories
+        </h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 0', marginBottom: '12px' }}>
+          {[
+            'Restaurant', 'Plumber', 'Electrician', 'Cleaning Service', 'Barbershop',
+            'Beauty Salon', 'Handyman', 'Auto Shop', 'Locksmith', 'Moving Company',
+            'Photographer', 'Dentist', 'Dog Walker', 'Cafe', 'Gym',
+            'Tattoo Studio', 'Tailor', 'Yoga Studio', 'Florist', 'Bakery',
+            'Pet Groomer', 'Accountant', 'Lawyer', 'Therapist', 'Daycare',
+          ].map(cat => (
             <Link key={cat} href="/business" style={{
               fontSize: '0.75rem', color: '#1a56db', textDecoration: 'none',
               padding: '3px 10px', borderRadius: '4px', border: '1px solid #e5e7eb',
@@ -343,7 +590,11 @@ export default function Home() {
               {cat}
             </Link>
           ))}
+          <span style={{ fontSize: '0.75rem', color: '#6b7280', padding: '3px 10px' }}>
+            and 55+ more categories
+          </span>
         </div>
+
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <Link href="/signup" style={{ ...linkStyle, fontSize: '0.875rem' }}>
             List your business free &rarr;
@@ -398,18 +649,90 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          10. HOW GEO-VERIFICATION WORKS
+          12. HOW WE KEEP NYC CLASSIFIEDS SAFE
           ═══════════════════════════════════════════════════════════════ */}
       <section style={sectionWrap}>
-        <h2 style={sectionHeading}>How Geo-Verification Works</h2>
+        <h2 style={sectionHeading}>How We Keep NYC Classifieds Safe</h2>
         <p style={sectionBody}>
-          Every user takes a live selfie at their NYC address during sign-up. GPS confirms they are within 50 feet
-          of their registered location. This 30-second process proves you are a real person who actually lives or
-          works in New York City — eliminating the bots, scammers, and fake accounts that plague other classifieds sites.
-          Your selfie is used for verification only and is not stored long-term. Your exact location is never shared —
-          only your borough and neighborhood are visible to other users.
+          Safety is not an add-on at NYC Classifieds — it is the foundation. Every feature is built with verification,
+          moderation, and user control in mind. Here is how we keep the platform safe for every New Yorker.
         </p>
-        <div style={{ marginTop: '12px' }}>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px', marginTop: '16px' }}>
+          <div style={{ padding: '14px 16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>
+              Selfie + GPS Verification
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: '#374151', lineHeight: 1.6, margin: 0 }}>
+              Every user takes a live selfie at their NYC address during signup. GPS confirms they are within
+              50 feet of their registered location. The entire process takes about 30 seconds. This proves you are
+              a real person who actually lives or works in New York City — no bots, no catfishing, no out-of-state
+              scammers creating fake accounts.
+            </p>
+          </div>
+
+          <div style={{ padding: '14px 16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>
+              Anti-Abuse Systems
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: '#374151', lineHeight: 1.6, margin: 0 }}>
+              Rate limiting on signups, messages, listings, and flags prevents automated abuse. IP tracking
+              identifies suspicious patterns. Rapid-fire posting, mass messaging, and flag manipulation are
+              automatically detected and blocked. These systems run silently in the background to stop bad actors
+              before they can affect real users.
+            </p>
+          </div>
+
+          <div style={{ padding: '14px 16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>
+              Content Moderation
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: '#374151', lineHeight: 1.6, margin: 0 }}>
+              Automatic filters catch spam, profanity, and suspicious content on{' '}
+              <Link href="/porch" style={linkStyle}>The Porch</Link> and in classifieds listings. External URLs
+              are filtered in community posts to prevent phishing. Content that violates{' '}
+              <Link href="/guidelines" style={linkStyle}>community guidelines</Link> is automatically flagged
+              for review. These filters are continuously updated based on real abuse patterns.
+            </p>
+          </div>
+
+          <div style={{ padding: '14px 16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>
+              User Controls
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: '#374151', lineHeight: 1.6, margin: 0 }}>
+              Every user has the power to keep their experience safe. Block users who bother you — they can
+              never contact you again. Flag suspicious listings or posts for moderator review. Report users
+              who violate community guidelines. These controls are available on every listing, message, and
+              Porch post.
+            </p>
+          </div>
+
+          <div style={{ padding: '14px 16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>
+              Admin Moderation
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: '#374151', lineHeight: 1.6, margin: 0 }}>
+              Flagged content goes into a moderation queue reviewed by our team. Moderator alerts notify
+              admins of high-priority issues — repeated flags on a user, suspicious signup patterns, or
+              content that needs immediate attention. We act quickly to remove bad content and bad actors.
+            </p>
+          </div>
+
+          <div style={{ padding: '14px 16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827', margin: '0 0 4px' }}>
+              Privacy Protection
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: '#374151', lineHeight: 1.6, margin: 0 }}>
+              Your verification selfie is used only to confirm your identity and is not stored long-term. Your
+              exact GPS coordinates are never shared with other users — only your borough and neighborhood are
+              visible. You control what personal information appears on your profile. Read our{' '}
+              <Link href="/privacy" style={linkStyle}>privacy policy</Link> for full details.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '16px' }}>
           <Link href="/signup" style={{ ...linkStyle, fontSize: '0.875rem' }}>
             Get verified in 30 seconds &rarr;
           </Link>
