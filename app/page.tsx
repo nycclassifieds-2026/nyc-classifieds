@@ -1,5 +1,5 @@
 import { boroughs, categories, neighborhoodSlug, slugify, businessCategories } from '@/lib/data'
-import { websiteSchema, organizationSchema, faqSchema, collectionPageSchema, speakableSchema, howToSchema } from '@/lib/seo'
+import { websiteSchema, organizationSchema, faqSchema, collectionPageSchema, speakableSchema, howToSchema, itemListSchema, offerCatalogSchema, siteNavigationSchema } from '@/lib/seo'
 import { buildMetadata } from '@/lib/seo'
 import Link from 'next/link'
 
@@ -69,7 +69,37 @@ export default function Home() {
         { name: 'Post & Browse', text: 'Post free classifieds in any of 12 categories — housing, jobs, services, for sale, gigs, and more. Browse listings from verified neighbors. Connect on The Porch community board.' },
       ],
     }),
-    speakableSchema({ url: '/' }),
+    speakableSchema({ url: '/', cssSelectors: ['h1', '[data-speakable]', '[data-speakable-intro]'] }),
+    // Schema 7: Browse by Category ItemList
+    itemListSchema({
+      name: 'Browse NYC Classifieds by Category',
+      description: 'All 12 classifieds categories available on The NYC Classifieds.',
+      url: '/',
+      items: categoryItems,
+    }),
+    // Schema 8: Browse by Borough ItemList
+    itemListSchema({
+      name: 'Browse NYC Classifieds by Borough',
+      description: 'Classifieds across all 5 New York City boroughs.',
+      url: '/',
+      items: boroughItems,
+    }),
+    // Schema 9: OfferCatalog
+    offerCatalogSchema({
+      name: 'NYC Classifieds — Free Listing Categories',
+      description: 'Free classifieds listings across 12 categories covering housing, jobs, services, for sale, gigs, and more in New York City.',
+      url: '/',
+      items: categoryItems,
+    }),
+    // Schema 10: SiteNavigationElement
+    siteNavigationSchema([
+      { name: 'Browse Classifieds', url: '/the-classifieds' },
+      { name: 'The Porch', url: '/porch' },
+      { name: 'Business Directory', url: '/business' },
+      { name: 'Search', url: '/search' },
+      { name: 'Sign Up', url: '/signup' },
+      { name: 'Blog', url: '/blog' },
+    ]),
   ]
 
   return (
@@ -184,6 +214,30 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
+          3b. SOCIAL PROOF / TRUST BADGES
+          ═══════════════════════════════════════════════════════════════ */}
+      <section style={sectionWrap} role="region" aria-label="Trust and coverage">
+        <h2 data-speakable style={sectionHeading}>Trusted by Verified New Yorkers Across All 5 Boroughs</h2>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '8px' }}>
+          {[
+            { label: '126+ Neighborhoods', color: '#059669', bg: '#f0fdf4', border: '#bbf7d0' },
+            { label: '12 Categories', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+            { label: '220+ Subcategories', color: '#d97706', bg: '#fefce8', border: '#fde68a' },
+            { label: 'Every User Geo-Verified', color: '#059669', bg: '#f0fdf4', border: '#bbf7d0' },
+          ].map(badge => (
+            <span key={badge.label} style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              padding: '8px 16px', borderRadius: '8px',
+              backgroundColor: badge.bg, border: `1px solid ${badge.border}`,
+              fontSize: '0.875rem', fontWeight: 600, color: badge.color,
+            }}>
+              {badge.label}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
           4. WHY NYC CLASSIFIEDS
           ═══════════════════════════════════════════════════════════════ */}
       <section style={sectionWrap}>
@@ -210,9 +264,9 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════════
           5. BRINGING BACK WHAT CRAIGSLIST GOT RIGHT
           ═══════════════════════════════════════════════════════════════ */}
-      <section style={sectionWrap}>
-        <h2 style={sectionHeading}>Bringing Back What Craigslist Got Right — and Fixing What Went Wrong</h2>
-        <p style={sectionBody}>
+      <article style={sectionWrap}>
+        <h2 data-speakable style={sectionHeading}>Bringing Back What Craigslist Got Right — and Fixing What Went Wrong</h2>
+        <p data-speakable-intro style={sectionBody}>
           There was a time when Craigslist was everything local classifieds should be. Simple, free, community-driven.
           You could find an <Link href="/listings/housing/apartments" style={linkStyle}>apartment in the East Village</Link>,
           sell a couch in <Link href="/brooklyn/park-slope" style={linkStyle}>Park Slope</Link>, hire a{' '}
@@ -253,13 +307,13 @@ export default function Home() {
           and <Link href="/the-classifieds" style={linkStyle}>12 categories with 220+ subcategories</Link> covering
           everything New Yorkers buy, sell, rent, hire, and share. 100% free, forever.
         </p>
-      </section>
+      </article>
 
       {/* ═══════════════════════════════════════════════════════════════
           6. CLASSIFIEDS THAT ACTUALLY WORK
           ═══════════════════════════════════════════════════════════════ */}
-      <section style={sectionWrap}>
-        <h2 style={sectionHeading}>Classifieds That Actually Work — Features Built for New Yorkers</h2>
+      <section style={sectionWrap} role="region" aria-label="Classifieds features">
+        <h2 data-speakable style={sectionHeading}>Classifieds That Actually Work — Features Built for New Yorkers</h2>
         <p style={sectionBody}>
           NYC Classifieds is not a stripped-down listing board. It is a full-featured classifieds platform designed
           for how New Yorkers actually search, buy, sell, hire, and connect. Here is what you get — all free.
@@ -361,7 +415,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════════
           7. BROWSE BY CATEGORY (every subcategory linked)
           ═══════════════════════════════════════════════════════════════ */}
-      <section style={sectionWrap}>
+      <nav aria-label="Browse by category" style={sectionWrap}>
         <h2 style={sectionHeading}>Browse Free NYC Classifieds by Category</h2>
         <p style={{ ...sectionBody, marginBottom: '12px' }}>
           NYC Classifieds has 12 categories covering everything New Yorkers need — from apartments and jobs to
@@ -396,12 +450,12 @@ export default function Home() {
             </div>
           )
         })}
-      </section>
+      </nav>
 
       {/* ═══════════════════════════════════════════════════════════════
           6. BROWSE BY BOROUGH & NEIGHBORHOOD
           ═══════════════════════════════════════════════════════════════ */}
-      <section style={sectionWrap}>
+      <nav aria-label="Browse by borough and neighborhood" style={sectionWrap}>
         <h2 style={sectionHeading}>NYC Classifieds by Borough &amp; Neighborhood</h2>
         <p style={{ ...sectionBody, marginBottom: '12px' }}>
           Every neighborhood in New York City has its own classifieds page. Browse listings and community posts from
@@ -445,13 +499,13 @@ export default function Home() {
             </div>
           </div>
         ))}
-      </section>
+      </nav>
 
       {/* ═══════════════════════════════════════════════════════════════
           9. THE PORCH — FULL FEATURE SHOWCASE
           ═══════════════════════════════════════════════════════════════ */}
-      <section style={sectionWrap}>
-        <h2 style={sectionHeading}>The Porch — NYC&#39;s Verified Neighborhood Community Board</h2>
+      <section style={sectionWrap} role="region" aria-label="The Porch community board">
+        <h2 data-speakable style={sectionHeading}>The Porch — NYC&#39;s Verified Neighborhood Community Board</h2>
         <p style={sectionBody}>
           Classifieds are only half the story. <Link href="/porch" style={linkStyle}>The Porch</Link> is the
           digital version of your front stoop — a neighborhood community feed where verified NYC residents connect
@@ -537,8 +591,8 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════════
           10. BUSINESS DIRECTORY — FULL FEATURE SHOWCASE
           ═══════════════════════════════════════════════════════════════ */}
-      <section style={sectionWrap}>
-        <h2 style={sectionHeading}>Free NYC Business Directory — Profiles, Reviews &amp; More</h2>
+      <section style={sectionWrap} role="region" aria-label="Business directory">
+        <h2 data-speakable style={sectionHeading}>Free NYC Business Directory — Profiles, Reviews &amp; More</h2>
         <p style={sectionBody}>
           The <Link href="/business" style={linkStyle}>NYC Business Directory</Link> gives every local business a
           free profile page that shows up in neighborhood search results across NYC Classifieds. Whether you are a
@@ -608,9 +662,9 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════════
           9. WHAT IS THE NYC CLASSIFIEDS (long-form prose)
           ═══════════════════════════════════════════════════════════════ */}
-      <section style={sectionWrap}>
-        <h2 style={sectionHeading}>What Is The NYC Classifieds?</h2>
-        <p style={sectionBody}>
+      <article style={sectionWrap}>
+        <h2 data-speakable style={sectionHeading}>What Is The NYC Classifieds?</h2>
+        <p data-speakable-intro style={sectionBody}>
           The NYC Classifieds is a free classifieds platform built exclusively for New York City. We connect real,
           geo-verified New Yorkers who want to buy, sell, find <Link href="/listings/housing" style={linkStyle}>housing</Link>,
           get hired through <Link href="/listings/jobs" style={linkStyle}>NYC job listings</Link>,
@@ -646,12 +700,12 @@ export default function Home() {
           <Link href="/listings/services/moving-and-hauling" style={linkStyle}>movers</Link>. Everything is
           free, verified, and built for the people who actually live and work in New York City.
         </p>
-      </section>
+      </article>
 
       {/* ═══════════════════════════════════════════════════════════════
           12. HOW WE KEEP NYC CLASSIFIEDS SAFE
           ═══════════════════════════════════════════════════════════════ */}
-      <section style={sectionWrap}>
+      <section style={sectionWrap} role="region" aria-label="Safety and security">
         <h2 style={sectionHeading}>How We Keep NYC Classifieds Safe</h2>
         <p style={sectionBody}>
           Safety is not an add-on at NYC Classifieds — it is the foundation. Every feature is built with verification,
@@ -742,7 +796,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════════
           11. POPULAR SEARCHES
           ═══════════════════════════════════════════════════════════════ */}
-      <section style={sectionWrap}>
+      <nav aria-label="Popular searches" style={sectionWrap}>
         <h2 style={sectionHeading}>Popular NYC Classifieds Searches</h2>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 0' }}>
           {[
@@ -804,7 +858,7 @@ export default function Home() {
             </Link>
           ))}
         </div>
-      </section>
+      </nav>
 
       {/* ═══════════════════════════════════════════════════════════════
           12. FAQ
@@ -834,7 +888,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════════
           13. SITE RESOURCES
           ═══════════════════════════════════════════════════════════════ */}
-      <section style={sectionWrap}>
+      <nav aria-label="Site resources" style={sectionWrap}>
         <h2 style={sectionHeading}>Explore The NYC Classifieds</h2>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 24px', fontSize: '0.8125rem' }}>
           <Link href="/about" style={linkStyle}>About Us</Link>
@@ -849,7 +903,7 @@ export default function Home() {
           <Link href="/signup" style={linkStyle}>Sign Up</Link>
           <Link href="/login" style={linkStyle}>Log In</Link>
         </div>
-      </section>
+      </nav>
 
       {/* ═══════════════════════════════════════════════════════════════
           14. FINAL CTA
@@ -877,6 +931,9 @@ export default function Home() {
             Browse Classifieds
           </Link>
         </div>
+        <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '16px' }}>
+          Last updated <time dateTime="2026-02-27">February 2026</time>
+        </p>
       </section>
     </main>
   )

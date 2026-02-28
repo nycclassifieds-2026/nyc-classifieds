@@ -18,13 +18,11 @@ export const metadata: Metadata = {
     locale: 'en_US',
     title: 'NYC Classifieds — Free Local Classifieds for New York City',
     description: 'Free local classifieds for NYC. Apartments, jobs, services, for sale & more across 126+ neighborhoods. Every user geo-verified. 100% free.',
-    images: [{ url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'}/icon-512.png`, width: 512, height: 512, alt: 'The NYC Classifieds' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'NYC Classifieds — Free Local Classifieds for New York City',
     description: 'Free local classifieds for NYC. Apartments, jobs, services, for sale & more. Every user geo-verified. 100% free.',
-    images: [`${process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'}/icon-512.png`],
   },
   robots: {
     index: true,

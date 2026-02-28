@@ -60,14 +60,22 @@ export function organizationSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${SITE_URL}/#organization`,
     name: SITE_NAME,
     url: SITE_URL,
     description: SITE_DESC,
+    foundingDate: '2025',
     logo: {
       '@type': 'ImageObject',
       url: `${SITE_URL}/icon-512.png`,
       width: 512,
       height: 512,
+    },
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer service',
+      url: `${SITE_URL}/about`,
+      availableLanguage: 'English',
     },
     areaServed: {
       '@type': 'City',
@@ -413,6 +421,50 @@ export function getCategorySeo(category: string | null): CategorySeo {
 export function jsonLdScript(schema: Record<string, unknown> | Record<string, unknown>[]) {
   const schemas = Array.isArray(schema) ? schema : [schema]
   return schemas.map(s => JSON.stringify(s))
+}
+
+// ─── OfferCatalog Schema ───
+
+export function offerCatalogSchema(opts: {
+  name: string
+  description: string
+  url: string
+  items: { name: string; url: string }[]
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'OfferCatalog',
+    name: opts.name,
+    description: opts.description,
+    url: `${SITE_URL}${opts.url}`,
+    numberOfItems: opts.items.length,
+    itemListElement: opts.items.map(item => ({
+      '@type': 'Offer',
+      itemOffered: {
+        '@type': 'Service',
+        name: item.name,
+        url: `${SITE_URL}${item.url}`,
+      },
+      price: '0',
+      priceCurrency: 'USD',
+    })),
+  }
+}
+
+// ─── SiteNavigationElement Schema ───
+
+export function siteNavigationSchema(items: { name: string; url: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SiteNavigationElement',
+    name: 'Main Navigation',
+    url: SITE_URL,
+    hasPart: items.map(item => ({
+      '@type': 'WebPage',
+      name: item.name,
+      url: `${SITE_URL}${item.url}`,
+    })),
+  }
 }
 
 export { SITE_NAME, SITE_URL }
