@@ -1,72 +1,18 @@
 import type { MetadataRoute } from 'next'
 import { boroughs, categories, neighborhoodSlug, slugify, porchPostTypes } from '@/lib/data'
 import { getAllSlugs as getBlogSlugs } from '@/lib/blog-posts'
-import { getSupabaseAdmin } from '@/lib/supabase-server'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date().toISOString()
   const entries: MetadataRoute.Sitemap = []
-  const db = getSupabaseAdmin()
 
-  // ── Query which category+subcategory combos have active listings ──
-  const { data: listingCombos } = await db
-    .from('listings')
-    .select('category_slug, subcategory_slug, location')
-    .eq('status', 'active')
-
-  // Build sets of populated slugs
-  const populatedCategories = new Set<string>()
-  const populatedSubcategories = new Set<string>()  // "cat:sub"
-  const populatedLocations = new Set<string>()       // raw location text for matching
-
-  if (listingCombos) {
-    for (const row of listingCombos) {
-      populatedCategories.add(row.category_slug)
-      if (row.subcategory_slug) {
-        populatedSubcategories.add(`${row.category_slug}:${row.subcategory_slug}`)
-      }
-      if (row.location) {
-        populatedLocations.add(row.location.toLowerCase())
-      }
-    }
-  }
-
-  // ── Query which borough/neighborhood combos have porch posts ──
-  const { data: porchCombos } = await db
-    .from('porch_posts')
-    .select('borough_slug, neighborhood_slug, post_type')
-
-  const populatedPorchBoroughs = new Set<string>()
-  const populatedPorchNeighborhoods = new Set<string>()  // "borough:nh"
-  const populatedPorchTypes = new Set<string>()           // "borough:nh:type"
-
-  if (porchCombos) {
-    for (const row of porchCombos) {
-      populatedPorchBoroughs.add(row.borough_slug)
-      populatedPorchNeighborhoods.add(`${row.borough_slug}:${row.neighborhood_slug}`)
-      populatedPorchTypes.add(`${row.borough_slug}:${row.neighborhood_slug}:${row.post_type}`)
-    }
-  }
-
-  // Helper: check if a neighborhood has any listing content
-  function nhHasListings(nhName: string, boroughName: string): boolean {
-    const needle = nhName.toLowerCase()
-    const boroughNeedle = boroughName.toLowerCase()
-    for (const loc of populatedLocations) {
-      if (loc.includes(needle) && loc.includes(boroughNeedle)) return true
-    }
-    return false
-  }
-
-  // ── Homepage — always included ──
+  // ── Homepage ──
   entries.push({ url: SITE_URL, lastModified: now, changeFrequency: 'daily', priority: 1.0 })
 
-  // ── Category pages — only if category has listings ──
+  // ── Category pages — all categories ──
   for (const cat of categories) {
-    if (!populatedCategories.has(cat.slug)) continue
-
     entries.push({
       url: `${SITE_URL}/listings/${cat.slug}`,
       lastModified: now,
@@ -74,13 +20,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     })
 
-    // Subcategory pages — only if subcategory has listings
+    // All subcategory pages
     for (const sub of cat.subs) {
-      const subSlug = slugify(sub)
-      if (!populatedSubcategories.has(`${cat.slug}:${subSlug}`)) continue
-
       entries.push({
-        url: `${SITE_URL}/listings/${cat.slug}/${subSlug}`,
+        url: `${SITE_URL}/listings/${cat.slug}/${slugify(sub)}`,
         lastModified: now,
         changeFrequency: 'daily',
         priority: 0.8,
@@ -88,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // ── Borough pages — always include (these are hub pages) ──
+  // ── Borough pages — all boroughs ──
   for (const b of boroughs) {
     entries.push({
       url: `${SITE_URL}/${b.slug}`,
@@ -97,9 +40,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     })
 
-    // Borough + category — only if category has listings
+    // Borough + every category
     for (const cat of categories) {
-      if (!populatedCategories.has(cat.slug)) continue
       entries.push({
         url: `${SITE_URL}/${b.slug}/${cat.slug}`,
         lastModified: now,
@@ -108,13 +50,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })
     }
 
-    // Neighborhood pages — only if neighborhood has content
+    // Every neighborhood in this borough
     for (const n of b.neighborhoods) {
       const nhSlug = neighborhoodSlug(n)
-      const hasListings = nhHasListings(n, b.slug.replace(/-/g, ' '))
-      const hasPorch = populatedPorchNeighborhoods.has(`${b.slug}:${nhSlug}`)
-
-      if (!hasListings && !hasPorch) continue
 
       entries.push({
         url: `${SITE_URL}/${b.slug}/${nhSlug}`,
@@ -123,72 +61,61 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8,
       })
 
-      // Neighborhood + category + subcategory
-      if (hasListings) {
-        for (const cat of categories) {
-          if (!populatedCategories.has(cat.slug)) continue
+      // Neighborhood + every category + every subcategory
+      for (const cat of categories) {
+        entries.push({
+          url: `${SITE_URL}/${b.slug}/${nhSlug}/${cat.slug}`,
+          lastModified: now,
+          changeFrequency: 'weekly',
+          priority: 0.6,
+        })
+
+        for (const sub of cat.subs) {
           entries.push({
-            url: `${SITE_URL}/${b.slug}/${nhSlug}/${cat.slug}`,
+            url: `${SITE_URL}/${b.slug}/${nhSlug}/${cat.slug}/${slugify(sub)}`,
             lastModified: now,
             changeFrequency: 'weekly',
-            priority: 0.6,
+            priority: 0.5,
           })
-
-          for (const sub of cat.subs) {
-            const subSlug = slugify(sub)
-            if (!populatedSubcategories.has(`${cat.slug}:${subSlug}`)) continue
-            entries.push({
-              url: `${SITE_URL}/${b.slug}/${nhSlug}/${cat.slug}/${subSlug}`,
-              lastModified: now,
-              changeFrequency: 'weekly',
-              priority: 0.5,
-            })
-          }
         }
       }
     }
   }
 
-  // ── The Porch — only populated sections ──
-  if (populatedPorchBoroughs.size > 0) {
-    entries.push({ url: `${SITE_URL}/porch`, lastModified: now, changeFrequency: 'daily', priority: 0.9 })
+  // ── The Porch — all combinations ──
+  entries.push({ url: `${SITE_URL}/porch`, lastModified: now, changeFrequency: 'daily', priority: 0.9 })
 
-    for (const b of boroughs) {
-      if (!populatedPorchBoroughs.has(b.slug)) continue
+  for (const b of boroughs) {
+    entries.push({
+      url: `${SITE_URL}/porch/${b.slug}`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.8,
+    })
+
+    for (const n of b.neighborhoods) {
+      const nhSlug = neighborhoodSlug(n)
 
       entries.push({
-        url: `${SITE_URL}/porch/${b.slug}`,
+        url: `${SITE_URL}/porch/${b.slug}/${nhSlug}`,
         lastModified: now,
         changeFrequency: 'daily',
         priority: 0.8,
       })
 
-      for (const n of b.neighborhoods) {
-        const nhSlug = neighborhoodSlug(n)
-        if (!populatedPorchNeighborhoods.has(`${b.slug}:${nhSlug}`)) continue
-
+      // Every post type for every neighborhood
+      for (const pt of porchPostTypes) {
         entries.push({
-          url: `${SITE_URL}/porch/${b.slug}/${nhSlug}`,
+          url: `${SITE_URL}/porch/${b.slug}/${nhSlug}/${pt.slug}`,
           lastModified: now,
-          changeFrequency: 'daily',
-          priority: 0.8,
+          changeFrequency: 'weekly',
+          priority: 0.6,
         })
-
-        // Post type pages — only if that combo has posts
-        for (const pt of porchPostTypes) {
-          if (!populatedPorchTypes.has(`${b.slug}:${nhSlug}:${pt.slug}`)) continue
-          entries.push({
-            url: `${SITE_URL}/porch/${b.slug}/${nhSlug}/${pt.slug}`,
-            lastModified: now,
-            changeFrequency: 'weekly',
-            priority: 0.6,
-          })
-        }
       }
     }
   }
 
-  // ── Business directory — always include ──
+  // ── Business directory ──
   entries.push({ url: `${SITE_URL}/business`, lastModified: now, changeFrequency: 'daily', priority: 0.9 })
 
   // ── Blog ──
@@ -203,7 +130,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   // ── Static pages ──
-  for (const page of ['about', 'search', 'legal', 'privacy', 'terms', 'guidelines']) {
+  for (const page of ['about', 'search', 'legal', 'privacy', 'terms', 'guidelines', 'the-classifieds', 'signup', 'login']) {
     entries.push({
       url: `${SITE_URL}/${page}`,
       lastModified: now,
