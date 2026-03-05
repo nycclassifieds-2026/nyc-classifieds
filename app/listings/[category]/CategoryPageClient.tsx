@@ -2,6 +2,7 @@
 
 import BrowsePage from '@/app/components/BrowsePage'
 import { categoryBySlug } from '@/lib/data'
+import { categoryFaqs } from '@/lib/seo-faqs'
 
 export default function CategoryPageClient({ categorySlug }: { categorySlug: string }) {
   const cat = categoryBySlug[categorySlug]
@@ -18,6 +19,7 @@ export default function CategoryPageClient({ categorySlug }: { categorySlug: str
       title={`${cat.name} in New York City`}
       breadcrumbs={[{ label: cat.name, href: `/listings/${cat.slug}` }]}
       category={cat}
+      faqs={categoryFaqs[categorySlug]}
     />
   )
 }

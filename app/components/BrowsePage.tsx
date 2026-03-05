@@ -27,6 +27,7 @@ interface BrowsePageProps {
   neighborhood?: string
   subcategories?: string[]
   categorySlug?: string
+  faqs?: { question: string; answer: string }[]
 }
 
 // Categories where price sort doesn't make sense
@@ -41,6 +42,7 @@ export default function BrowsePage({
   neighborhood,
   subcategories,
   categorySlug,
+  faqs,
 }: BrowsePageProps) {
   const [listings, setListings] = useState<Listing[]>([])
   const [total, setTotal] = useState(0)
@@ -244,6 +246,55 @@ export default function BrowsePage({
         </div>
       )}
       </PreLaunchGate>
+
+      {/* Visible subcategory links for SEO — always rendered */}
+      {subs.length > 0 && !subcategorySlug && (
+        <section style={{ marginTop: '32px' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#111827', marginBottom: '12px' }}>
+            Browse {category?.name || 'All'} subcategories
+          </h2>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {subs.map(s => (
+              <Link
+                key={s}
+                href={`/listings/${effectiveCategorySlug}/${slugify(s)}`}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb',
+                  fontSize: '0.8125rem',
+                  color: '#1a56db',
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {s}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Visible FAQ section for SEO — always rendered */}
+      {faqs && faqs.length > 0 && (
+        <section style={{ marginTop: '32px' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#111827', marginBottom: '16px' }}>
+            Frequently asked questions
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {faqs.map((faq, i) => (
+              <div key={i}>
+                <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827', marginBottom: '4px' }}>
+                  {faq.question}
+                </h3>
+                <p data-speakable style={{ fontSize: '0.8125rem', color: '#6b7280', lineHeight: 1.5, margin: 0 }}>
+                  {faq.answer}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   )
 }
