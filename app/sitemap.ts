@@ -1,8 +1,13 @@
 import type { MetadataRoute } from 'next'
 import { boroughs, categories, neighborhoodSlug, slugify, porchPostTypes } from '@/lib/data'
 import { getAllSlugs as getBlogSlugs } from '@/lib/blog-posts'
+import { getSupabaseAdmin } from '@/lib/supabase-server'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
+
+function toSlug(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 80)
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date().toISOString()
@@ -113,6 +118,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         })
       }
     }
+  }
+
+  // ── Porch posts + Listings from database ──
+  try {
+    const db = getSupabaseAdmin()
+    const [{ data: porchPosts }, { data: listings }] = await Promise.all([
+      db.from('porch_posts').select('id, title, updated_at').order('created_at', { ascending: false }).limit(500),
+      db.from('listings').select('id, title, category_slug, updated_at').eq('status', 'active').order('created_at', { ascending: false }).limit(500),
+    ])
+    for (const p of porchPosts || []) {
+      entries.push({
+        url: `${SITE_URL}/porch/post/${p.id}/${toSlug(p.title)}`,
+        lastModified: p.updated_at || now,
+        changeFrequency: 'weekly',
+        priority: 0.7,
+      })
+    }
+    for (const l of listings || []) {
+      entries.push({
+        url: `${SITE_URL}/listings/${l.category_slug}/${l.id}`,
+        lastModified: l.updated_at || now,
+        changeFrequency: 'weekly',
+        priority: 0.7,
+      })
+    }
+  } catch {
+    // Graceful fallback if DB is unavailable
   }
 
   // ── Business directory ──

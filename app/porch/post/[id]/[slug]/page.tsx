@@ -12,15 +12,25 @@ interface PostData {
   neighborhood_slug?: string
   user?: { name?: string }
   reply_count?: number
+  replies?: { body: string; created_at: string; users: { name: string } }[]
 }
 
 async function fetchPost(id: string): Promise<PostData | null> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'
   try {
-    const res = await fetch(`${siteUrl}/api/porch?post_id=${id}`, { next: { revalidate: 60 } })
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.posts?.[0] || data.post || null
+    // Try the single-post endpoint first (includes replies)
+    const res = await fetch(`${siteUrl}/api/porch/${id}`, { next: { revalidate: 60 } })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.post) {
+        return { ...data.post, replies: data.replies || [], user: data.post.users }
+      }
+    }
+    // Fallback to list endpoint
+    const res2 = await fetch(`${siteUrl}/api/porch?post_id=${id}`, { next: { revalidate: 60 } })
+    if (!res2.ok) return null
+    const data2 = await res2.json()
+    return data2.posts?.[0] || data2.post || null
   } catch {
     return null
   }
@@ -71,14 +81,21 @@ export default async function PorchPostPage({ params }: { params: Promise<{ id: 
     datePublished: post?.created_at || new Date().toISOString(),
     ...(post?.updated_at && { dateModified: post.updated_at }),
     author: { '@type': 'Person', name: authorName },
-    ...(post?.reply_count != null && { commentCount: post.reply_count }),
-    ...(post?.reply_count != null && {
+    ...(post?.replies && post.replies.length > 0 && {
+      commentCount: post.replies.length,
+      comment: post.replies.map(r => ({
+        '@type': 'Comment',
+        text: r.body,
+        datePublished: r.created_at,
+        author: { '@type': 'Person', name: r.users?.name || 'NYC Resident' },
+      })),
       interactionStatistic: {
         '@type': 'InteractionCounter',
         interactionType: 'https://schema.org/CommentAction',
-        userInteractionCount: post.reply_count,
+        userInteractionCount: post.replies.length,
       },
     }),
+    ...(post?.reply_count != null && !post?.replies?.length && { commentCount: post.reply_count }),
     ...(neighborhood && borough && {
       spatialCoverage: {
         '@type': 'Place',
