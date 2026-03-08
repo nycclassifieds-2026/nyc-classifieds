@@ -11,7 +11,7 @@ import { notifyError } from '@/lib/errors'
 const COOKIE_NAME = 'nyc_classifieds_user'
 const isProd = process.env.NODE_ENV === 'production'
 const MAX_DISTANCE_MILES = 0.1
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'jefftuckernyc@gmail.com').split(',').map(e => e.trim())
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'hi@thenycclassifieds.com').split(',').map(e => e.trim())
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 const MIME_TO_EXT: Record<string, string> = {

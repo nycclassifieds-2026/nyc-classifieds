@@ -13,7 +13,7 @@ function ensureConfigured() {
     return
   }
   webpush.setVapidDetails(
-    'mailto:jefftuckernyc@gmail.com',
+    'mailto:hi@thenycclassifieds.com',
     VAPID_PUBLIC,
     VAPID_PRIVATE,
   )
