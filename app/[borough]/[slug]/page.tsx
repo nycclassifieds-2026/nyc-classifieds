@@ -22,8 +22,8 @@ export async function generateMetadata({ params }: { params: Promise<{ borough: 
   if (cat) {
     const subSample = cat.subs.slice(0, 5).join(', ')
     return buildMetadata({
-      title: `${cat.name} in ${b.name} — Verified Local ${cat.name} Listings`,
-      description: `Find ${cat.name.toLowerCase()} in ${b.name} from geo-verified locals. ${subSample} & more. Free to post. Every user is verified with a selfie + GPS at their ${b.name} address.`,
+      title: `${cat.name} Classified Ads in ${b.name}`,
+      description: `${cat.name} classified ads in ${b.name} — ${subSample} & more. Every poster geo-verified with selfie + GPS. Free to post and browse. The NYC Classifieds.`,
       path: `/${borough}/${slug}`,
     })
   }
@@ -31,8 +31,8 @@ export async function generateMetadata({ params }: { params: Promise<{ borough: 
   const nh = findNeighborhood(borough, slug)
   if (nh) {
     return buildMetadata({
-      title: `${nh.name}, ${b.name} — Local Classifieds from Verified Residents`,
-      description: `Free classifieds in ${nh.name}, ${b.name}. Apartments, jobs, services, items for sale, gigs & community posts from neighbors verified to ${nh.name}. Post anything free.`,
+      title: `Classified Ads in ${nh.name}, ${b.name}`,
+      description: `Classified ads in ${nh.name}, ${b.name} — apartments, jobs, services, for sale & more. Every poster verified with selfie + GPS — real neighbors, not strangers. The NYC Classifieds.`,
       path: `/${borough}/${slug}`,
     })
   }

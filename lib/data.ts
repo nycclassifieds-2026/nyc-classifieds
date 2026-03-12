@@ -22,9 +22,9 @@ export const categories: Category[] = [
   { name: 'Community', slug: 'community', color: '#059669', tagline: 'The Porch | Local Feed', subs: ['Carpool & Rideshare', 'Events', 'Garage Sales', 'Groups', 'Local Alerts', 'Lost & Found', 'Neighborhood Questions', 'Pet Sightings', 'Recommendations', 'Seasonal', 'Shoutouts', 'Stoop Sales', 'Volunteers', 'Welcome / New Here'] },
   { name: 'Tickets & Events', slug: 'tickets', color: '#6d28d9', subs: ['Broadway', 'Comedy', 'Concerts', 'Festivals', 'Resale', 'Sports'] },
   { name: 'Pets', slug: 'pets', color: '#65a30d', subs: ['Adoption', 'Dog Walking', 'Grooming', 'Lost & Found Pets', 'Pet Sitting'] },
-  { name: 'Personals', slug: 'personals', color: '#db2777', subs: ['Activity Partners', 'Missed Connections', 'Strictly Platonic'] },
+  { name: 'Personals', slug: 'personals', color: '#db2777', subs: ['Activity Partners', 'Missed Connections', 'Penpals (Virtual Only)', 'Strictly Platonic'] },
   { name: 'Barter', slug: 'barter', color: '#7c3aed', subs: ['Goods for Goods', 'Goods for Skills', 'Skills for Skills'] },
-  { name: 'Rentals & Lending', slug: 'rentals', color: '#7c3aed', subs: ['Cameras & Gear', 'Party Supplies', 'Sports Equipment', 'Tools & Equipment'] },
+  { name: 'Rentals & Lending', slug: 'rentals', color: '#7c3aed', subs: ['Baby & Kid Gear', 'Cameras & Gear', 'Formal Wear', 'Moving Equipment', 'Party Supplies', 'Sports Equipment', 'Tools & Equipment'] },
   { name: 'Resumes', slug: 'resumes', color: '#4b5563', subs: ['Accounting & Finance', 'Admin & Office', 'AI & Data Science', 'Architecture & Design', 'Biotech & Pharma', 'Construction', 'Creative & Media', 'Customer Service', 'Cybersecurity', 'Education & Teaching', 'Engineering', 'Fashion', 'Film & TV', 'Fitness & Wellness', 'Food & Hospitality', 'Healthcare', 'Human Resources', 'Legal', 'Marketing & Advertising', 'Nonprofit', 'Nursing', 'Operations', 'Real Estate', 'Retail', 'Sales', 'Social Work', 'Software Engineering', 'Tech', 'Trades & Skilled Labor', 'Transportation', 'Writing & Editing'] },
 ]
 

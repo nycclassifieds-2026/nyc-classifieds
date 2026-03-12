@@ -20,6 +20,8 @@ interface Listing {
 
 interface BrowsePageProps {
   title: string
+  description?: React.ReactNode
+
   breadcrumbs: { label: string; href: string }[]
   category?: Category
   subcategorySlug?: string
@@ -35,6 +37,7 @@ const hidePriceSortCategories = new Set(['jobs', 'services', 'gigs', 'resumes', 
 
 export default function BrowsePage({
   title,
+  description,
   breadcrumbs,
   category,
   subcategorySlug,
@@ -93,7 +96,7 @@ export default function BrowsePage({
       </nav>
 
       {/* H1 — always visible for SEO */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: description ? '8px' : '16px' }}>
         <div>
           <h1 style={{ fontSize: '1.375rem', fontWeight: 700, color: '#111827' }}>{title}</h1>
           <p style={{ color: '#6b7280', fontSize: '0.8125rem', marginTop: '2px' }}>
@@ -114,6 +117,9 @@ export default function BrowsePage({
           </Link>
         </div>
       </div>
+
+      {/* Description — SEO content */}
+      {description && description}
 
       <PreLaunchGate>
       {/* Subcategory filter + sort */}

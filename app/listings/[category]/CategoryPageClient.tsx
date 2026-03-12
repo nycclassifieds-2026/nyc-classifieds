@@ -1,8 +1,10 @@
 'use client'
 
 import BrowsePage from '@/app/components/BrowsePage'
+import PageDescription from '@/app/components/PageDescription'
 import { categoryBySlug } from '@/lib/data'
 import { categoryFaqs } from '@/lib/seo-faqs'
+import { getLongTailH1 } from '@/lib/page-content'
 
 export default function CategoryPageClient({ categorySlug }: { categorySlug: string }) {
   const cat = categoryBySlug[categorySlug]
@@ -16,7 +18,13 @@ export default function CategoryPageClient({ categorySlug }: { categorySlug: str
 
   return (
     <BrowsePage
-      title={`${cat.name} in New York City`}
+      title={getLongTailH1({ categorySlug: cat.slug })}
+      description={
+        <PageDescription
+          categorySlug={cat.slug}
+          categoryName={cat.name}
+        />
+      }
       breadcrumbs={[{ label: cat.name, href: `/listings/${cat.slug}` }]}
       category={cat}
       faqs={categoryFaqs[categorySlug]}

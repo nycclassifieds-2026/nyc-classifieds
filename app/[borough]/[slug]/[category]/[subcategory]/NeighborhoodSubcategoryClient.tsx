@@ -1,7 +1,9 @@
 'use client'
 
 import BrowsePage from '@/app/components/BrowsePage'
+import PageDescription from '@/app/components/PageDescription'
 import { boroughBySlug, categoryBySlug, findNeighborhood, slugify } from '@/lib/data'
+import { getLongTailH1 } from '@/lib/page-content'
 
 export default function NeighborhoodSubcategoryClient({
   boroughSlug, neighborhoodSlug, categorySlug, subcategorySlug
@@ -16,7 +18,18 @@ export default function NeighborhoodSubcategoryClient({
 
   return (
     <BrowsePage
-      title={`${subName} in ${nh.name}, ${b.name}`}
+      title={getLongTailH1({ categorySlug: cat.slug, subcategoryName: subName, subcategorySlug, neighborhood: nh.name, borough: b.name })}
+      description={
+        <PageDescription
+          categorySlug={cat.slug}
+          categoryName={cat.name}
+          subcategorySlug={subcategorySlug}
+          subcategoryName={subName}
+          neighborhood={nh.name}
+          neighborhoodHref={`/${b.slug}/${neighborhoodSlug}`}
+          borough={b.name}
+        />
+      }
       breadcrumbs={[
         { label: b.name, href: `/${b.slug}` },
         { label: nh.name, href: `/${b.slug}/${neighborhoodSlug}` },

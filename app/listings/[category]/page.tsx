@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { categories, categoryBySlug, slugify } from '@/lib/data'
-import { buildMetadata, faqSchema, speakableSchema } from '@/lib/seo'
+import { buildMetadata, faqSchema, speakableSchema, SITE_URL } from '@/lib/seo'
 import { categoryFaqs } from '@/lib/seo-faqs'
 import CategoryPageClient from './CategoryPageClient'
 
@@ -12,52 +12,52 @@ export async function generateStaticParams() {
 // Custom per-category SEO copy
 const categoryMeta: Record<string, { title: string; desc: string }> = {
   'housing': {
-    title: 'NYC Apartments & Housing — No-Fee Rentals, Rooms & Sublets',
-    desc: 'Find apartments, rooms, sublets & real estate in NYC. Every landlord is verified with a selfie + GPS. No-fee rentals across Manhattan, Brooklyn, Queens, Bronx & Staten Island.',
+    title: 'Housing in New York City',
+    desc: 'Apartments, rooms, sublets & real estate in NYC. Every landlord verified with selfie + GPS. No brokers, no fees across all 5 boroughs. The NYC Classifieds.',
   },
   'jobs': {
-    title: 'NYC Jobs — Now Hiring Across All 5 Boroughs',
-    desc: 'Find local jobs in NYC — restaurants, tech, healthcare, trades, finance & more. No recruiter fees. Every employer is geo-verified to a real NYC address. Post jobs free.',
+    title: 'Jobs in New York City',
+    desc: 'Local jobs in NYC — restaurants, tech, healthcare, trades, finance & more. Every employer geo-verified. Apply direct, zero fees. The NYC Classifieds.',
   },
   'for-sale': {
-    title: 'Buy & Sell in NYC — Furniture, Electronics, Vintage & More',
-    desc: 'Buy & sell furniture, electronics, clothing, bikes, sneakers & more in NYC. Free to post. Every seller is verified with a selfie at their NYC address. No bots, no scams.',
+    title: 'For Sale in New York City',
+    desc: 'Buy & sell furniture, electronics, clothing, bikes, sneakers & more in NYC. Every seller verified with selfie + GPS. Meet locally, buy safely. The NYC Classifieds.',
   },
   'services': {
-    title: 'NYC Services — Hire Verified Plumbers, Cleaners, Movers & Local Pros',
-    desc: 'Find trusted local service providers in NYC. Plumbing, cleaning, moving, handyman, tutoring & 40+ categories. Every pro is geo-verified. Free to list your business.',
+    title: 'Services in New York City',
+    desc: 'Hire trusted local pros in NYC — plumbing, cleaning, moving, tutoring & 40+ categories. Every provider geo-verified to your neighborhood. The NYC Classifieds.',
   },
   'gigs': {
-    title: 'NYC Gigs — Find Quick Work or Hire Local Help Today',
-    desc: 'Pick up gigs in NYC — dog walking, moving help, event setup, delivery & more. Or post a gig and hire a verified local worker. All gig posters are geo-verified.',
+    title: 'Gigs in New York City',
+    desc: 'Pick up gigs in NYC — dog walking, moving help, event setup, delivery & more. Post a gig or find work from verified neighbors. The NYC Classifieds.',
   },
   'community': {
-    title: 'NYC Community Board — Events, Lost & Found, Stoop Sales & More',
-    desc: 'Your local community feed for NYC. Share recommendations, post alerts, report lost pets, list stoop sales & connect with verified neighbors across 126+ neighborhoods.',
+    title: 'Community in New York City',
+    desc: 'Your neighborhood board for NYC. Recommendations, local alerts, stoop sales, lost pets & more from verified neighbors across 126+ neighborhoods. The NYC Classifieds.',
   },
   'tickets': {
-    title: 'NYC Tickets & Events — Broadway, Concerts, Comedy & Sports',
-    desc: 'Buy & sell tickets to NYC events. Broadway shows, comedy clubs, concerts, sports & festivals. Verified sellers only — no bots, no scams. Post tickets free.',
+    title: 'Tickets & Events in New York City',
+    desc: 'Buy & sell tickets to NYC events — Broadway, comedy, concerts, sports & festivals. Verified sellers only, no scalper bots. The NYC Classifieds.',
   },
   'pets': {
-    title: 'NYC Pets — Adopt Dogs & Cats, Find Pet Sitters & Walkers',
-    desc: 'Adopt pets, find dog walkers, groomers & pet sitters in NYC. Every user is geo-verified. Help NYC animals find loving homes. Free to post.',
+    title: 'Pets in New York City',
+    desc: 'Adopt pets, find dog walkers, groomers & pet sitters in NYC. Every poster is a verified local animal lover. The NYC Classifieds.',
   },
   'personals': {
-    title: 'NYC Personals — Meet Verified New Yorkers Near You',
-    desc: 'Activity partners, missed connections & platonic friendships in NYC. Every user is verified with a selfie at their real address. Real people, real neighborhoods.',
+    title: 'Personals in New York City',
+    desc: 'Activity partners, missed connections, penpals & platonic friendships in NYC. Every person verified with selfie + GPS. Real people, real neighborhoods. The NYC Classifieds.',
   },
   'barter': {
-    title: 'NYC Barter — Trade Skills & Stuff with Your Neighbors',
-    desc: 'Swap goods for goods, skills for skills, or mix & match with real NYC neighbors. No cash needed. Everyone is geo-verified to their NYC address.',
+    title: 'Barter in New York City',
+    desc: 'Swap goods for goods, skills for skills, or mix & match with verified NYC neighbors. No cash needed. Everyone geo-verified. The NYC Classifieds.',
   },
   'rentals': {
-    title: 'NYC Rentals & Lending — Borrow Tools, Cameras, Gear & More',
-    desc: 'Borrow from your NYC neighbors instead of buying. Tools, cameras, sports gear, party supplies & more. All users are geo-verified. Free to list.',
+    title: 'Rentals & Lending in New York City',
+    desc: 'Borrow from verified NYC neighbors — cameras, baby gear, formal wear, tools, sports equipment & more. Why buy when you can borrow? The NYC Classifieds.',
   },
   'resumes': {
-    title: 'NYC Resumes — Post Yours Free, Get Found by Local Employers',
-    desc: 'Post your resume for free and get found by NYC employers hiring now. Browse candidates across tech, healthcare, trades, finance & 30+ fields. Verified profiles only.',
+    title: 'Resumes in New York City',
+    desc: 'Post your resume free and get found by NYC employers. Browse candidates across tech, healthcare, trades, finance & 30+ fields. Verified profiles only. The NYC Classifieds.',
   },
 }
 
@@ -85,19 +85,21 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
     url: `/listings/${category}/${slugify(s)}`,
   })) || []
 
+  const siteUrl = SITE_URL
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     name: `${cat?.name || category} in New York City`,
     description: `Browse free ${(cat?.name || category).toLowerCase()} listings across all five NYC boroughs.`,
-    url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'}/listings/${category}`,
+    url: `${siteUrl}/listings/${category}`,
     isPartOf: { '@type': 'WebSite', name: 'The NYC Classifieds' },
     mainEntity: {
       '@type': 'ItemList',
       numberOfItems: subItems.length,
       itemListElement: subItems.map((item, i) => ({
         '@type': 'ListItem', position: i + 1, name: item.name,
-        url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'}${item.url}`,
+        url: `${siteUrl}${item.url}`,
       })),
     },
   }
@@ -106,8 +108,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com' },
-      { '@type': 'ListItem', position: 2, name: cat?.name || category, item: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://thenycclassifieds.com'}/listings/${category}` },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+      { '@type': 'ListItem', position: 2, name: cat?.name || category, item: `${siteUrl}/listings/${category}` },
     ],
   }
 

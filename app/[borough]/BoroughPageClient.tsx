@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import BrowsePage from '@/app/components/BrowsePage'
+import { LocationDescription } from '@/app/components/PageDescription'
 import { boroughBySlug, categories, neighborhoodSlug } from '@/lib/data'
 
 export default function BoroughPageClient({ boroughSlug }: { boroughSlug: string }) {
@@ -11,7 +12,8 @@ export default function BoroughPageClient({ boroughSlug }: { boroughSlug: string
   return (
     <>
       <BrowsePage
-        title={`Classifieds in ${b.name}`}
+        title={`Classified Ads in ${b.name}`}
+        description={<LocationDescription borough={b.name} />}
         breadcrumbs={[{ label: b.name, href: `/${b.slug}` }]}
         borough={b.name}
       />

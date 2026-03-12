@@ -12,24 +12,24 @@ export async function generateStaticParams() {
 
 const boroughMeta: Record<string, { title: string; desc: string }> = {
   'manhattan': {
-    title: 'Manhattan Classifieds — Apartments, Jobs & Services in 41 Neighborhoods',
-    desc: 'Free classifieds in Manhattan. Find apartments, jobs, services & more from the Upper East Side to Tribeca. Every poster is verified with a selfie + GPS at their Manhattan address.',
+    title: 'Classified Ads in Manhattan',
+    desc: 'Classified ads in Manhattan — apartments, jobs, services & more across 41 neighborhoods from Upper East Side to Tribeca. Every poster verified with selfie + GPS. The NYC Classifieds.',
   },
   'brooklyn': {
-    title: 'Brooklyn Classifieds — Buy, Sell & Hire Local in 28 Neighborhoods',
-    desc: 'Free classifieds in Brooklyn. Apartments, jobs, services, for sale & gigs from Williamsburg to Bay Ridge. Every poster is geo-verified to their Brooklyn address.',
+    title: 'Classified Ads in Brooklyn',
+    desc: 'Classified ads in Brooklyn — apartments, jobs, services & more across 28 neighborhoods from Williamsburg to Bay Ridge. Every poster geo-verified. The NYC Classifieds.',
   },
   'queens': {
-    title: 'Queens Classifieds — Local Listings Across 30 Neighborhoods',
-    desc: 'Free classifieds in Queens. Apartments, jobs, services & more from Astoria to Flushing. Every poster is verified with a selfie + GPS at their Queens address.',
+    title: 'Classified Ads in Queens',
+    desc: 'Classified ads in Queens — apartments, jobs, services & more across 30 neighborhoods from Astoria to Flushing. Every poster verified with selfie + GPS. The NYC Classifieds.',
   },
   'bronx': {
-    title: 'Bronx Classifieds — Apartments, Jobs & Services in 15 Neighborhoods',
-    desc: 'Free classifieds in the Bronx. Find apartments, jobs, services & more from Fordham to Riverdale. Every poster is geo-verified to their Bronx address.',
+    title: 'Classified Ads in the Bronx',
+    desc: 'Classified ads in the Bronx — apartments, jobs, services & more across 15 neighborhoods from Fordham to Riverdale. Every poster geo-verified. The NYC Classifieds.',
   },
   'staten-island': {
-    title: 'Staten Island Classifieds — Local Listings Across 10 Neighborhoods',
-    desc: 'Free classifieds in Staten Island. Apartments, jobs, services & more from Tottenville to St. George. Every poster is geo-verified to their Staten Island address.',
+    title: 'Classified Ads in Staten Island',
+    desc: 'Classified ads in Staten Island — apartments, jobs, services & more across 10 neighborhoods from Tottenville to St. George. Every poster geo-verified. The NYC Classifieds.',
   },
 }
 
@@ -41,8 +41,8 @@ export async function generateMetadata({ params }: { params: Promise<{ borough: 
   const custom = boroughMeta[b.slug]
   const nhSample = b.neighborhoods.slice(0, 6).join(', ')
   return buildMetadata({
-    title: custom?.title || `${b.name} Classifieds — Free Listings Across ${b.neighborhoods.length} Neighborhoods`,
-    description: custom?.desc || `Free classifieds in ${b.name}, NYC. Apartments, jobs, services & more across ${b.neighborhoods.length} neighborhoods including ${nhSample}. Geo-verified posters only.`,
+    title: custom?.title || `Classified Ads in ${b.name}`,
+    description: custom?.desc || `Classified ads in ${b.name} — apartments, jobs, services & more across ${b.neighborhoods.length} neighborhoods including ${nhSample}. Every poster geo-verified. The NYC Classifieds.`,
     path: `/${b.slug}`,
   })
 }

@@ -20,9 +20,40 @@ export async function generateMetadata({ params }: { params: Promise<{ borough: 
   if (!b || !nh || !cat) return { title: 'Not Found' }
 
   const subSample = cat.subs.slice(0, 5).join(', ')
+  const titleMap: Record<string, string> = {
+    housing: `Housing in ${nh.name}, ${b.name}`,
+    jobs: `Jobs in ${nh.name}, ${b.name}`,
+    'for-sale': `For Sale in ${nh.name}, ${b.name}`,
+    services: `Services in ${nh.name}, ${b.name}`,
+    gigs: `Gigs in ${nh.name}, ${b.name}`,
+    community: `Community in ${nh.name}, ${b.name}`,
+    'tickets': `Tickets & Events in ${nh.name}, ${b.name}`,
+    pets: `Pets in ${nh.name}, ${b.name}`,
+    personals: `Personals in ${nh.name}, ${b.name}`,
+    barter: `Barter in ${nh.name}, ${b.name}`,
+    'rentals': `Rentals & Lending in ${nh.name}, ${b.name}`,
+    resumes: `Resumes in ${nh.name}, ${b.name}`,
+  }
+
+  const loc = `${nh.name}, ${b.name}`
+  const descMap: Record<string, string> = {
+    housing: `Apartments, rooms, sublets & more in ${loc}. ${subSample} — no brokers, no scams. Every listing from a geo-verified neighbor. The NYC Classifieds.`,
+    jobs: `Jobs in ${loc} — ${subSample} & more. Every employer geo-verified to your area. Apply direct, zero fees. The NYC Classifieds.`,
+    'for-sale': `Buy & sell in ${loc} — ${subSample} & more. Every seller verified with selfie + GPS. Meet locally, buy safely. The NYC Classifieds.`,
+    services: `Hire local pros in ${loc} — ${subSample} & more. Every provider geo-verified to your neighborhood. The NYC Classifieds.`,
+    gigs: `Gigs in ${loc} — ${subSample} & more. Quick jobs from geo-verified neighbors. Pick up work nearby. The NYC Classifieds.`,
+    community: `Your neighborhood board for ${loc} — ${subSample} & more. Every post from a verified local. The NYC Classifieds.`,
+    tickets: `Tickets & events in ${loc} — ${subSample}. Buy from verified locals, not scalper bots. The NYC Classifieds.`,
+    pets: `Pets in ${loc} — ${subSample}. Every poster is a verified local animal lover. The NYC Classifieds.`,
+    personals: `Personals in ${loc} — ${subSample}. Every person verified with selfie + GPS. Real and local. The NYC Classifieds.`,
+    barter: `Barter in ${loc} — ${subSample}. Trade with geo-verified neighbors you can trust. No money needed. The NYC Classifieds.`,
+    rentals: `Rent & borrow in ${loc} — ${subSample} & more. Every lender geo-verified. Why buy when you can borrow? The NYC Classifieds.`,
+    resumes: `Browse resumes in ${loc} — ${subSample} & more. Every candidate geo-verified to your area. The NYC Classifieds.`,
+  }
+
   return buildMetadata({
-    title: `${cat.name} in ${nh.name}, ${b.name} — Verified Local Listings`,
-    description: `${cat.name} in ${nh.name}, ${b.name} from your verified neighbors. ${subSample} & more. Every poster is confirmed to live or work in ${nh.name}. Free to post.`,
+    title: titleMap[category] || `${cat.name} in ${nh.name}, ${b.name}`,
+    description: descMap[category] || `${cat.name} in ${loc}. ${subSample} & more. Every poster geo-verified. The NYC Classifieds.`,
     path: `/${borough}/${slug}/${category}`,
   })
 }

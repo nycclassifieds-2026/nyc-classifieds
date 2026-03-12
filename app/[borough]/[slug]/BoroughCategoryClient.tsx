@@ -1,6 +1,7 @@
 'use client'
 
 import BrowsePage from '@/app/components/BrowsePage'
+import PageDescription from '@/app/components/PageDescription'
 import { boroughBySlug, categoryBySlug } from '@/lib/data'
 
 export default function BoroughCategoryClient({ boroughSlug, categorySlug }: { boroughSlug: string; categorySlug: string }) {
@@ -11,6 +12,13 @@ export default function BoroughCategoryClient({ boroughSlug, categorySlug }: { b
   return (
     <BrowsePage
       title={`${cat.name} in ${b.name}`}
+      description={
+        <PageDescription
+          categorySlug={cat.slug}
+          categoryName={cat.name}
+          borough={b.name}
+        />
+      }
       breadcrumbs={[
         { label: b.name, href: `/${b.slug}` },
         { label: cat.name, href: `/${b.slug}/${cat.slug}` },

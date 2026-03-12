@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { boroughs, boroughBySlug } from '@/lib/data'
-import { buildMetadata, breadcrumbSchema, collectionPageSchema } from '@/lib/seo'
+import { buildMetadata, breadcrumbSchema, collectionPageSchema, faqSchema, speakableSchema, SITE_URL } from '@/lib/seo'
 import PorchClient from '../PorchClient'
 
 export async function generateStaticParams() {
@@ -41,10 +41,32 @@ export default async function PorchBoroughPage({ params }: { params: Promise<{ b
     })),
   })
 
+  const siteUrl = SITE_URL
+
+  const forumLd = {
+    '@context': 'https://schema.org',
+    '@type': 'DiscussionForum',
+    name: `The Porch — ${b.name} Neighborhood Feed`,
+    description: `Neighborhood discussion feed for ${b.name}, New York City. Recommendations, questions, alerts, events, and more from verified residents.`,
+    url: `${siteUrl}/porch/${borough}`,
+    author: { '@type': 'Organization', name: 'The NYC Classifieds', url: siteUrl },
+  }
+
+  const porchBoroughFaqLd = faqSchema([
+    { question: `What is The Porch in ${b.name}?`, answer: `The Porch is a verified neighborhood feed for ${b.name} residents. Post questions, recommendations, alerts, lost pets, stoop sales, and more. Every poster is confirmed to live or work in ${b.name} with selfie + GPS.` },
+    { question: `How do I post on The Porch in ${b.name}?`, answer: `Sign up free on The NYC Classifieds, verify your ${b.name} address with a live selfie + GPS, and start posting immediately. It's 100% free.` },
+    { question: `Is The Porch only for ${b.name}?`, answer: `The Porch covers all 5 NYC boroughs and 123+ neighborhoods. Browse your specific neighborhood or the full ${b.name} feed.` },
+  ])
+
+  const porchSpeakLd = speakableSchema({ url: `/porch/${borough}` })
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(forumLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(porchBoroughFaqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(porchSpeakLd) }} />
       <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
         <PorchClient boroughSlug={borough} />
       </Suspense>

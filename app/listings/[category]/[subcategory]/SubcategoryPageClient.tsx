@@ -1,7 +1,9 @@
 'use client'
 
 import BrowsePage from '@/app/components/BrowsePage'
+import PageDescription from '@/app/components/PageDescription'
 import { categoryBySlug, slugify } from '@/lib/data'
+import { getLongTailH1 } from '@/lib/page-content'
 
 export default function SubcategoryPageClient({ categorySlug, subcategorySlug }: { categorySlug: string; subcategorySlug: string }) {
   const cat = categoryBySlug[categorySlug]
@@ -17,7 +19,15 @@ export default function SubcategoryPageClient({ categorySlug, subcategorySlug }:
 
   return (
     <BrowsePage
-      title={`${subName} in New York City`}
+      title={getLongTailH1({ categorySlug: cat.slug, subcategoryName: subName, subcategorySlug })}
+      description={
+        <PageDescription
+          categorySlug={cat.slug}
+          categoryName={cat.name}
+          subcategorySlug={subcategorySlug}
+          subcategoryName={subName}
+        />
+      }
       breadcrumbs={[
         { label: cat.name, href: `/listings/${cat.slug}` },
         { label: subName, href: `/listings/${cat.slug}/${subcategorySlug}` },

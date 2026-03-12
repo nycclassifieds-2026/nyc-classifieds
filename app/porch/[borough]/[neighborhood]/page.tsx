@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { boroughs, boroughBySlug, findNeighborhood, neighborhoodSlug } from '@/lib/data'
-import { buildMetadata, breadcrumbSchema, placeSchema } from '@/lib/seo'
+import { buildMetadata, breadcrumbSchema, placeSchema, faqSchema, speakableSchema } from '@/lib/seo'
 import PorchClient from '../../PorchClient'
 
 export const dynamicParams = true
@@ -62,11 +62,21 @@ export default async function PorchNeighborhoodPage({ params }: { params: Promis
     url: `/porch/${borough}/${neighborhood}`,
   })
 
+  const porchNhFaqLd = faqSchema([
+    { question: `What is The Porch in ${nh.name}?`, answer: `The Porch is a verified community feed for ${nh.name}, ${b.name}. Post questions, share recommendations, report lost pets, list stoop sales, and connect with real neighbors. Every poster is confirmed to ${nh.name} with selfie + GPS.` },
+    { question: `Who can post on The Porch in ${nh.name}?`, answer: `Anyone who signs up on The NYC Classifieds and verifies their ${nh.name} address with a live selfie + GPS. It's 100% free — no fees, no premium tiers.` },
+    { question: `What can I post on The Porch?`, answer: `Recommendations, questions, local alerts, lost & found, stoop sales, events, shoutouts, and anything relevant to your ${nh.name} community. No spam — every poster is verified local.` },
+  ])
+
+  const porchNhSpeakLd = speakableSchema({ url: `/porch/${borough}/${neighborhood}` })
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(forumLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(placeLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(porchNhFaqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(porchNhSpeakLd) }} />
       <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af' }}>Loading...</div>}>
         <PorchClient boroughSlug={borough} neighborhoodSlug={neighborhood} />
       </Suspense>

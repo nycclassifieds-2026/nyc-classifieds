@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   themeColor: '#2563eb',
   title: {
     default: 'NYC Classifieds — Free Local Classifieds for New York City | The NYC Classifieds',
-    template: '%s | The NYC Classifieds',
+    template: '%s',
   },
   description: 'Free local classifieds for NYC. Apartments, jobs, services, for sale, gigs & more across 126+ neighborhoods in all 5 boroughs. Every user geo-verified. 100% free.',
   keywords: ['NYC classifieds', 'free classifieds', 'local classifieds', 'classifieds', 'free NYC classifieds', 'New York City classifieds', 'New York classifieds', 'classifieds near me', 'free classifieds NYC', 'free local classifieds', 'Craigslist NYC alternative', 'apartments NYC', 'jobs NYC', 'for sale NYC', 'services NYC', 'Brooklyn classifieds', 'Manhattan classifieds', 'Queens classifieds', 'Bronx classifieds', 'Staten Island classifieds', 'neighborhood classifieds NYC', 'online classifieds NYC', 'NYC community board'],
