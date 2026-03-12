@@ -98,6 +98,27 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   return (
     <>
       {!hideNav && (
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 1001,
+          backgroundColor: '#2563eb',
+          color: '#ffffff',
+          textAlign: 'center',
+          padding: mobile ? '8px 12px' : '10px 16px',
+          fontSize: mobile ? '0.8rem' : '0.875rem',
+          fontFamily: "'DM Sans', sans-serif",
+          fontWeight: 500,
+          lineHeight: 1.4,
+        }}>
+          We&apos;re in <strong>Testing Mode</strong> — look around, it&apos;ll remind you of 2 awesome platforms from back in the day.{' '}
+          <Link href="/signup" style={{ color: '#ffffff', textDecoration: 'underline', fontWeight: 700 }}>
+            Sign up
+          </Link>{' '}
+          — you don&apos;t want to miss this launch.
+        </div>
+      )}
+      {!hideNav && (
         <header style={{
           backgroundColor: '#ffffff',
           borderBottom: '1px solid #e5e7eb',
